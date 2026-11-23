@@ -71,6 +71,33 @@ class ExpandedCoverageTests(unittest.TestCase):
             self.assertEqual(result["crop_stage"], stage)
             self.assertEqual(result["status"], "insufficient_evidence")
 
+    def test_crop_menu_only_lists_approved_state_and_district_guidance(self):
+        from evidence_store import evidence_db
+
+        def coverage():
+            response = self.client.get("/api/farm-config")
+            self.assertEqual(response.headers["cache-control"], "no-store")
+            return {state["id"]: state for state in response.raise_for_status().json()["coverage"]}
+
+        states = coverage()
+        self.assertEqual(states["andhra-pradesh"]["crop_ids"], ["paddy"])
+        self.assertEqual(states["tamil-nadu"]["crop_ids"], ["brinjal", "okra", "onion", "tomato"])
+        self.assertEqual(states["uttarakhand"]["crop_ids"], ["chilli"])
+        self.assertEqual(states["delhi"]["crop_ids"], [])
+        self.assertEqual(states["maharashtra"]["crop_ids"], [])
+        districts = {item["id"]: item["crop_ids"] for item in states["andhra-pradesh"]["districts"]}
+        self.assertEqual(districts["krishna"], ["paddy"])
+        self.assertEqual(districts["west-godavari"], ["paddy"])
+        self.assertEqual(districts["eluru"], [])
+        coimbatore = next(item for item in states["tamil-nadu"]["districts"] if item["id"] == COIMBATORE["district_id"])
+        self.assertEqual(coimbatore["crop_ids"], states["tamil-nadu"]["crop_ids"])
+        with evidence_db(write=True) as connection:
+            connection.execute("UPDATE source_documents SET status='archived' WHERE id='tnau-organic-tomato-water'")
+            connection.execute("UPDATE evidence_passages SET status='draft' WHERE document_id='tnau-chilli-water'")
+        states = coverage()
+        self.assertNotIn("tomato", states["tamil-nadu"]["crop_ids"])
+        self.assertEqual(states["uttarakhand"]["crop_ids"], [])
+
     def test_vegetable_guidance_respects_crop_and_state(self):
         question = "How do I irrigate the crop?"
         for location, crop, code in (

@@ -1,6 +1,7 @@
 import json
 import os
 import sqlite3
+from collections import defaultdict
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 from hashlib import sha256
@@ -9,14 +10,14 @@ from types import SimpleNamespace
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Header, HTTPException, Query
+from fastapi import APIRouter, Header, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from advisory_rules import ACTIONS, INDIA, WEATHER_TOPIC, applicable, citation, decision, needs_forecast, preferred, question_topic, rainfall_on, requested_day
 from advisory_generation import ChatProvider, CitedClaim, render_with_provider
 from advisory_log import decision_signature, deliver, ensure_advisory_tables, latest_run
 from evidence_index import EvidenceIndexUnavailable
-from evidence_store import database_path, ensure_evidence_schema, evidence_db
+from evidence_store import PUBLISHED_PASSAGES, database_path, ensure_evidence_schema, evidence_db
 from live_weather import FORECAST_DAYS, Forecast, fetch_forecast, fetch_forecast_days, forecast_configured
 from locations import CONFIG, DISTRICTS, DEMO_DISTRICTS
 
@@ -306,8 +307,39 @@ router = APIRouter()
 
 
 @router.get("/api/farm-config")
-def farm_config():
-    return CONFIG if demos_enabled() else {key: value for key, value in CONFIG.items() if key != "demo_districts"}
+def farm_config(response: Response):
+    response.headers["Cache-Control"] = "no-store"
+    with evidence_db() as connection:
+        rows = connection.execute(PUBLISHED_PASSAGES + """
+            AND p.kind IN ('advisory', 'background') AND p.crop IS NOT NULL
+            AND (p.stage_id IS NOT NULL OR COALESCE(p.crop_stage, '') = '')
+        """).fetchall()
+
+    scoped_crops = defaultdict(set)
+    for row in rows:
+        state, district, crop = row["state_id"], row["district_id"], row["crop"]
+        if crop not in CONFIG["crops"] or row["decision_code"] not in ACTIONS.get(row["topic"], {}):
+            continue
+        if row["stage_id"] and row["stage_id"] not in CONFIG["crop_stages"][crop]:
+            continue
+        if district in DISTRICTS.get(state, ()) or (district is None and row["statewide"]):
+            scoped_crops[state, district].add(crop)
+
+    coverage = []
+    for state in CONFIG["coverage"]:
+        state_id = state["id"]
+        statewide = scoped_crops[state_id, None]
+        districts = [
+            {**district, "crop_ids": sorted(statewide | scoped_crops[state_id, district["id"]])}
+            for district in state["districts"]
+        ]
+        crop_ids = sorted({crop for district in districts if district["enabled"] for crop in district["crop_ids"]})
+        coverage.append({**state, "districts": districts, "crop_ids": crop_ids})
+
+    config = {**CONFIG, "coverage": coverage}
+    if not demos_enabled():
+        config.pop("demo_districts")
+    return config
 
 
 @router.get("/api/forecast")

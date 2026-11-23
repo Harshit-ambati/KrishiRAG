@@ -15,7 +15,7 @@ python -m uvicorn main:app --host 127.0.0.1 --port 8765
 
 Open the [farmer interface](http://127.0.0.1:8765). The form and results are available in English, Telugu, and Hindi. Select a state or Union Territory and district. Crop details can be omitted for a forecast or general definition.
 
-After choosing a state, the vegetable menu shows the ten catalog crops wherever the sources document their cultivation. The menu uses positive area or production in the 2017–18 crop tables, supplemented by the government and ICAR sources recorded in [`state_vegetables.json`](state_vegetables.json). These reports show cultivation somewhere in the state or Union Territory. The coverage panel checks reviewed advisory evidence for the selected district, crop, and stage. Paddy remains available under field crops. [Horticultural Statistics at a Glance 2018](https://nhb.gov.in/statistics/Publication/Horticulture%20Statistics%20at%20a%20Glance-2018.pdf)
+After choosing a state, the crop menu lists crops with approved guidance somewhere in that state. Choosing a district narrows the menu to guidance for that district and applicable statewide sources. The menu includes dated editions so older questions can still be replayed. The coverage panel and advisory check the specific date, crop stage, and question. Farmers can leave the crop blank for general farming and weather questions.
 
 The stage menus include germination and establishment where applicable, panicle initiation for paddy, and crop-specific stages such as bulb formation, tuber growth, head and curd formation, and pod filling. Existing stage IDs remain valid. [Examples of crop growth stages in IMD agromet bulletins](https://www.agritech.tnau.ac.in/pdf/2013/Bulletin_27.09.2013.pdf)
 

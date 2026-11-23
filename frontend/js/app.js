@@ -62,29 +62,15 @@ function renderDistricts() {
 
 function renderCrops() {
   const state = selectedState();
-  const cropSelect = fields.crop;
-  const current = cropSelect.value;
-  const vegetables = state?.vegetable_ids ?? [];
-  cropSelect.replaceChildren(new Option(state ? copy.noCrop : copy.chooseStateFirst, 'none'));
-  if (state) {
-    const fieldCrops = document.createElement('optgroup');
-    fieldCrops.label = copy.fieldCrops;
-    fieldCrops.append(new Option(localName(crops.paddy), 'paddy'));
-    cropSelect.append(fieldCrops);
-  }
-  if (vegetables.length) {
-    const group = document.createElement('optgroup');
-    group.label = copy.stateVegetables;
-    vegetables.map(value => new Option(localName(crops[value]), value))
-      .sort((a, b) => a.text.localeCompare(b.text, language))
-      .forEach(option => group.append(option));
-    cropSelect.append(group);
-  }
-  cropSelect.value = Array.from(cropSelect.options).some(option => option.value === current) ? current : 'none';
-  cropSelect.disabled = pending || !state;
+  const district = districtsFor(state).find(entry => entry.id === fields.district.value);
+  const cropIds = (district ?? state)?.crop_ids ?? [];
+  const choices = cropIds.map(value => ({ value, label: localName(crops[value]) }))
+    .sort((a, b) => a.label.localeCompare(b.label, language));
+  setOptions(fields.crop, [{ value: 'none', label: state ? copy.noCrop : copy.chooseStateFirst }, ...choices]);
+  fields.crop.disabled = pending || !choices.length;
   const note = byId('crop-availability');
   note.hidden = !state;
-  note.textContent = vegetables.length ? copy.cultivationNote : copy.cultivationGap;
+  note.textContent = choices.length ? copy.cropAvailability : copy.cropAvailabilityGap;
 }
 
 function renderCropStages() {
@@ -472,6 +458,8 @@ function fieldChanged(event) {
   if (event.target === fields.state) {
     fields.district.value = '';
     renderDistricts();
+  }
+  if ([fields.state, fields.district].includes(event.target)) {
     renderCrops();
     renderCropStages();
   }
@@ -519,7 +507,7 @@ function setPending(value) {
   for (const control of [fields.state, fields.question, fields.observation, languageSelect]) {
     control.disabled = value;
   }
-  fields.crop.disabled = value || !selectedState();
+  fields.crop.disabled = value || fields.crop.options.length <= 1;
   fields.stage.disabled = value || fields.crop.value === 'none';
   fields.district.disabled = value || !districtsFor(selectedState()).length;
 }
