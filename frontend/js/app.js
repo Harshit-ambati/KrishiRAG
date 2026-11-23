@@ -17,6 +17,7 @@ let pending = false;
 let result;
 let requestError;
 let failedRequest;
+const feedback = new Map();
 
 const selectedState = () => coverage.find(state => state.id === fields.state.value);
 const districtsFor = state => state?.districts.filter(district => district.enabled) ?? [];
@@ -145,8 +146,11 @@ function renderResult() {
   }
 
   const sources = byId('result-sources');
-  sources.replaceChildren(...answer.evidence.map(source => {
+  const sourceNumbers = new Map();
+  sources.replaceChildren(...answer.evidence.map((source, index) => {
     const item = document.createElement('li');
+    item.id = 'advisory-source-' + (index + 1);
+    if (source.passage_id) sourceNumbers.set(source.passage_id, index + 1);
     item.lang = source.language === 'mul' ? '' : source.language ?? answer.language;
     if (source.original_url?.startsWith('https://')) {
       const link = document.createElement('a');
@@ -157,10 +161,29 @@ function renderResult() {
       link.rel = 'noopener noreferrer';
       link.textContent = source.title;
       item.append(link);
-      const locator = [source.publisher, source.version, source.page_number && copy.page + ' ' + source.page_number, source.section].filter(Boolean);
+      const locator = [source.publisher, source.issue_date && copy.issued + ' ' + formattedDate(source.issue_date),
+        source.version, source.page_number && copy.page + ' ' + source.page_number, source.section].filter(Boolean);
       if (locator.length) item.append(' · ' + locator.join(' · '));
     } else {
       item.textContent = source.title;
+    }
+    return item;
+  }));
+  const claimCitations = byId('claim-citations');
+  const claims = answer.claims ?? [];
+  claimCitations.hidden = !claims.length;
+  claimCitations.setAttribute('aria-label', copy.claimCitations);
+  claimCitations.replaceChildren(...claims.map(claim => {
+    const item = document.createElement('li');
+    item.append(copy.claimNames[claim.kind] + ' ');
+    for (const id of claim.passage_ids) {
+      const number = sourceNumbers.get(id);
+      if (!number) continue;
+      const reference = document.createElement('a');
+      reference.href = '#advisory-source-' + number;
+      reference.textContent = '[' + number + ']';
+      reference.setAttribute('aria-label', copy.sources + ' ' + number);
+      item.append(reference, ' ');
     }
     return item;
   }));
@@ -169,7 +192,45 @@ function renderResult() {
   byId('validity').hidden = !answer.validity_window;
   renderDate('validity-start', answer.validity_window?.valid_from);
   renderDate('validity-date', answer.validity_window?.valid_until);
+  renderFeedback();
 }
+
+function formattedDate(value) {
+  return new Intl.DateTimeFormat(language + '-IN', { dateStyle: 'medium', timeZone: 'UTC' })
+    .format(new Date(value + 'T00:00:00Z'));
+}
+
+function renderFeedback() {
+  const current = feedback.get(result?.answer.advisory_id);
+  for (const button of byId('feedback-actions').querySelectorAll('button')) {
+    button.disabled = pending || Boolean(current?.pending);
+    button.setAttribute('aria-pressed', String(current?.rating === button.dataset.rating));
+  }
+  byId('feedback-message').textContent = current?.message ? copy[current.message] : '';
+}
+
+byId('feedback-actions').addEventListener('click', async event => {
+  const rating = event.target.closest('button')?.dataset.rating;
+  if (!rating || !result || pending) return;
+  const { advisory_id: advisoryId, session_id: sessionId } = result.answer;
+  const saved = feedback.get(advisoryId);
+  if (saved?.pending) return;
+  const existing = saved?.rating;
+  feedback.set(advisoryId, { rating: existing, pending: true, message: 'feedbackSaving' });
+  renderFeedback();
+  let message = 'feedbackSaved';
+  try {
+    const response = await fetch('/api/advisories/' + encodeURIComponent(advisoryId) + '/feedback', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, rating }), signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) message = 'feedbackError';
+  } catch {
+    message = 'feedbackError';
+  }
+  feedback.set(advisoryId, { rating: message === 'feedbackSaved' ? rating : existing, message });
+  if (result) renderFeedback();
+});
 
 function renderDate(id, value) {
   const date = byId(id);
@@ -214,7 +275,7 @@ languageSelect.addEventListener('change', () => {
   failedRequest = undefined;
   renderLanguage();
   if (result && !requestError) {
-    requestAdvisory({ session_id: result.answer.session_id, language }, result);
+    requestAdvisory({ session_id: result.answer.session_id, translate_advisory_id: result.answer.advisory_id, language }, result);
   }
 });
 scenarioSelect.addEventListener('change', resetSession);
@@ -248,10 +309,12 @@ async function requestAdvisory(payload, { state, district }, key = requestKey())
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(35000),
     });
     if (response.ok) {
       result = { answer: await response.json(), state, district };
+    } else if (payload.translate_advisory_id && response.status === 409) {
+      requestError = 'translationChanged';
     } else if (payload.session_id && [404, 409].includes(response.status)) {
       result = undefined;
       requestError = 'sessionError';

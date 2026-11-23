@@ -1,0 +1,3789 @@
+{
+  "model": "qwen2.5-0.5b-instruct-q4_0",
+  "cases": 60,
+  "metrics": {
+    "llm_alone": {
+      "recommendation_correctness": [
+        0,
+        18
+      ],
+      "citation_support": [
+        0,
+        0
+      ],
+      "appropriate_clarification_or_withholding": [
+        27,
+        42
+      ],
+      "answer_coverage": [
+        0,
+        60
+      ],
+      "median_ms": 3852.7,
+      "invalid_outputs": 0,
+      "language_agreement": [
+        2,
+        20
+      ]
+    },
+    "basic_rag": {
+      "recommendation_correctness": [
+        0,
+        18
+      ],
+      "citation_support": [
+        0,
+        0
+      ],
+      "appropriate_clarification_or_withholding": [
+        18,
+        42
+      ],
+      "answer_coverage": [
+        0,
+        60
+      ],
+      "median_ms": 7404.6,
+      "invalid_outputs": 19,
+      "language_agreement": [
+        3,
+        20
+      ]
+    },
+    "checked_rag": {
+      "recommendation_correctness": [
+        18,
+        18
+      ],
+      "citation_support": [
+        18,
+        18
+      ],
+      "appropriate_clarification_or_withholding": [
+        42,
+        42
+      ],
+      "answer_coverage": [
+        18,
+        60
+      ],
+      "median_ms": 20.3,
+      "invalid_outputs": 0,
+      "language_agreement": [
+        20,
+        20
+      ]
+    }
+  },
+  "runs": [
+    {
+      "case": "irrigation-krishna",
+      "category": "supported",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "maintain_moisture",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4687.87,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-krishna",
+      "category": "supported",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "maintain_moisture",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 14976.53,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "irrigation-krishna",
+      "category": "supported",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "maintain_moisture",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 18756.11,
+      "output": {
+        "status": "supported",
+        "code": "maintain_moisture",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 1.0,
+        "generation": "provider_error"
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-krishna",
+      "category": "supported",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "maintain_moisture",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4680.25,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-krishna",
+      "category": "supported",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "maintain_moisture",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 9076.46,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "irrigation-krishna",
+      "category": "supported",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "maintain_moisture",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 18715.47,
+      "output": {
+        "status": "supported",
+        "code": "maintain_moisture",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 1.0,
+        "generation": "provider_error"
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-krishna",
+      "category": "supported",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "maintain_moisture",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4601.36,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-krishna",
+      "category": "supported",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "maintain_moisture",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 9004.82,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "irrigation-krishna",
+      "category": "supported",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "maintain_moisture",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 18695.02,
+      "output": {
+        "status": "supported",
+        "code": "maintain_moisture",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 1.0,
+        "generation": "provider_error"
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-west",
+      "category": "supported",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "avoid_irrigation_while_standing",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4138.48,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-west",
+      "category": "supported",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "avoid_irrigation_while_standing",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8949.29,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "irrigation-west",
+      "category": "supported",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "avoid_irrigation_while_standing",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 13934.49,
+      "output": {
+        "status": "supported",
+        "code": "avoid_irrigation_while_standing",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-3",
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 1.9,
+        "generation": "invalid_output"
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-west",
+      "category": "supported",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "avoid_irrigation_while_standing",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4628.93,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-west",
+      "category": "supported",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "avoid_irrigation_while_standing",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6882.54,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-west",
+      "category": "supported",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "avoid_irrigation_while_standing",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 18705.56,
+      "output": {
+        "status": "supported",
+        "code": "avoid_irrigation_while_standing",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-3",
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 1.9,
+        "generation": "provider_error"
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-west",
+      "category": "supported",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "avoid_irrigation_while_standing",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 5155.28,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "irrigation-west",
+      "category": "supported",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "avoid_irrigation_while_standing",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 9349.44,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "irrigation-west",
+      "category": "supported",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "avoid_irrigation_while_standing",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 16447.05,
+      "output": {
+        "status": "supported",
+        "code": "avoid_irrigation_while_standing",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-3",
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 1.9,
+        "generation": "invalid_output"
+      },
+      "error": null
+    },
+    {
+      "case": "rain-krishna",
+      "category": "supported",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4475.27,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-krishna",
+      "category": "supported",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7099.45,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none",
+          "none",
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-krishna",
+      "category": "supported",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 10282.33,
+      "output": {
+        "status": "supported",
+        "code": "plan_with_district_forecast",
+        "follow_up": null,
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 1.0,
+        "generation": "invalid_output"
+      },
+      "error": null
+    },
+    {
+      "case": "rain-krishna",
+      "category": "supported",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4966.66,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-krishna",
+      "category": "supported",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7344.05,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-krishna",
+      "category": "supported",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 13676.14,
+      "output": {
+        "status": "supported",
+        "code": "plan_with_district_forecast",
+        "follow_up": null,
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 1.0,
+        "generation": "invalid_output"
+      },
+      "error": null
+    },
+    {
+      "case": "rain-krishna",
+      "category": "supported",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4596.39,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-krishna",
+      "category": "supported",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8135.91,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-krishna",
+      "category": "supported",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 12605.93,
+      "output": {
+        "status": "supported",
+        "code": "plan_with_district_forecast",
+        "follow_up": null,
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 1.0,
+        "generation": "invalid_output"
+      },
+      "error": null
+    },
+    {
+      "case": "rain-west",
+      "category": "supported",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 5201.63,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-west",
+      "category": "supported",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8365.82,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "imd-value-added-ap-94-2026-2",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-west",
+      "category": "supported",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 10926.68,
+      "output": {
+        "status": "supported",
+        "code": "plan_with_district_forecast",
+        "follow_up": null,
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 1.9,
+        "generation": "llm"
+      },
+      "error": null
+    },
+    {
+      "case": "rain-west",
+      "category": "supported",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 5046.81,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-west",
+      "category": "supported",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7266.92,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-west",
+      "category": "supported",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 14808.24,
+      "output": {
+        "status": "supported",
+        "code": "plan_with_district_forecast",
+        "follow_up": null,
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 1.9,
+        "generation": "invalid_output"
+      },
+      "error": null
+    },
+    {
+      "case": "rain-west",
+      "category": "supported",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4958.45,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          ""
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-west",
+      "category": "supported",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6993.79,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "rain-west",
+      "category": "supported",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "plan_with_district_forecast",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 12692.73,
+      "output": {
+        "status": "supported",
+        "code": "plan_with_district_forecast",
+        "follow_up": null,
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 1.9,
+        "generation": "invalid_output"
+      },
+      "error": null
+    },
+    {
+      "case": "harvest",
+      "category": "supported",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4527.23,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest",
+      "category": "supported",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6892.73,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-agromet-ap-93-2026-2",
+          "imd-agromet-ap-93-2026-4",
+          "angrau-vyavasayam-2023-03-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest",
+      "category": "supported",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 12619.61,
+      "output": {
+        "status": "supported",
+        "code": "harvest_at_maturity",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-2",
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 1.8,
+        "generation": "invalid_output"
+      },
+      "error": null
+    },
+    {
+      "case": "harvest",
+      "category": "supported",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4607.16,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest",
+      "category": "supported",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6594.98,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "angrau-vyavasayam-2023-03-1",
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest",
+      "category": "supported",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 18771.11,
+      "output": {
+        "status": "supported",
+        "code": "harvest_at_maturity",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-2",
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 1.8,
+        "generation": "provider_error"
+      },
+      "error": null
+    },
+    {
+      "case": "harvest",
+      "category": "supported",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4375.92,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest",
+      "category": "supported",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7621.72,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "angrau-vyavasayam-2023-03-1",
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest",
+      "category": "supported",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 18766.0,
+      "output": {
+        "status": "supported",
+        "code": "harvest_at_maturity",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-2",
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 1.8,
+        "generation": "provider_error"
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-west",
+      "category": "supported",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4300.94,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-west",
+      "category": "supported",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6282.67,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-agromet-ap-93-2026-2",
+          "imd-agromet-ap-93-2026-4",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-west",
+      "category": "supported",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 13939.45,
+      "output": {
+        "status": "supported",
+        "code": "harvest_at_maturity",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-4",
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 3.8,
+        "generation": "invalid_output"
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-west",
+      "category": "supported",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6273.7,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-west",
+      "category": "supported",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7572.95,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "angrau-vyavasayam-2023-03-1",
+          "imd-agromet-ap-93-2026-2",
+          "imd-agromet-ap-93-2026-4"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-west",
+      "category": "supported",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 18855.3,
+      "output": {
+        "status": "supported",
+        "code": "harvest_at_maturity",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-4",
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 3.8,
+        "generation": "provider_error"
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-west",
+      "category": "supported",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4660.22,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-west",
+      "category": "supported",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6623.16,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "angrau-vyavasayam-2023-03-1",
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-west",
+      "category": "supported",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "supported",
+      "expected_code": "harvest_at_maturity",
+      "correct": true,
+      "citation_supported": true,
+      "elapsed_ms": 18703.5,
+      "output": {
+        "status": "supported",
+        "code": "harvest_at_maturity",
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-4",
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 3.8,
+        "generation": "provider_error"
+      },
+      "error": null
+    },
+    {
+      "case": "missing-stage",
+      "category": "missing_context",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4069.76,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-stage",
+      "category": "missing_context",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 9178.24,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "missing-stage",
+      "category": "missing_context",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 18.27,
+      "output": {
+        "status": "clarification",
+        "code": null,
+        "follow_up": "crop_stage",
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "missing-stage",
+      "category": "missing_context",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4299.53,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-stage",
+      "category": "missing_context",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7314.11,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-stage",
+      "category": "missing_context",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 19.3,
+      "output": {
+        "status": "clarification",
+        "code": null,
+        "follow_up": "crop_stage",
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "missing-stage",
+      "category": "missing_context",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3479.55,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-stage",
+      "category": "missing_context",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8984.09,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "missing-stage",
+      "category": "missing_context",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 18.15,
+      "output": {
+        "status": "clarification",
+        "code": null,
+        "follow_up": "crop_stage",
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "missing-moisture",
+      "category": "missing_context",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3602.82,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-moisture",
+      "category": "missing_context",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7992.49,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3",
+          "angrau-vyavasayam-2023-03-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-moisture",
+      "category": "missing_context",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 32.91,
+      "output": {
+        "status": "clarification",
+        "code": null,
+        "follow_up": "field_observations",
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "missing-moisture",
+      "category": "missing_context",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3928.39,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-moisture",
+      "category": "missing_context",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6973.98,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3",
+          "angrau-vyavasayam-2023-03-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-moisture",
+      "category": "missing_context",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 33.63,
+      "output": {
+        "status": "clarification",
+        "code": null,
+        "follow_up": "field_observations",
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "missing-moisture",
+      "category": "missing_context",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3603.69,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-moisture",
+      "category": "missing_context",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6914.05,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3",
+          "angrau-vyavasayam-2023-03-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "missing-moisture",
+      "category": "missing_context",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 38.35,
+      "output": {
+        "status": "clarification",
+        "code": null,
+        "follow_up": "field_observations",
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-stage",
+      "category": "missing_context",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3283.8,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-stage",
+      "category": "missing_context",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6594.11,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-agromet-ap-93-2026-2",
+          "imd-agromet-ap-93-2026-4",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-stage",
+      "category": "missing_context",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 21.36,
+      "output": {
+        "status": "clarification",
+        "code": null,
+        "follow_up": "crop_stage",
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-stage",
+      "category": "missing_context",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3742.42,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-stage",
+      "category": "missing_context",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7159.32,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "angrau-vyavasayam-2023-03-1",
+          "imd-agromet-ap-93-2026-2",
+          "imd-agromet-ap-93-2026-4"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-stage",
+      "category": "missing_context",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 18.85,
+      "output": {
+        "status": "clarification",
+        "code": null,
+        "follow_up": "crop_stage",
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-stage",
+      "category": "missing_context",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3700.85,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-stage",
+      "category": "missing_context",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7276.97,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "angrau-vyavasayam-2023-03-1",
+          "imd-agromet-ap-93-2026-2",
+          "imd-agromet-ap-93-2026-4"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "harvest-stage",
+      "category": "missing_context",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "clarification",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 19.25,
+      "output": {
+        "status": "clarification",
+        "code": null,
+        "follow_up": "crop_stage",
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "unsupported-eluru",
+      "category": "wrong_district",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3233.07,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "unsupported-eluru",
+      "category": "wrong_district",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7773.05,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "unsupported-eluru",
+      "category": "wrong_district",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 2.21,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "unsupported-eluru",
+      "category": "wrong_district",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 4464.94,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "unsupported-eluru",
+      "category": "wrong_district",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7252.61,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "unsupported-eluru",
+      "category": "wrong_district",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 2.15,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "unsupported-eluru",
+      "category": "wrong_district",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3494.72,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "unsupported-eluru",
+      "category": "wrong_district",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 6659.18,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "unsupported-eluru",
+      "category": "wrong_district",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 2.66,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "only-neighbor-forecast",
+      "category": "wrong_district",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3414.6,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "only-neighbor-forecast",
+      "category": "wrong_district",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7473.35,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "only-neighbor-forecast",
+      "category": "wrong_district",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3.69,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "only-neighbor-forecast",
+      "category": "wrong_district",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 4213.12,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "only-neighbor-forecast",
+      "category": "wrong_district",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7314.76,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "angrau-vyavasayam-2023-03-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "only-neighbor-forecast",
+      "category": "wrong_district",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3.29,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "only-neighbor-forecast",
+      "category": "wrong_district",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3406.65,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "only-neighbor-forecast",
+      "category": "wrong_district",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7101.51,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "only-neighbor-forecast",
+      "category": "wrong_district",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3.87,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "expired-weather",
+      "category": "expired",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3552.65,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-weather",
+      "category": "expired",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7296.46,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "imd-value-added-ap-94-2026-2",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-weather",
+      "category": "expired",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 2.68,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "expired-weather",
+      "category": "expired",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3778.11,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-weather",
+      "category": "expired",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7543.22,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-weather",
+      "category": "expired",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3.06,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "expired-weather",
+      "category": "expired",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3420.68,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-weather",
+      "category": "expired",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 6613.75,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "imd-value-added-ap-94-2026-2",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-weather",
+      "category": "expired",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3.16,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "expired-crop",
+      "category": "expired",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3066.34,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-crop",
+      "category": "expired",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7669.26,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "expired-crop",
+      "category": "expired",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 19.82,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "expired-crop",
+      "category": "expired",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3424.3,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-crop",
+      "category": "expired",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8834.54,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "expired-crop",
+      "category": "expired",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 19.85,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "expired-crop",
+      "category": "expired",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3385.23,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-crop",
+      "category": "expired",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 6888.35,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3",
+          "imd-value-added-ap-94-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "expired-crop",
+      "category": "expired",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 25.62,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-not-yet-valid",
+      "category": "expired",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 4635.36,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-not-yet-valid",
+      "category": "expired",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7849.32,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none",
+          "none",
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-not-yet-valid",
+      "category": "expired",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 2.99,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-not-yet-valid",
+      "category": "expired",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 4045.19,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-not-yet-valid",
+      "category": "expired",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7465.08,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "angrau-vyavasayam-2023-03-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-not-yet-valid",
+      "category": "expired",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3.64,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-not-yet-valid",
+      "category": "expired",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3870.03,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-not-yet-valid",
+      "category": "expired",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7055.78,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-not-yet-valid",
+      "category": "expired",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3.38,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "wrong-stage",
+      "category": "out_of_scope",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3528.24,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "wrong-stage",
+      "category": "out_of_scope",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8268.97,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "wrong-stage",
+      "category": "out_of_scope",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 19.87,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "wrong-stage",
+      "category": "out_of_scope",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3543.84,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "wrong-stage",
+      "category": "out_of_scope",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 9167.9,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "wrong-stage",
+      "category": "out_of_scope",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 19.87,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "wrong-stage",
+      "category": "out_of_scope",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3443.41,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "wrong-stage",
+      "category": "out_of_scope",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8813.39,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "wrong-stage",
+      "category": "out_of_scope",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 20.06,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "crop-conflict",
+      "category": "conflicting",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3292.27,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "crop-conflict",
+      "category": "conflicting",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7671.4,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "crop-conflict",
+      "category": "conflicting",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 37.82,
+      "output": {
+        "status": "conflicting_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "eval-conflict-1"
+        ],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "crop-conflict",
+      "category": "conflicting",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3653.22,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "crop-conflict",
+      "category": "conflicting",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8971.66,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "crop-conflict",
+      "category": "conflicting",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 36.83,
+      "output": {
+        "status": "conflicting_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [
+          "eval-conflict-1",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "crop-conflict",
+      "category": "conflicting",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3334.37,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "crop-conflict",
+      "category": "conflicting",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6433.62,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "imd-agromet-ap-93-2026-3",
+          "eval-conflict-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "crop-conflict",
+      "category": "conflicting",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 39.38,
+      "output": {
+        "status": "conflicting_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [
+          "imd-agromet-ap-93-2026-1",
+          "eval-conflict-1"
+        ],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-conflict",
+      "category": "conflicting",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4299.23,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-conflict",
+      "category": "conflicting",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7551.54,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "imd-value-added-ap-94-2026-2",
+          "eval-conflict-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-conflict",
+      "category": "conflicting",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 20.63,
+      "output": {
+        "status": "conflicting_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "eval-conflict-1"
+        ],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-conflict",
+      "category": "conflicting",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 4095.86,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-conflict",
+      "category": "conflicting",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 18834.55,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ReadTimeout"
+    },
+    {
+      "case": "forecast-conflict",
+      "category": "conflicting",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 29.0,
+      "output": {
+        "status": "conflicting_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "eval-conflict-1"
+        ],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-conflict",
+      "category": "conflicting",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 3587.42,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-conflict",
+      "category": "conflicting",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 6965.62,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-2",
+          "imd-value-added-ap-94-2026-1",
+          "eval-conflict-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "forecast-conflict",
+      "category": "conflicting",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "conflicting_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 18.7,
+      "output": {
+        "status": "conflicting_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "eval-conflict-1"
+        ],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "archived-crop",
+      "category": "archived",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3008.55,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "archived-crop",
+      "category": "archived",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8969.53,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "archived-crop",
+      "category": "archived",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 17.19,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "archived-crop",
+      "category": "archived",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3590.4,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "archived-crop",
+      "category": "archived",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 10042.61,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "archived-crop",
+      "category": "archived",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 16.33,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "archived-crop",
+      "category": "archived",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3520.52,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "archived-crop",
+      "category": "archived",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7166.03,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "angrau-vyavasayam-2023-03-1",
+          "imd-value-added-ap-94-2026-1",
+          "imd-value-added-ap-94-2026-2"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "archived-crop",
+      "category": "archived",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 20.06,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "market-price",
+      "category": "out_of_scope",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3584.73,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "market-price",
+      "category": "out_of_scope",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 6692.42,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "market-price",
+      "category": "out_of_scope",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 2.24,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "market-price",
+      "category": "out_of_scope",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3835.39,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "market-price",
+      "category": "out_of_scope",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 6819.56,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "angrau-vyavasayam-2023-03-1",
+          "imd-agromet-ap-93-2026-2",
+          "imd-agromet-ap-93-2026-4"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "market-price",
+      "category": "out_of_scope",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 2.53,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "market-price",
+      "category": "out_of_scope",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 4121.46,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "market-price",
+      "category": "out_of_scope",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 7298.66,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "angrau-vyavasayam-2023-03-1",
+          "imd-agromet-ap-93-2026-2",
+          "imd-agromet-ap-93-2026-4"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "market-price",
+      "category": "out_of_scope",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 2.73,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "no-spray-guidance",
+      "category": "out_of_scope",
+      "language": "en",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3707.77,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "no-spray-guidance",
+      "category": "out_of_scope",
+      "language": "en",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 8522.53,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "no-spray-guidance",
+      "category": "out_of_scope",
+      "language": "en",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 18.73,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "no-spray-guidance",
+      "category": "out_of_scope",
+      "language": "te",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3947.36,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "wait_until_dry",
+        "follow_up": "none",
+        "source_ids": [
+          "none"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "no-spray-guidance",
+      "category": "out_of_scope",
+      "language": "te",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": false,
+      "citation_supported": false,
+      "elapsed_ms": 7912.62,
+      "output": {
+        "status": "invalid",
+        "source_ids": []
+      },
+      "error": "ValidationError"
+    },
+    {
+      "case": "no-spray-guidance",
+      "category": "out_of_scope",
+      "language": "te",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 22.16,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    },
+    {
+      "case": "no-spray-guidance",
+      "category": "out_of_scope",
+      "language": "hi",
+      "mode": "llm_alone",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 3488.18,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "no-spray-guidance",
+      "category": "out_of_scope",
+      "language": "hi",
+      "mode": "basic_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 6648.71,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": "none",
+        "follow_up": "none",
+        "source_ids": [
+          "imd-value-added-ap-94-2026-1",
+          "imd-value-added-ap-94-2026-2",
+          "imd-agromet-ap-93-2026-1"
+        ],
+        "rainfall_mm": 0.0
+      },
+      "error": null
+    },
+    {
+      "case": "no-spray-guidance",
+      "category": "out_of_scope",
+      "language": "hi",
+      "mode": "checked_rag",
+      "expected_status": "insufficient_evidence",
+      "expected_code": null,
+      "correct": true,
+      "citation_supported": false,
+      "elapsed_ms": 21.12,
+      "output": {
+        "status": "insufficient_evidence",
+        "code": null,
+        "follow_up": null,
+        "source_ids": [],
+        "rainfall_mm": null,
+        "generation": "system"
+      },
+      "error": null
+    }
+  ]
+}

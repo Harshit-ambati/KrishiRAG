@@ -114,8 +114,18 @@
             <section class="sources" aria-labelledby="source-title">
               <h3 id="source-title" data-text="sources">Sources</h3>
               <p id="no-sources" data-text="noSources" hidden>No sources are attached to this result.</p>
-              <ul id="result-sources"></ul>
+              <ol id="result-sources"></ol>
+              <ul id="claim-citations" class="claim-citations" aria-label="Claim citations"></ul>
               <p id="validity" class="validity" hidden><span data-text="validity">Evidence validity</span> <time id="validity-start"></time> – <time id="validity-date"></time></p>
+            </section>
+            <section class="feedback" aria-labelledby="feedback-title">
+              <h3 id="feedback-title" data-text="feedbackTitle">Was this advisory helpful?</h3>
+              <div class="feedback-actions" id="feedback-actions">
+                <button type="button" data-rating="useful" data-text="useful" aria-pressed="false">Useful</button>
+                <button type="button" data-rating="unclear" data-text="unclear" aria-pressed="false">Unclear</button>
+                <button type="button" data-rating="potentially_incorrect" data-text="potentiallyIncorrect" aria-pressed="false">Potentially incorrect</button>
+              </div>
+              <p id="feedback-message" role="status" aria-live="polite"></p>
             </section>
           </div>
         </div>

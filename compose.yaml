@@ -1,0 +1,25 @@
+services:
+  agrirag:
+    build: .
+    ports:
+      - "127.0.0.1:${AGRIRAG_PORT:-8765}:8000"
+    environment:
+      AGRIRAG_ADMIN_USER: "${AGRIRAG_ADMIN_USER:-admin}"
+      AGRIRAG_ADMIN_PASSWORD: "${AGRIRAG_ADMIN_PASSWORD:-}"
+      AGRIRAG_LLM_URL: "${AGRIRAG_LLM_URL:-}"
+      AGRIRAG_LLM_MODEL: "${AGRIRAG_LLM_MODEL:-}"
+      AGRIRAG_LLM_API_KEY: "${AGRIRAG_LLM_API_KEY:-}"
+      AGRIRAG_LLM_TIMEOUT: "${AGRIRAG_LLM_TIMEOUT:-20}"
+      AGRIRAG_DB_PATH: /app/data/advisories.sqlite3
+      AGRIRAG_CHROMA_PATH: /app/data/advisories.chroma
+      AGRIRAG_E5_DIR: /app/data/e5-small
+    volumes:
+      - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; assert urlopen('http://127.0.0.1:8000/healthz', timeout=3).status == 200"]
+      interval: 15s
+      timeout: 5s
+      start_period: 5m
+      retries: 5

@@ -20,6 +20,15 @@
     <p class="section-description">Compare extracted passages against the original before publishing.</p>
     <p id="admin-status" role="status" aria-live="polite"></p>
     <p id="admin-error" role="alert" hidden></p>
+    <details class="card feedback-review" id="feedback-review">
+      <summary>Advisory feedback</summary>
+      <div class="admin-actions">
+        <button type="button" class="secondary" id="refresh-feedback">Refresh feedback</button>
+        <button type="button" class="secondary" id="more-feedback" hidden>Load more</button>
+      </div>
+      <p id="feedback-review-status" role="status" aria-live="polite"></p>
+      <div id="feedback-review-list"></div>
+    </details>
     <div class="admin-grid">
       <aside class="card">
         <h2>Sources</h2>

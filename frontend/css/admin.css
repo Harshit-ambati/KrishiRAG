@@ -24,4 +24,8 @@
 .extraction-note { color: var(--muted); margin-bottom: 8px; }
 .raw-extraction pre { max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--soft-green); padding: 10px; }
 .use-extraction { margin-top: 7px; }
+.feedback-review { margin-top: 14px; }
+.feedback-review summary { cursor: pointer; font-weight: 700; }
+.feedback-record { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; overflow-wrap: anywhere; }
+.feedback-record p + p { margin-top: 5px; }
 @media (max-width: 760px) { .admin-grid { grid-template-columns: minmax(0, 1fr); } }

@@ -69,6 +69,7 @@ MESSAGES = {
     "observation_why": ("A district forecast cannot establish the current moisture in your field.", "జిల్లా వాతావరణ అంచనాతో మీ పొలంలోని ప్రస్తుత తేమను నిర్ధారించలేం.", "ज़िले के पूर्वानुमान से आपके खेत की मौजूदा नमी तय नहीं होती।"),
     "standing": ("Since you report standing water, hold off on adding irrigation while water is standing.", "పొలంలో నీరు నిలిచిందని మీరు చెప్పారు. నీరు నిలిచి ఉన్నంతవరకు అదనంగా నీరు పెట్టకండి.", "आपने खेत में पानी भरा होने की बात कही है। जब तक पानी भरा है, अतिरिक्त सिंचाई टालें।"),
     "practice": ("The cited crop guidance applies to the selected area and crop stage.", "చూపిన పంట సూచన ఎంచుకున్న ప్రాంతానికి, పంట దశకు వర్తిస్తుంది.", "दी गई कृषि सलाह चुने गए क्षेत्र और फसल की अवस्था पर लागू है।"),
+    "practice_short": ("This guidance applies to your selected area and crop stage.", "ఈ సూచన ఎంచుకున్న ప్రాంతానికి, పంట దశకు వర్తిస్తుంది.", "यह सलाह चुने गए क्षेत्र और फसल की अवस्था पर लागू है।"),
     "rain": ("The district bulletin forecast {amount:g} mm of rain for {date}.", "{date} తేదీకి జిల్లా బులెటిన్ {amount:g} మి.మీ. వర్షపాతాన్ని అంచనా వేసింది.", "ज़िले के बुलेटिन में {date} के लिए {amount:g} मिमी बारिश का पूर्वानुमान था।"),
     "weather_action": ("Use the district forecast when planning field work and check conditions at the field.", "పొలం పనులు నిర్ణయించేటప్పుడు జిల్లా అంచనాతో పాటు పొలంలోని పరిస్థితిని చూడండి.", "खेत का काम तय करते समय ज़िले का पूर्वानुमान और खेत की स्थिति देखें।"),
 }
@@ -182,6 +183,25 @@ def decision(session, connection, covered_location):
             "validity_window": {"valid_from": max(start for start, _ in windows), "valid_until": min(end for _, end in windows)} if windows else None,
         }
 
+    def support(code, action, action_rows, *, practice_rows=(), weather_rows=(), amount=None):
+        claims = [{
+            "kind": "action", "text": action, "passage_ids": [row["id"] for row in action_rows],
+        }]
+        wording = {"action": [action]}
+        if practice_rows:
+            explanation = message("practice")
+            claims.append({"kind": "practice", "text": explanation, "passage_ids": [row["id"] for row in practice_rows]})
+            wording["practice"] = [explanation, message("practice_short")]
+        if weather_rows:
+            explanation = message("rain", date=day, amount=amount)
+            claims.append({"kind": "weather", "text": explanation, "passage_ids": [row["id"] for row in weather_rows]})
+            wording["weather"] = [explanation]
+        return {
+            **result("supported", " ".join(claim["text"] for claim in claims[1:]),
+                     [*practice_rows, *weather_rows], action=action),
+            "claims": claims, "claim_wording": wording, "decision_code": code, "forecast_rainfall_mm": amount,
+        }
+
     if not covered_location:
         return result("insufficient_evidence", message("location"))
     if session.requested_date is None:
@@ -210,7 +230,7 @@ def decision(session, connection, covered_location):
         amount = next(iter(amounts))
         weather = weather[:1]
         if topic == WEATHER_TOPIC:
-            return result("supported", message("rain", date=day, amount=amount), weather, action=message("weather_action"))
+            return support("plan_with_district_forecast", message("weather_action"), weather, weather_rows=weather, amount=amount)
 
     candidates = [row for row in applicable(connection, session, topic, day) if row["kind"] != "weather"
                   and (row["stage_id"] or not row["crop_stage"])]
@@ -241,8 +261,6 @@ def decision(session, connection, covered_location):
             return result("clarification", message("observation_why"), field="field_observations", follow_up="observation")
         if moisture == "standing":
             action = message("standing")
+            code = "avoid_irrigation_while_standing"
 
-    explanation = message("practice")
-    if amount is not None:
-        explanation += " " + message("rain", date=day, amount=amount)
-    return result("supported", explanation, practices[:1] + weather, action=action)
+    return support(code, action, practices[:1], practice_rows=practices[:1], weather_rows=weather, amount=amount)

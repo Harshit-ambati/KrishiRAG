@@ -1,7 +1,7 @@
 import json
 import os
 import sqlite3
-from contextlib import closing
+from contextlib import contextmanager
 from datetime import date
 from hashlib import sha256
 from pathlib import Path
@@ -12,6 +12,8 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from advisory_rules import decision, requested_day
+from advisory_generation import ChatProvider, CitedClaim, render_with_provider
+from advisory_log import decision_signature, deliver, ensure_advisory_tables, latest_run
 from evidence_index import EvidenceIndexUnavailable
 from evidence_store import ensure_evidence_schema
 
@@ -44,6 +46,7 @@ class AdvisoryRequest(BaseModel):
     session_id: UUID | None = None
     demo_scenario: DemoStatus | None = None
     requested_date: date | None = None
+    translate_advisory_id: UUID | None = None
 
     @field_validator("crop")
     @classmethod
@@ -61,6 +64,10 @@ class AdvisoryRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_initial_fields(self):
+        if self.translate_advisory_id is not None:
+            allowed = {"session_id", "language", "translate_advisory_id"}
+            if not (self.session_id and self.language) or self.model_fields_set - allowed:
+                raise ValueError("Translate with only the advisory ID, its session ID, and the new language.")
         if self.session_id is None:
             required = (*CONTEXT_FIELDS, "crop_stage", "question", "language")
             missing = [field for field in required if getattr(self, field) is None]
@@ -116,6 +123,10 @@ class AdvisoryResponse(BaseModel):
     validity_window: ValidityWindow | None
     is_demo: bool
     requested_date: date | None = None
+    claims: list[CitedClaim] = Field(default_factory=list)
+    decision_code: str | None = None
+    forecast_rainfall_mm: float | None = None
+    generation_outcome: Literal["system", "verified_template", "llm", "provider_error", "invalid_output", "demo"] = "system"
 
 
 class AdvisorySession(BaseModel):
@@ -166,28 +177,32 @@ def evaluate_demo(session: AdvisorySession) -> AdvisoryResponse:
         follow_up_field=follow_up_field,
         evidence=[DemoEvidence(title=source[session.language]) for source in fixture.get("sources", [])],
         validity_window=fixture.get("validity_window"),
-        is_demo=True,
+        is_demo=True, generation_outcome="demo",
     )
 
 
-def evaluate(session: AdvisorySession, connection, advisory_id=None) -> AdvisoryResponse:
+def evaluate(session: AdvisorySession, connection, advisory_id=None):
     supported_location = session.district_id in DISTRICTS.get(session.state_id, set())
     if session.demo_scenario and supported_location:
-        return evaluate_demo(session)
+        response = evaluate_demo(session)
+        return (response.model_copy(update={"advisory_id": advisory_id}) if advisory_id else response), {}
 
     try:
         result = decision(session, connection, supported_location)
     except EvidenceIndexUnavailable as exc:
         raise HTTPException(503, detail="evidence_index_unavailable") from exc
-    return AdvisoryResponse(
+    wording = result.pop("claim_wording", {})
+    response = AdvisoryResponse(
         advisory_id=advisory_id or uuid4(), session_id=session.session_id, language=session.language,
-        crop_stage=session.crop_stage, requested_date=session.requested_date, is_demo=False, **result,
+        crop_stage=session.crop_stage, requested_date=session.requested_date, is_demo=False,
+        generation_outcome="verified_template" if wording else "system", **result,
     )
+    return response, wording
 
 
 def load_session(connection, request: AdvisoryRequest) -> AdvisorySession:
     if request.session_id is None:
-        session = AdvisorySession(session_id=uuid4(), **request.model_dump(exclude={"session_id"}))
+        session = AdvisorySession(session_id=uuid4(), **request.model_dump(exclude={"session_id", "translate_advisory_id"}))
         session.requested_date, session.date_explicit = requested_day(session.question, request.requested_date)
         return session
 
@@ -216,6 +231,46 @@ def load_session(connection, request: AdvisoryRequest) -> AdvisorySession:
     return session
 
 
+@contextmanager
+def advisory_transaction():
+    database = Path(os.environ.get("AGRIRAG_DB_PATH", ROOT / "data" / "advisories.sqlite3"))
+    database.parent.mkdir(parents=True, exist_ok=True)
+
+    connection = sqlite3.connect(database, timeout=20)
+    try:
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys = ON")
+        ensure_evidence_schema(connection)
+        ensure_advisory_tables(connection)
+        with connection:
+            connection.execute("BEGIN IMMEDIATE")
+            yield connection
+    finally:
+        connection.close()
+
+
+def request_fingerprint(request, exclude=None):
+    return sha256(request.model_dump_json(exclude=exclude).encode("utf-8")).hexdigest()
+
+
+def replay_request(connection, request, key, fingerprint):
+    if not key:
+        return None
+    cached = connection.execute(
+        "SELECT fingerprint, response FROM advisory_retries WHERE request_key = ?", (key,)
+    ).fetchone()
+    if not cached:
+        return None
+    valid = {fingerprint}
+    if request.translate_advisory_id is None:
+        valid.add(request_fingerprint(request, {"translate_advisory_id"}))
+        if request.requested_date is None:
+            valid.add(request_fingerprint(request, {"requested_date", "translate_advisory_id"}))
+    if cached["fingerprint"] not in valid:
+        raise HTTPException(409, detail="request_key_reused")
+    return json.loads(cached["response"])
+
+
 router = APIRouter()
 
 
@@ -224,54 +279,59 @@ def create_advisory(
     request: AdvisoryRequest,
     idempotency_key: Annotated[str | None, Header(min_length=16, max_length=100)] = None,
 ) -> AdvisoryResponse:
-    database = Path(os.environ.get("AGRIRAG_DB_PATH", ROOT / "data" / "advisories.sqlite3"))
-    database.parent.mkdir(parents=True, exist_ok=True)
+    fingerprint = request_fingerprint(request)
+    with advisory_transaction() as connection:
+        replay = replay_request(connection, request, idempotency_key, fingerprint)
+        translation_run = None
+        if request.translate_advisory_id:
+            translation_run = latest_run(connection, request.translate_advisory_id, request.session_id)
+            if translation_run is None:
+                raise HTTPException(404, detail="advisory_not_found")
+        if replay and "context" not in replay:
+            previous = AdvisoryResponse.model_validate(replay)
+            session = load_session(connection, AdvisoryRequest(session_id=previous.session_id))
+            return deliver(connection, session, previous)
+        if replay:
+            session = AdvisorySession.model_validate(replay["context"])
+        elif translation_run:
+            session = AdvisorySession.model_validate_json(translation_run["context"])
+            session.language = request.language
+        else:
+            session = load_session(connection, request)
+            save_session(connection, session)
 
-    with closing(sqlite3.connect(database, timeout=20)) as connection, connection:
-        connection.row_factory = sqlite3.Row
-        ensure_evidence_schema(connection)
-        connection.executescript("""
-            CREATE TABLE IF NOT EXISTS advisory_sessions (
-                session_id TEXT PRIMARY KEY,
-                context TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS advisory_retries (
-                request_key TEXT PRIMARY KEY,
-                fingerprint TEXT NOT NULL,
-                response TEXT NOT NULL
-            );
-        """)
-        connection.execute("BEGIN IMMEDIATE")
-        if idempotency_key:
-            fingerprint = sha256(request.model_dump_json().encode("utf-8")).hexdigest()
-            cached = connection.execute(
-                "SELECT fingerprint, response FROM advisory_retries WHERE request_key = ?", (idempotency_key,)
-            ).fetchone()
-            if cached:
-                # Demo retries created before requested_date was added used the older schema.
-                legacy_fingerprint = sha256(request.model_dump_json(exclude={"requested_date"}).encode("utf-8")).hexdigest()
-                if fingerprint != cached[0] and (request.requested_date is not None or legacy_fingerprint != cached[0]):
-                    raise HTTPException(409, detail="request_key_reused")
-                recorded = json.loads(cached[1])
-                if "context" not in recorded:
-                    return AdvisoryResponse.model_validate(recorded)
-                # Recheck SQLite on exact retries. An archived source must never
-                # leak back through the previously cached advisory.
-                context = AdvisorySession.model_validate(recorded["context"])
-                return evaluate(context, connection, UUID(recorded["advisory_id"]))
-
-        session = load_session(connection, request)
-        response = evaluate(session, connection)
-        connection.execute("""
-            INSERT INTO advisory_sessions (session_id, context) VALUES (?, ?)
-            ON CONFLICT(session_id) DO UPDATE SET context = excluded.context
-        """, (str(session.session_id), session.model_dump_json()))
-        if idempotency_key:
-            saved = response.model_dump_json() if response.is_demo else json.dumps({
-                "context": session.model_dump(mode="json"), "advisory_id": str(response.advisory_id),
-            })
+        response, wording = evaluate(session, connection, UUID(replay["advisory_id"]) if replay else None)
+        signature = decision_signature(response)
+        if translation_run and signature != translation_run["decision_signature"]:
+            raise HTTPException(409, detail="advisory_changed")
+        if replay:
+            delivered = latest_run(connection, response.advisory_id, response.session_id)
+            if delivered and delivered["decision_signature"] == signature:
+                return AdvisoryResponse.model_validate_json(delivered["response"])
+        if idempotency_key and not replay:
             connection.execute(
                 "INSERT INTO advisory_retries VALUES (?, ?, ?)",
-                (idempotency_key, fingerprint, saved),
+                (idempotency_key, fingerprint, json.dumps({
+                    "context": session.model_dump(mode="json"), "advisory_id": str(response.advisory_id),
+                })),
             )
-        return response
+        provider = ChatProvider.configured() if wording else None
+        if provider is None:
+            return deliver(connection, session, response)
+
+    # Provider I/O runs outside the SQLite write lock.
+    proposed = render_with_provider(provider, session, response, wording)
+    with advisory_transaction() as connection:
+        fresh, _ = evaluate(session, connection, response.advisory_id)
+        if decision_signature(fresh) != signature:
+            if translation_run:
+                raise HTTPException(409, detail="advisory_changed")
+            return deliver(connection, session, fresh)
+        return deliver(connection, session, proposed, provider.model)
+
+
+def save_session(connection, session):
+    connection.execute("""
+        INSERT INTO advisory_sessions (session_id, context) VALUES (?, ?)
+        ON CONFLICT(session_id) DO UPDATE SET context = excluded.context
+    """, (str(session.session_id), session.model_dump_json()))

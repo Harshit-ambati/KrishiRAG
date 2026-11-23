@@ -36,6 +36,23 @@ For a specific demo, add `demo_scenario` when starting the session. The availabl
 
 The server stores the original question and farm context in `data/advisories.sqlite3` by default. Set `AGRIRAG_DB_PATH` to use a different SQLite file.
 
+Each supported result links its proposed action and explanation to the original passage IDs. Source cards show the publisher, issue date, original title, version, and PDF page or section. The server stores the exact response and source versions for each delivered advisory. The language switch translates the decision already displayed, with the same evidence IDs, validity, dates, and quantities. If the evidence changes, the interface asks the farmer to resubmit.
+
+## Configure the model
+
+AgriRAG accepts an OpenAI-compatible Chat Completions endpoint. A local [llama.cpp server](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) with [Qwen2.5-0.5B-Instruct GGUF](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF) is one option. The backend uses these variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `AGRIRAG_LLM_URL` | Provider base URL ending in `/v1` |
+| `AGRIRAG_LLM_MODEL` | Provider model name or alias |
+| `AGRIRAG_LLM_API_KEY` | Optional provider credential, set on the server only |
+| `AGRIRAG_LLM_TIMEOUT` | Request timeout in seconds, defaults to 20 |
+
+For the model used in the measured evaluation, start `llama-server -m qwen2.5-0.5b-instruct-q4_0.gguf --alias qwen2.5-0.5b-instruct-q4_0 --host 127.0.0.1 --port 8879`. Set the base URL to `http://127.0.0.1:8879/v1` and the model alias to `qwen2.5-0.5b-instruct-q4_0` before starting FastAPI. A remote endpoint receives the question, farm context, and approved passages for supported requests.
+
+The model chooses from vetted wording for the decision and must attach the exact source IDs for each claim. Invalid output or provider failure falls back to the cited verified template. Clarifications, conflicts, and evidence gaps go directly to the farmer without a model call.
+
 ## Prepare the evidence index
 
 From the project folder, load the reviewed catalog and build Chroma's local vector index.
@@ -64,11 +81,25 @@ The [pilot audit](EVIDENCE_AUDIT.md) records the reviewed districts, source edit
 
 Set `AGRIRAG_ADMIN_PASSWORD` before starting FastAPI and open [the evidence admin](http://127.0.0.1:8765/admin). The username defaults to `admin` and can be set with `AGRIRAG_ADMIN_USER`. Use HTTPS when serving outside loopback.
 
+Under **Advisory feedback**, reviewers can inspect Useful, Unclear, and Potentially incorrect ratings alongside the original question, shown answer, language, and exact evidence versions.
+
 Upload a PDF or UTF-8 text document to create a draft. Open the publisher’s original or download the stored copy, complete the source metadata, and record which passages you checked. Include only the passages to publish. For a scan, mixed-column table, or legacy Telugu encoding, use the rendered original to type or correct the passage and record the locator. Publishing locks the version. Upload a replacement as a new version, then archive the old one and select its successor.
 
 For use by the decision engine, record the stated crop stage and map it to a supported farmer-form stage. Select a decision code only when the passage supports that action. For rainfall, record the verified daily values in millimetres keyed by ISO date on a `district-rainfall-forecast` weather passage. Mark a passage statewide only when the publication explicitly supports that scope.
 
 `GET /api/evidence?state_id=andhra-pradesh&district_id=krishna&on_date=2026-11-24` returns approved passages for an exact district and date. `covered` indicates that both reviewed paddy guidance and weather evidence apply to that date. The endpoint excludes archived and undated material from the dated lookup.
+
+## Deploy and smoke-test
+
+Run `docker compose up -d --build` with `AGRIRAG_ADMIN_PASSWORD` and any provider variables set in the deployment environment. Compose binds the app to loopback on port 8765 by default. A provider outside the container needs a reachable base URL. For a provider on the Docker host, use `host.docker.internal` and configure its listener to accept connections from Docker. For native deployment, run the same seed and index commands, then start Uvicorn as in [Run locally](#run-locally). Use `/healthz` as the HTTP health check.
+
+The single FastAPI service uses `./data` as the persistent mount for the SQLite evidence catalog, source snapshots, advisory and feedback logs, Chroma, and E5 weights. Keep that mount across deploys and back it up. For public hosting, use a persistent volume, TLS, and server-managed secrets. Keep one application instance per SQLite/Chroma volume.
+
+Run `python demo/run.py` against the running service. It replays the 24 November 2026 scenario with the two pilot districts, checks an expired 29 November forecast and an unsupported district, and compares equivalent English, Telugu, and Hindi answers. Use `--url` for a different deployment. Add `--smoke` with admin credentials set to submit test feedback and verify the protected admin view. See the [manual demo](demo/README.md) and [language verification record](demo/VERIFICATION.md).
+
+## Evaluate
+
+See the [measured evaluation](evaluation/REPORT.md) and its [labeled cases](evaluation/cases.json). Run `python evaluation/run.py --output evaluation/results.json` with the provider variables set. The 20 scenario families each have English, Telugu, and Hindi variants. The evaluator builds temporary SQLite catalogs for the wrong-district, archived, and conflict fixtures.
 
 ## Pilot evidence
 

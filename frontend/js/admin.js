@@ -271,3 +271,68 @@ work('Loading sources…', async () => {
   renderSources();
   return sources.length ? '' : 'Upload a source to begin.';
 });
+
+const feedbackLabels = { useful: 'Useful', unclear: 'Unclear', potentially_incorrect: 'Potentially incorrect' };
+let feedbackOffset = 0;
+let loadingFeedback = false;
+
+function feedbackRecord(record) {
+  const item = document.createElement('article');
+  item.className = 'feedback-record';
+  const { response } = record;
+  const heading = document.createElement('h3');
+  heading.textContent = feedbackLabels[record.rating] + ' · ' + response.language + ' · ' + record.recorded_at + ' UTC';
+  const question = document.createElement('p');
+  question.textContent = record.question;
+  const answer = document.createElement('p');
+  answer.lang = response.language;
+  answer.textContent = [response.suggested_action, response.explanation, response.follow_up_question].filter(Boolean).join(' ');
+  const mode = document.createElement('p');
+  mode.textContent = [response.status, response.generation_outcome, record.provider_model, response.advisory_id].filter(Boolean).join(' · ');
+  const sources = document.createElement('ul');
+  for (const evidence of response.evidence) {
+    const entry = document.createElement('li');
+    const url = officialLink(evidence.original_url, evidence.page_number);
+    if (url) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = evidence.title;
+      entry.append(link);
+    } else entry.textContent = evidence.title;
+    const metadata = [evidence.publisher, evidence.issue_date, evidence.version, evidence.section, evidence.passage_id].filter(Boolean);
+    if (metadata.length) entry.append(' · ' + metadata.join(' · '));
+    sources.append(entry);
+  }
+  item.append(heading, question, answer, mode, sources);
+  return item;
+}
+
+async function loadFeedback(reset = false) {
+  if (loadingFeedback) return;
+  loadingFeedback = true;
+  const status = byId('feedback-review-status');
+  status.textContent = 'Loading feedback…';
+  try {
+    const offset = reset ? 0 : feedbackOffset;
+    const response = await fetch('/api/admin/advisory-feedback?offset=' + offset, { cache: 'no-store' });
+    if (!response.ok) throw new Error('Feedback could not be loaded.');
+    const records = await response.json();
+    if (reset) byId('feedback-review-list').replaceChildren();
+    byId('feedback-review-list').append(...records.map(feedbackRecord));
+    feedbackOffset = offset + records.length;
+    byId('more-feedback').hidden = records.length < 50;
+    status.textContent = feedbackOffset ? '' : 'No feedback has been submitted.';
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    loadingFeedback = false;
+  }
+}
+
+byId('feedback-review').addEventListener('toggle', event => {
+  if (event.target.open && !feedbackOffset) loadFeedback(true);
+});
+byId('refresh-feedback').addEventListener('click', () => loadFeedback(true));
+byId('more-feedback').addEventListener('click', () => loadFeedback());
