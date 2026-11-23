@@ -110,6 +110,34 @@ INSTRUCTION = (
 )
 
 
+def gemini_advisory_schema(verified_claims):
+    def claim_schema(claim):
+        ids = claim["passage_ids"]
+        return {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["kind", "text", "passage_ids"],
+            "properties": {
+                "kind": {"type": "string", "enum": [claim["kind"]]},
+                "text": {"type": "string", "enum": claim["wording"]},
+                "passage_ids": {"type": "array", "items": {"type": "string", "enum": ids},
+                                "minItems": len(ids), "maxItems": len(ids)},
+            },
+        }
+
+    action, *explanation = [claim_schema(claim) for claim in verified_claims]
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["action", "explanation"],
+        "properties": {
+            "action": action,
+            "explanation": {"type": "array", "prefixItems": explanation,
+                            "minItems": len(explanation), "maxItems": len(explanation)},
+        },
+    }
+
+
 def render_with_provider(provider, session, response, wording):
     if provider is None:
         return response
@@ -126,8 +154,10 @@ def render_with_provider(provider, session, response, wording):
         } for claim in response.claims],
         "untrusted_passages": [row.model_dump(mode="json") for row in response.evidence],
     }
+    schema = (gemini_advisory_schema(payload["verified_claims"]) if isinstance(provider, GeminiProvider)
+              else ModelAdvisory.model_json_schema())
     try:
-        raw = provider.complete(INSTRUCTION, payload, ModelAdvisory.model_json_schema(), max_tokens=900)
+        raw = provider.complete(INSTRUCTION, payload, schema, max_tokens=900)
     except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
         return response.model_copy(update={"generation_outcome": "provider_error"})
 
