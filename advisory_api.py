@@ -11,6 +11,10 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from advisory_rules import decision, requested_day
+from evidence_index import EvidenceIndexUnavailable
+from evidence_store import ensure_evidence_schema
+
 ROOT = Path(__file__).resolve().parent
 CONFIG = json.loads((ROOT / "dist" / "coverage.json").read_text(encoding="utf-8"))
 FIXTURES = json.loads((ROOT / "demo_advisories.json").read_text(encoding="utf-8"))
@@ -20,7 +24,9 @@ DISTRICTS = {
 }
 CONTEXT_FIELDS = ("state_id", "district_id", "crop")
 Language = Literal["en", "te", "hi"]
-Status = Literal["supported", "conditional", "clarification", "coverageGap", "conflict"]
+DemoStatus = Literal["supported", "conditional", "clarification", "coverageGap", "conflict"]
+Status = Literal["supported", "conditional", "clarification", "coverageGap", "conflict",
+                 "insufficient_evidence", "conflicting_evidence"]
 Identifier = Annotated[str, Field(min_length=1, max_length=80)]
 Question = Annotated[str, Field(min_length=1, max_length=1200)]
 
@@ -36,7 +42,8 @@ class AdvisoryRequest(BaseModel):
     language: Language | None = None
     field_observations: Annotated[str, Field(max_length=1200)] | None = None
     session_id: UUID | None = None
-    demo_scenario: Status | None = None
+    demo_scenario: DemoStatus | None = None
+    requested_date: date | None = None
 
     @field_validator("crop")
     @classmethod
@@ -53,12 +60,7 @@ class AdvisoryRequest(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_location_and_initial_fields(self):
-        if self.state_id is not None and self.state_id not in DISTRICTS:
-            raise ValueError("Unsupported state")
-        if self.state_id is not None and self.district_id is not None:
-            if self.district_id not in DISTRICTS[self.state_id]:
-                raise ValueError("District is not covered by the selected state")
+    def validate_initial_fields(self):
         if self.session_id is None:
             required = (*CONTEXT_FIELDS, "crop_stage", "question", "language")
             missing = [field for field in required if getattr(self, field) is None]
@@ -70,6 +72,29 @@ class AdvisoryRequest(BaseModel):
 class DemoEvidence(BaseModel):
     title: str
     is_demo: Literal[True] = True
+
+
+class EvidenceReference(BaseModel):
+    is_demo: Literal[False] = False
+    title: str
+    publisher: str
+    original_url: str
+    source_id: str
+    passage_id: str
+    version: str
+    issue_date: date | None
+    valid_from: date | None
+    valid_until: date | None
+    state_id: str
+    district_id: str | None
+    crop: str | None
+    crop_stage: str | None
+    topic: str
+    page_number: int | None
+    section: str | None
+    sha256: str | None
+    excerpt: str
+    language: str
 
 
 class ValidityWindow(BaseModel):
@@ -87,9 +112,10 @@ class AdvisoryResponse(BaseModel):
     explanation: str
     follow_up_question: str | None
     follow_up_field: Literal["crop_stage", "field_observations"] | None
-    evidence: list[DemoEvidence]
+    evidence: list[EvidenceReference | DemoEvidence]
     validity_window: ValidityWindow | None
-    is_demo: Literal[True] = True
+    is_demo: bool
+    requested_date: date | None = None
 
 
 class AdvisorySession(BaseModel):
@@ -101,10 +127,12 @@ class AdvisorySession(BaseModel):
     question: str
     language: Language
     field_observations: str | None = None
-    demo_scenario: Status | None = None
+    demo_scenario: DemoStatus | None = None
+    requested_date: date | None = None
+    date_explicit: bool | None = None
 
 
-def evaluate(session: AdvisorySession) -> AdvisoryResponse:
+def evaluate_demo(session: AdvisorySession) -> AdvisoryResponse:
     question = session.question.casefold()
     follow_up_field = None
     scenario = session.demo_scenario
@@ -138,12 +166,30 @@ def evaluate(session: AdvisorySession) -> AdvisoryResponse:
         follow_up_field=follow_up_field,
         evidence=[DemoEvidence(title=source[session.language]) for source in fixture.get("sources", [])],
         validity_window=fixture.get("validity_window"),
+        is_demo=True,
+    )
+
+
+def evaluate(session: AdvisorySession, connection, advisory_id=None) -> AdvisoryResponse:
+    supported_location = session.district_id in DISTRICTS.get(session.state_id, set())
+    if session.demo_scenario and supported_location:
+        return evaluate_demo(session)
+
+    try:
+        result = decision(session, connection, supported_location)
+    except EvidenceIndexUnavailable as exc:
+        raise HTTPException(503, detail="evidence_index_unavailable") from exc
+    return AdvisoryResponse(
+        advisory_id=advisory_id or uuid4(), session_id=session.session_id, language=session.language,
+        crop_stage=session.crop_stage, requested_date=session.requested_date, is_demo=False, **result,
     )
 
 
 def load_session(connection, request: AdvisoryRequest) -> AdvisorySession:
     if request.session_id is None:
-        return AdvisorySession(session_id=uuid4(), **request.model_dump(exclude={"session_id"}))
+        session = AdvisorySession(session_id=uuid4(), **request.model_dump(exclude={"session_id"}))
+        session.requested_date, session.date_explicit = requested_day(session.question, request.requested_date)
+        return session
 
     row = connection.execute(
         "SELECT context FROM advisory_sessions WHERE session_id = ?", (str(request.session_id),)
@@ -151,13 +197,15 @@ def load_session(connection, request: AdvisoryRequest) -> AdvisorySession:
     if row is None:
         raise HTTPException(404, detail="session_not_found")
     session = AdvisorySession.model_validate_json(row[0])
-    if session.district_id not in DISTRICTS.get(session.state_id, set()):
-        raise HTTPException(409, detail="session_location_unavailable")
     for field in (*CONTEXT_FIELDS, "demo_scenario"):
         value = getattr(request, field)
         if value is not None and value != getattr(session, field):
             raise HTTPException(409, detail="session_context_mismatch")
 
+    if session.date_explicit is None:
+        session.requested_date, session.date_explicit = requested_day(session.question, request.requested_date)
+    elif request.requested_date and request.requested_date != session.requested_date:
+        raise HTTPException(409, detail="session_context_mismatch")
     # A follow-up supplies context for the question already stored in this session.
     if request.crop_stage and request.crop_stage != "unknown":
         session.crop_stage = request.crop_stage
@@ -179,7 +227,9 @@ def create_advisory(
     database = Path(os.environ.get("AGRIRAG_DB_PATH", ROOT / "data" / "advisories.sqlite3"))
     database.parent.mkdir(parents=True, exist_ok=True)
 
-    with closing(sqlite3.connect(database)) as connection, connection:
+    with closing(sqlite3.connect(database, timeout=20)) as connection, connection:
+        connection.row_factory = sqlite3.Row
+        ensure_evidence_schema(connection)
         connection.executescript("""
             CREATE TABLE IF NOT EXISTS advisory_sessions (
                 session_id TEXT PRIMARY KEY,
@@ -198,19 +248,30 @@ def create_advisory(
                 "SELECT fingerprint, response FROM advisory_retries WHERE request_key = ?", (idempotency_key,)
             ).fetchone()
             if cached:
-                if fingerprint != cached[0]:
+                # Demo retries created before requested_date was added used the older schema.
+                legacy_fingerprint = sha256(request.model_dump_json(exclude={"requested_date"}).encode("utf-8")).hexdigest()
+                if fingerprint != cached[0] and (request.requested_date is not None or legacy_fingerprint != cached[0]):
                     raise HTTPException(409, detail="request_key_reused")
-                return AdvisoryResponse.model_validate_json(cached[1])
+                recorded = json.loads(cached[1])
+                if "context" not in recorded:
+                    return AdvisoryResponse.model_validate(recorded)
+                # Recheck SQLite on exact retries. An archived source must never
+                # leak back through the previously cached advisory.
+                context = AdvisorySession.model_validate(recorded["context"])
+                return evaluate(context, connection, UUID(recorded["advisory_id"]))
 
         session = load_session(connection, request)
-        response = evaluate(session)
+        response = evaluate(session, connection)
         connection.execute("""
             INSERT INTO advisory_sessions (session_id, context) VALUES (?, ?)
             ON CONFLICT(session_id) DO UPDATE SET context = excluded.context
         """, (str(session.session_id), session.model_dump_json()))
         if idempotency_key:
+            saved = response.model_dump_json() if response.is_demo else json.dumps({
+                "context": session.model_dump(mode="json"), "advisory_id": str(response.advisory_id),
+            })
             connection.execute(
                 "INSERT INTO advisory_retries VALUES (?, ?, ?)",
-                (idempotency_key, fingerprint, response.model_dump_json()),
+                (idempotency_key, fingerprint, saved),
             )
         return response

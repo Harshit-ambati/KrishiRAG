@@ -76,6 +76,8 @@ textarea::placeholder { color: #607068; opacity: 1; }
 .result-status { display: inline-block; border-radius: 6px; padding: 4px 9px; font-size: .87rem; font-weight: 700; background: var(--soft-green); color: var(--green); }
 .result-status[data-status="conditional"], .result-status[data-status="coverageGap"] { background: #f8ecd3; color: #6b4c10; }
 .result-status[data-status="conflict"] { background: #fbe8e5; color: #852e28; }
+.result-status[data-status="conflicting_evidence"] { background: #fbe8e5; color: #852e28; }
+.result-status[data-status="insufficient_evidence"] { background: #f8ecd3; color: #6b4c10; }
 .result-status[data-status="clarification"] { background: #e5eef5; color: #284763; }
 .result-location { margin-top: 6px; color: var(--muted); font-size: .9rem; }
 .advisory h3 { margin: 12px 0 2px; font-size: 1rem; }

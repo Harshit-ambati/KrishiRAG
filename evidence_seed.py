@@ -37,12 +37,26 @@ def seed(snapshots: Path | None):
                         "UPDATE source_documents SET content = ? WHERE id = ? AND sha256 = ? AND content IS NULL",
                         (files[document_id], document_id, record["sha256"]),
                     )
+                # Add structured fields to the same originally audited, still-published records.
+                for index, passage in enumerate(record["passages"], start=1):
+                    rainfall = passage.get("daily_rainfall")
+                    connection.execute("""
+                        UPDATE evidence_passages
+                        SET stage_id = COALESCE(stage_id, ?), decision_code = COALESCE(decision_code, ?),
+                            daily_rainfall = COALESCE(daily_rainfall, ?)
+                        WHERE id = ? AND document_id = ? AND status = 'approved' AND content = ?
+                          AND EXISTS (
+                              SELECT 1 FROM source_documents d WHERE d.id = ? AND d.sha256 = ? AND d.status = 'approved'
+                          )
+                    """, (passage.get("stage_id"), passage.get("decision_code"), json.dumps(rainfall) if rainfall else None,
+                          f"{document_id}-{index}", document_id, passage["content"], document_id, record["sha256"]))
                 continue
             fields = (*PASSAGE_FIELDS, "id", "document_id", "status", "extraction_note")
             for index, passage in enumerate(record["passages"], start=1):
                 values = {
                     **passage, "id": f"{document_id}-{index}", "document_id": document_id,
-                    "status": "approved", "reviewed": True, "include": True,
+                    "status": "approved", "reviewed": True, "include": True, "statewide": passage.get("statewide", False),
+                    "daily_rainfall": json.dumps(passage["daily_rainfall"]) if passage.get("daily_rainfall") else None,
                     "extraction_note": "Manually reviewed against the rendered original PDF.",
                 }
                 connection.execute(

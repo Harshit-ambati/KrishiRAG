@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import secrets
 import sqlite3
@@ -15,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 from pypdf import PdfReader
 
 from advisory_api import CONFIG, DISTRICTS
+from advisory_rules import ACTIONS, WEATHER_TOPIC
 from evidence_store import DOCUMENT_COLUMNS, DOCUMENT_FIELDS, PASSAGE_FIELDS, evidence_db
 
 ROOT = Path(__file__).resolve().parent
@@ -65,6 +67,10 @@ class PassageReview(Dates):
     crop: AreaId | None = None
     crop_stage: Short = ""
     topic: Short = ""
+    stage_id: AreaId | None = None
+    statewide: bool = False
+    decision_code: AreaId | None = None
+    daily_rainfall: Annotated[dict[date, Annotated[float, Field(ge=0, le=3000, allow_inf_nan=False)]], Field(max_length=366)] | None = None
     content: Annotated[str, Field(max_length=16000)] = ""
     include: bool = False
     reviewed: bool = False
@@ -121,6 +127,8 @@ def get_detail(connection, document_id):
     document["passages"] = [dict(row) for row in connection.execute(
         "SELECT * FROM evidence_passages WHERE document_id = ? ORDER BY page_number, rowid", (document_id,)
     )]
+    for passage in document["passages"]:
+        passage["daily_rainfall"] = json.loads(passage["daily_rainfall"] or "null")
     document["has_snapshot"] = bool(connection.execute(
         "SELECT content IS NOT NULL FROM source_documents WHERE id = ?", (document_id,)
     ).fetchone()[0])
@@ -180,7 +188,8 @@ def admin_page():
 
 @admin.get("/api/admin/evidence/config")
 def admin_config():
-    return {"coverage": CONFIG["coverage"], "crops": CONFIG["crops"]}
+    return {"coverage": CONFIG["coverage"], "crops": CONFIG["crops"], "stages": CONFIG["stages"],
+            "decisions": {topic: list(codes) for topic, codes in ACTIONS.items()}}
 
 
 @admin.get("/api/admin/evidence")
@@ -264,9 +273,21 @@ def save_passage(connection, document, metadata, passage):
         raise HTTPException(422, "A passage district is not enabled for the selected state.")
     if passage.crop and passage.crop not in CONFIG["crops"]:
         raise HTTPException(422, "Choose a configured passage crop.")
+    if passage.stage_id and passage.stage_id not in CONFIG["stages"]:
+        raise HTTPException(422, "Choose a configured crop stage.")
+    if passage.statewide and passage.district_id:
+        raise HTTPException(422, "District-specific passages cannot also be marked statewide.")
+    if passage.decision_code and passage.decision_code not in ACTIONS.get(passage.topic, {}):
+        raise HTTPException(422, "The reviewed decision does not match the passage topic.")
+    if passage.daily_rainfall and (passage.kind != "weather" or passage.topic != WEATHER_TOPIC):
+        raise HTTPException(422, "Daily rainfall belongs on district-rainfall-forecast weather passages.")
     if passage.page_number and document["page_count"] and passage.page_number > document["page_count"]:
         raise HTTPException(422, "A passage page is outside the uploaded PDF.")
     saved = passage.model_dump(mode="json")
+    if saved["daily_rainfall"]:
+        saved["daily_rainfall"] = json.dumps(saved["daily_rainfall"], sort_keys=True)
+    else:
+        saved["daily_rainfall"] = None
     values = [saved[field] for field in PASSAGE_FIELDS]
     if passage.id:
         assignments = ", ".join(f"{field} = ?" for field in PASSAGE_FIELDS)
@@ -307,6 +328,9 @@ def validate_publication(document, passage):
     start = passage["valid_from"] or document["valid_from"]
     if passage["kind"] == "weather" and not (passage["district_id"] and document["issue_date"] and start):
         raise HTTPException(422, "District weather passages need an issue date, district and explicit validity window.")
+    end = passage["valid_until"] or document["valid_until"]
+    if passage["daily_rainfall"] and any(not start <= day <= end for day in passage["daily_rainfall"]):
+        raise HTTPException(422, "Every rainfall date must fall within the effective forecast window.")
     if start and document["issue_date"] and start < document["issue_date"]:
         raise HTTPException(422, "Passage validity cannot begin before the source issue date.")
     if passage["valid_from"] and document["valid_from"] and (

@@ -49,7 +49,7 @@ class AdvisoryApiTests(unittest.TestCase):
 
     def test_validates_new_requests(self):
         for changes in (
-            {"state_id": "telangana"}, {"district_id": "eluru"}, {"language": "fr"},
+            {"language": "fr"},
             {"crop_stage": "unknown-stage"}, {"crop": "maize"}, {"question": "   "},
             {"question": None}, {"district_id": None},
         ):
@@ -70,7 +70,7 @@ class AdvisoryApiTests(unittest.TestCase):
                 self.assertEqual(result["validity_window"] is not None, status == "supported")
 
     def test_clarification_preserves_original_question_and_context(self):
-        initial = self.create(crop_stage="unknown")
+        initial = self.create(crop_stage="unknown", demo_scenario="supported")
         self.assertEqual(initial["status"], "clarification")
         self.assertEqual(initial["follow_up_field"], "crop_stage")
 
@@ -92,7 +92,7 @@ class AdvisoryApiTests(unittest.TestCase):
         self.assertEqual(stored["field_observations"], "Water is standing.")
 
     def test_observation_follow_up_and_session_conflicts(self):
-        initial = self.create(question="When should I spray?")
+        initial = self.create(question="When should I spray?", demo_scenario="conditional")
         self.assertEqual(initial["follow_up_field"], "field_observations")
         updated = self.follow_up(initial["session_id"], field_observations="It is still raining.")
         self.assertEqual(updated["status"], "conditional")

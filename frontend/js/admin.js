@@ -1,7 +1,7 @@
 const byId = id => document.getElementById(id);
 const metadataFields = Array.from(document.querySelectorAll('#review-fields > .field-grid [name], #review-fields > .check [name]'));
 const statusText = { draft: 'Draft', approved: 'Published', archived: 'Archived' };
-const nullable = new Set(['original_url', 'state_id', 'district_id', 'crop', 'issue_date', 'valid_from', 'valid_until']);
+const nullable = new Set(['original_url', 'state_id', 'district_id', 'crop', 'stage_id', 'decision_code', 'issue_date', 'valid_from', 'valid_until']);
 let config;
 let sources = [];
 let selected;
@@ -93,6 +93,13 @@ function addPassage(passage = {}, expand = false) {
   districtOptions(row.querySelector('[name="district_id"]'), passage.district_id);
   setOptions(row.querySelector('[name="crop"]'), 'No crop specified',
     Object.entries(config.crops).map(([id, names]) => ({ id, label: names.en })), passage.crop);
+  setOptions(row.querySelector('[name="stage_id"]'), 'No stage mapped',
+    Object.entries(config.stages).map(([id, names]) => ({ id, label: names.en })), passage.stage_id);
+  setOptions(row.querySelector('[name="decision_code"]'), 'No reviewed decision',
+    Object.entries(config.decisions).flatMap(([topic, codes]) => codes.map(id => ({
+      id, label: topic + ' · ' + id.replaceAll('_', ' '),
+    }))), passage.decision_code);
+  row.querySelector('[name="daily_rainfall"]').value = passage.daily_rainfall ? JSON.stringify(passage.daily_rainfall) : '';
 
   const page = passage.page_number ? 'PDF page ' + passage.page_number : 'Passage';
   summary.textContent = [page, passage.section, passage.status === 'approved' ? 'Published' : 'Draft'].filter(Boolean).join(' · ');
@@ -186,7 +193,14 @@ function reviewPayload() {
     id: row.dataset.id || null,
     ...readFields(row.querySelectorAll('[name]')),
   }));
-  for (const passage of passages) passage.language ||= null;
+  for (const passage of passages) {
+    passage.language ||= null;
+    try {
+      passage.daily_rainfall = passage.daily_rainfall ? JSON.parse(passage.daily_rainfall) : null;
+    } catch {
+      throw new Error('Enter rainfall as JSON using forecast dates as keys and amounts in mm as values.');
+    }
+  }
   return { revision: selected.revision, metadata: readFields(metadataFields), passages };
 }
 

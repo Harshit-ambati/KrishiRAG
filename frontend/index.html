@@ -76,7 +76,7 @@
             <textarea id="observation" name="observation" rows="2" maxlength="1200" aria-describedby="observation-error" data-placeholder="observationPlaceholder" placeholder="For example, water is still standing after yesterday’s rain."></textarea>
             <p class="field-error" id="observation-error" hidden></p>
           </div>
-          <button id="submit" class="primary" type="submit" aria-controls="result-content"><span data-text="submit" id="submit-label">Get demo advisory</span></button>
+          <button id="submit" class="primary" type="submit" aria-controls="result-content"><span data-text="submit" id="submit-label">Get advisory</span></button>
           <p class="request-error" id="request-error" role="alert" hidden></p>
         </form>
       </section>
@@ -84,9 +84,9 @@
       <section class="card result-card" aria-labelledby="result-title">
         <div class="result-heading">
           <h2 id="result-title" data-text="resultTitle">Advisory result</h2>
-          <span class="demo-badge" data-text="demo">Mock demo</span>
+          <span class="demo-badge" id="demo-badge" data-text="demo" hidden>Mock demo</span>
         </div>
-        <p class="section-description" data-text="demoDescription">Answers use demo fixtures. Choose a scenario to test a specific result.</p>
+        <p class="section-description" data-text="demoDescription">Uses reviewed evidence by default. Choose a demo scenario to try an example.</p>
         <div class="field scenario-field">
           <label for="scenario" data-text="scenario">Mock scenario</label>
           <select id="scenario" aria-controls="result-content"></select>
@@ -95,12 +95,13 @@
         <div id="result-content" aria-busy="false">
           <div id="result-placeholder" class="result-placeholder">
             <span class="placeholder-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H6V3zm7 0v5h4M9 12h6m-6 4h6"/></svg></span>
-            <p id="placeholder-title" class="placeholder-title" data-text="emptyTitle">Your demo result will appear here</p>
-            <p id="placeholder-description" data-text="emptyDescription">Fill in the form and submit it to see the selected example.</p>
+            <p id="placeholder-title" class="placeholder-title" data-text="emptyTitle">Your result will appear here</p>
+            <p id="placeholder-description" data-text="emptyDescription">Fill in the form and submit it to check for applicable evidence.</p>
           </div>
           <div id="advisory" class="advisory" hidden>
             <p id="result-status" class="result-status"></p>
             <p id="result-location" class="result-location"></p>
+            <p id="result-requested-date" class="result-location" hidden><span data-text="requestedDate">Advisory date</span> <time id="advisory-date"></time></p>
             <h3 data-text="action">Suggested action</h3>
             <p id="result-action"></p>
             <h3 data-text="explanation">Why this result?</h3>
@@ -112,9 +113,9 @@
             </section>
             <section class="sources" aria-labelledby="source-title">
               <h3 id="source-title" data-text="sources">Sources</h3>
-              <p id="no-sources" data-text="noSources" hidden>No sources are attached to this mock scenario.</p>
+              <p id="no-sources" data-text="noSources" hidden>No sources are attached to this result.</p>
               <ul id="result-sources"></ul>
-              <p id="validity" class="validity" hidden><span data-text="validity">Example validity</span> <time id="validity-start"></time> – <time id="validity-date"></time></p>
+              <p id="validity" class="validity" hidden><span data-text="validity">Evidence validity</span> <time id="validity-start"></time> – <time id="validity-date"></time></p>
             </section>
           </div>
         </div>

@@ -25,6 +25,8 @@
         "kind": "advisory",
         "crop": "paddy",
         "crop_stage": "Milk to grain hardening",
+        "stage_id": "grain-filling",
+        "decision_code": "maintain_moisture",
         "topic": "irrigation",
         "content": "Keep enough moisture in the soil as the rice grain fills and hardens. Avoid overwatering and standing water.",
         "review_notes": "Checked the district header, rice row and stage column visually. Paraphrase. The source provides no irrigation depth or schedule."
@@ -36,6 +38,8 @@
         "kind": "advisory",
         "crop": "paddy",
         "crop_stage": "Physiological maturity (action condition in the milk-to-grain-hardening row)",
+        "stage_id": "mature",
+        "decision_code": "harvest_at_maturity",
         "topic": "harvest",
         "content": "Harvest at physiological maturity, when roughly 80–85% of grains in a panicle are mature. Dry grain to 12–14% moisture before storage.",
         "review_notes": "Checked both percentages and the maturity qualifier against the page image. Paraphrase. This bullet does not set a weather-safe harvest time."
@@ -47,6 +51,8 @@
         "kind": "advisory",
         "crop": "paddy",
         "crop_stage": "Milk to grain hardening",
+        "stage_id": "grain-filling",
+        "decision_code": "maintain_moisture",
         "topic": "irrigation",
         "content": "Keep enough moisture in the soil as the rice grain fills and hardens. Avoid overwatering and standing water.",
         "review_notes": "Checked the district header, rice row and stage column visually. Paraphrase. The source provides no irrigation depth or schedule."
@@ -58,6 +64,8 @@
         "kind": "advisory",
         "crop": "paddy",
         "crop_stage": "Physiological maturity (action condition in the milk-to-grain-hardening row)",
+        "stage_id": "mature",
+        "decision_code": "harvest_at_maturity",
         "topic": "harvest",
         "content": "Harvest at physiological maturity, when roughly 80–85% of grains in a panicle are mature. Dry grain to 12–14% moisture before storage.",
         "review_notes": "Checked both percentages and the maturity qualifier against the page image. Paraphrase. This bullet does not set a weather-safe harvest time."
@@ -90,6 +98,7 @@
         "language": "en",
         "kind": "weather",
         "topic": "district-rainfall-forecast",
+        "daily_rainfall": { "2026-11-24": 1.0, "2026-11-25": 1.8, "2026-11-26": 1.3, "2026-11-27": 1.0, "2026-11-28": 0.4 },
         "content": "Issued 23 November. District rainfall forecast for 24, 25, 26, 27 and 28 November respectively (mm): 1.0, 1.8, 1.3, 1.0, 0.4.",
         "review_notes": "Compared the five dates and rainfall cells visually with the English table and cross-checked the parallel Telugu district block. Forecast values, not observed rain."
       },
@@ -100,6 +109,7 @@
         "language": "en",
         "kind": "weather",
         "topic": "district-rainfall-forecast",
+        "daily_rainfall": { "2026-11-24": 1.9, "2026-11-25": 3.8, "2026-11-26": 1.8, "2026-11-27": 1.5, "2026-11-28": 0.7 },
         "content": "Issued 23 November. District rainfall forecast for 24, 25, 26, 27 and 28 November respectively (mm): 1.9, 3.8, 1.8, 1.5, 0.7.",
         "review_notes": "Compared the five dates and rainfall cells visually with the English table and cross-checked the parallel Telugu district block. Forecast values, not observed rain."
       }
@@ -127,6 +137,8 @@
         "kind": "background",
         "crop": "paddy",
         "crop_stage": "Post-harvest",
+        "stage_id": "post-harvest",
+        "decision_code": "dry_grain_to_14",
         "topic": "grain-drying",
         "content": "కోత తర్వాత నిల్వకు ముందు వరి ధాన్యాన్ని 14 శాతం తేమ వచ్చే వరకు ఆరబెట్టాలని వ్యాసం సూచిస్తుంది.",
         "review_notes": "Telugu paraphrase from the rendered page, not legacy extracted text. The visible second bullet gives 14% moisture. Geographic scope and validity are not extended from the author's affiliation or publication month."

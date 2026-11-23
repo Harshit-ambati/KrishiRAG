@@ -98,12 +98,16 @@
           <label class="field">Evidence type<select name="kind"><option value="background">Background</option><option value="advisory">Crop advisory</option><option value="weather">District weather</option></select></label>
           <label class="field">Crop<select name="crop"></select></label>
           <label class="field">Crop stage as stated<input name="crop_stage" maxlength="240"></label>
+          <label class="field">Applicable stage in the farmer form<select name="stage_id"></select></label>
           <label class="field">Topic<input name="topic" maxlength="240"></label>
+          <label class="field">Reviewed decision<select name="decision_code"></select></label>
           <label class="field">Valid from (optional)<input name="valid_from" type="date"></label>
           <label class="field">Valid through (optional)<input name="valid_until" type="date"></label>
+          <label class="field full-field">Daily district rainfall forecast, in mm (optional JSON)<textarea name="daily_rainfall" rows="2" placeholder='{"2026-11-24": 1.9}'></textarea></label>
           <label class="field full-field">Reviewed passage or paraphrase<textarea name="content" rows="4" maxlength="16000"></textarea></label>
           <label class="field full-field">Review notes<textarea name="review_notes" rows="2" maxlength="1800"></textarea></label>
         </div>
+        <label class="check"><input name="statewide" type="checkbox"> The source specifically supports use across the selected state.</label>
         <label class="check"><input name="reviewed" type="checkbox"> I compared the text and locator with the original passage.</label>
         <label class="check"><input name="include" type="checkbox"> Include this passage when publishing.</label>
       </fieldset>

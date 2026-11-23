@@ -11,7 +11,7 @@ python -m pip install -r requirements.txt
 python -m uvicorn main:app --host 127.0.0.1 --port 8765
 ```
 
-Open the [farmer interface](http://127.0.0.1:8765). It uses plain HTML, CSS, and JavaScript without a build step or API key. The form and its results are available in English, Telugu, and Hindi. The demo scenario selector demonstrates five statuses. In automatic mode, a deterministic fixture matches the question and checks for missing field details. The resulting advice and sources are examples.
+Open the [farmer interface](http://127.0.0.1:8765). It uses plain HTML, CSS, and JavaScript without a build step or API key. The form and its results are available in English, Telugu, and Hindi. The default mode uses reviewed evidence. The scenario selector still offers labeled demo examples.
 
 Open the [evidence archive](http://127.0.0.1:8765/archive/) for the dated lookup. Choose **View archived advisory** to load an example for Krishna on 3 November 2026. The demo and the archive share the state and district configuration. Set `placeholder: true` on a district to label it as a demo district in the farmer interface.
 
@@ -25,20 +25,33 @@ Open the [API documentation](http://127.0.0.1:8765/docs) to try `POST /api/advis
   "district_id": "krishna",
   "crop": "paddy",
   "crop_stage": "unknown",
-  "question": "Do I need to irrigate after rain?",
+  "question": "Do I need to irrigate on 2026-11-24?",
   "language": "en"
 }
 ```
 
-When the response asks for the crop stage, send `session_id` from the response and `crop_stage`, such as `tillering`. When it asks about field conditions, send `session_id` and `field_observations`. The session keeps the original question, state, district, and crop. A follow-up can set `language` to `en`, `te`, or `hi`. To ask a new question, omit `session_id`.
+When the response asks for the crop stage, send `session_id` from the response and `crop_stage`, such as `grain-filling`. When it asks about field conditions, send `session_id` and `field_observations`, such as “Standing water” or “The soil is drying.” Relative dates are interpreted in Asia/Kolkata and kept with the original question across follow-ups. An optional `requested_date` on a new session takes precedence over the question date. A follow-up can set `language` to `en`, `te`, or `hi`. To ask a new question, omit `session_id`.
 
-For a specific demo, add `demo_scenario` when starting the session. The available values are `supported`, `conditional`, `clarification`, `coverageGap`, and `conflict`. An unknown crop stage prompts for clarification first. The optional `Idempotency-Key` request header replays the same response when a client retries the same body and key.
+For a specific demo, add `demo_scenario` when starting the session. The available values are `supported`, `conditional`, `clarification`, `coverageGap`, and `conflict`. In evidence mode, the API returns `insufficient_evidence` for unsupported locations or unavailable evidence and `conflicting_evidence` when applicable sources disagree. An exact retry with `Idempotency-Key` retains its advisory ID and rechecks current evidence approval.
 
 The server stores the original question and farm context in `data/advisories.sqlite3` by default. Set `AGRIRAG_DB_PATH` to use a different SQLite file.
 
+## Prepare the evidence index
+
+From the project folder, load the reviewed catalog and build Chroma's local vector index.
+
+```sh
+python evidence_seed.py
+python evidence_index.py --download-model
+```
+
+The index uses the pinned multilingual E5-small ONNX model on CPU. The setup command verifies the downloaded model and tokenizer checksums. The model files default to `data/e5-small` and the Chroma directory defaults to the SQLite path with a `.chroma` suffix. Set `AGRIRAG_E5_DIR` or `AGRIRAG_CHROMA_PATH` to change those paths. Advisory requests run locally after setup and index newly published candidates as needed.
+
+SQLite supplies the eligible passage IDs and the citation metadata. Chroma ranks only those IDs for the requested topic. Dated weather decisions require an exact district and a reviewed forecast value for that date. General crop guidance can apply at state scope when the reviewer has explicitly verified that scope. The rules use reviewer-selected stage and decision codes such as `grain-filling` and `maintain_moisture`. A more specific applicable scope takes precedence, and a newer applicable edition of the same publication replaces its older edition. Incomparable conflicting sources are cited and the system withholds an action.
+
 ## Verify
 
-Run `node --test` to verify the archive retrieval, or install the API test dependencies and run the Python suite.
+Run `node --test` to verify the archive retrieval, or install the API test dependencies and run the Python suite. The real multilingual ranking test runs when the E5 model is installed.
 
 ```sh
 python -m pip install -r requirements-dev.txt
@@ -52,6 +65,8 @@ The [pilot audit](EVIDENCE_AUDIT.md) records the reviewed districts, source edit
 Set `AGRIRAG_ADMIN_PASSWORD` before starting FastAPI and open [the evidence admin](http://127.0.0.1:8765/admin). The username defaults to `admin` and can be set with `AGRIRAG_ADMIN_USER`. Use HTTPS when serving outside loopback.
 
 Upload a PDF or UTF-8 text document to create a draft. Open the publisher’s original or download the stored copy, complete the source metadata, and record which passages you checked. Include only the passages to publish. For a scan, mixed-column table, or legacy Telugu encoding, use the rendered original to type or correct the passage and record the locator. Publishing locks the version. Upload a replacement as a new version, then archive the old one and select its successor.
+
+For use by the decision engine, record the stated crop stage and map it to a supported farmer-form stage. Select a decision code only when the passage supports that action. For rainfall, record the verified daily values in millimetres keyed by ISO date on a `district-rainfall-forecast` weather passage. Mark a passage statewide only when the publication explicitly supports that scope.
 
 `GET /api/evidence?state_id=andhra-pradesh&district_id=krishna&on_date=2026-11-24` returns approved passages for an exact district and date. `covered` indicates that both reviewed paddy guidance and weather evidence apply to that date. The endpoint excludes archived and undated material from the dated lookup.
 

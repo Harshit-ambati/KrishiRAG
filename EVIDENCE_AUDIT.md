@@ -12,4 +12,4 @@ I verified the original publisher URLs by downloading the PDFs. The IMD endpoint
 
 The audited IMD URLs are rotating endpoints. Preserve the matching original PDF when verifying a new edition. The local evidence database holds the three verified snapshots. The checked-in seed can recreate the reviewed records without redistributing the full PDFs. A redeployment can attach an original only if its SHA-256 matches the seed.
 
-This audit establishes no additional district coverage, spray-timing guidance, irrigation volumes, or rolling weather feed. University background passages cannot establish district coverage. The farmer question endpoint continues to use labeled demo fixtures. The approved catalog is available separately through the dated evidence lookup.
+This audit establishes no additional district coverage, spray-timing guidance, irrigation volumes, or rolling weather feed. The university background passage is excluded from district decisions because its geographic applicability is unspecified. The farmer question endpoint uses the approved catalog by default. The explicitly selected demo scenarios remain labeled.

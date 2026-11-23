@@ -63,7 +63,7 @@ function renderLanguage() {
   ], copy.selectStage);
   setOptions(scenarioSelect, [
     { value: '', label: copy.automatic },
-    ...Object.entries(copy.statuses).map(([value, label]) => ({ value, label })),
+    ...['supported', 'conditional', 'clarification', 'coverageGap', 'conflict'].map(value => ({ value, label: copy.statuses[value] })),
   ]);
   fields.crop.value = copy.cropValue;
 
@@ -116,6 +116,7 @@ function renderResult() {
   error.textContent = requestError ? copy[requestError] : '';
   byId('result-placeholder').hidden = Boolean(result);
   byId('advisory').hidden = !result;
+  byId('demo-badge').hidden = !(result ? result.answer.is_demo : scenarioSelect.value);
 
   if (!result) {
     byId('placeholder-title').textContent = pending ? copy.loadingTitle : copy.emptyTitle;
@@ -137,6 +138,8 @@ function renderResult() {
   byId('follow-up').hidden = !answer.follow_up_question;
   byId('answer-follow-up').disabled = pending;
   byId('result-follow-up').textContent = answer.follow_up_question ?? '';
+  byId('result-requested-date').hidden = !answer.requested_date;
+  renderDate('advisory-date', answer.requested_date);
   for (const id of ['result-status', 'result-action', 'result-explanation', 'result-follow-up', 'result-sources']) {
     byId(id).lang = answer.language;
   }
@@ -144,7 +147,21 @@ function renderResult() {
   const sources = byId('result-sources');
   sources.replaceChildren(...answer.evidence.map(source => {
     const item = document.createElement('li');
-    item.textContent = source.title;
+    item.lang = source.language === 'mul' ? '' : source.language ?? answer.language;
+    if (source.original_url?.startsWith('https://')) {
+      const link = document.createElement('a');
+      const url = new URL(source.original_url);
+      if (source.page_number) url.hash = 'page=' + source.page_number;
+      link.href = url.href;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = source.title;
+      item.append(link);
+      const locator = [source.publisher, source.version, source.page_number && copy.page + ' ' + source.page_number, source.section].filter(Boolean);
+      if (locator.length) item.append(' · ' + locator.join(' · '));
+    } else {
+      item.textContent = source.title;
+    }
     return item;
   }));
   sources.hidden = !answer.evidence.length;
