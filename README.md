@@ -60,7 +60,7 @@ AgriRAG supports the Gemini and OpenAI APIs for structured rendering. For Docker
 | `AGRIRAG_OPENAI_MODEL` | Optional OpenAI model override. Defaults to `gpt-4.1-mini`. |
 | `AGRIRAG_LLM_TIMEOUT` | Request timeout in seconds, defaults to 20 |
 
-The selected provider receives the question, farm context, and eligible passages for covered requests. AgriRAG validates the generated wording and citations before display. The app uses its cited verified templates when a key is absent, the provider fails, or the output fails validation. The historical Qwen report applies to its recorded model and fixtures.
+The selected provider receives the question, farm context, and eligible passages for covered requests. AgriRAG validates the generated wording and citations before display. The app uses its cited verified templates when a key is absent, the provider fails, or the output fails validation. When the provider returns HTTP 429, the API records `generation_outcome: "provider_limit"` and the result shows a localized usage-limit notice alongside the verified answer. The historical Qwen report applies to its recorded model and fixtures.
 
 ## Verify live weather in Postman
 

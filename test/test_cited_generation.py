@@ -10,6 +10,7 @@ from uuid import uuid4
 import httpx
 from fastapi.testclient import TestClient
 
+from advisory_generation import ChatProvider, GeminiProvider
 from evidence_seed import seed
 from evidence_store import evidence_db
 from main import app
@@ -118,6 +119,30 @@ class CitedGenerationTests(unittest.TestCase):
         self.provider.complete.assert_not_called()
         self.provider.complete.side_effect = httpx.ReadTimeout("provider stopped responding")
         self.assertEqual(self.send()["generation_outcome"], "provider_error")
+
+    def test_provider_usage_limit_returns_cited_fallback_without_upstream_details(self):
+        cases = (
+            (GeminiProvider, {"status": "RESOURCE_EXHAUSTED"}),
+            (ChatProvider, {"code": "insufficient_quota"}),
+            (ChatProvider, {"code": "rate_limit_exceeded"}),
+        )
+        for provider_class, details in cases:
+            with self.subTest(provider=provider_class.__name__, details=details):
+                provider = provider_class("https://provider.example", "test-model")
+                upstream = httpx.Response(429, json={"error": {"message": "private diagnostic", **details}},
+                                          request=httpx.Request("POST", "https://provider.example"))
+                with (
+                    patch("advisory_api.ChatProvider.configured", return_value=provider),
+                    patch("advisory_generation.httpx.post", return_value=upstream),
+                ):
+                    result = self.send()
+                self.assertEqual(result["generation_outcome"], "provider_limit")
+                self.assertEqual(result["status"], "supported")
+                self.assertEqual(result["decision_code"], "avoid_irrigation_while_standing")
+                self.assertTrue(result["claims"])
+                self.assertEqual([ref["passage_id"] for ref in result["evidence"]],
+                                 ["imd-agromet-ap-93-2026-1", "imd-value-added-ap-94-2026-1"])
+                self.assertNotIn("private diagnostic", json.dumps(result))
 
     def test_language_switch_and_feedback_keep_plan_and_citations(self):
         for language, rating in (("en", "useful"), ("te", "unclear"), ("hi", "potentially_incorrect")):

@@ -91,6 +91,7 @@ textarea::placeholder { color: #607068; opacity: 1; }
 .result-status[data-status="insufficient_evidence"] { background: #f8ecd3; color: #6b4c10; }
 .result-status[data-status="clarification"] { background: #e5eef5; color: #284763; }
 .result-location { margin-top: 6px; color: var(--muted); font-size: .9rem; }
+.result-notice { margin-top: 10px; padding: 8px 11px; border-radius: 6px; background: #f8ecd3; color: #6b4c10; font-size: .92rem; }
 .advisory h3 { margin: 12px 0 2px; font-size: 1rem; }
 .follow-up { margin-top: 14px; padding: 11px 13px; border: 1px solid #cddce7; border-radius: 8px; background: #eff5f9; }
 .follow-up h3 { margin-top: 0; }

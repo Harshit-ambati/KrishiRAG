@@ -158,6 +158,9 @@ def render_with_provider(provider, session, response, wording):
               else ModelAdvisory.model_json_schema())
     try:
         raw = provider.complete(INSTRUCTION, payload, schema, max_tokens=900)
+    except httpx.HTTPStatusError as exc:
+        outcome = "provider_limit" if exc.response.status_code == 429 else "provider_error"
+        return response.model_copy(update={"generation_outcome": outcome})
     except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
         return response.model_copy(update={"generation_outcome": "provider_error"})
 

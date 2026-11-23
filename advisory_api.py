@@ -130,7 +130,9 @@ class AdvisoryResponse(BaseModel):
     forecast_rainfall_mm: float | None = None
     weather_snapshot: Forecast | None = None
     answer_type: Literal["advice", "information"] = "advice"
-    generation_outcome: Literal["system", "verified_template", "llm", "provider_error", "invalid_output", "demo"] = "system"
+    generation_outcome: Literal[
+        "system", "verified_template", "llm", "provider_limit", "provider_error", "invalid_output", "demo",
+    ] = "system"
 
 
 class AdvisorySession(BaseModel):
