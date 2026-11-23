@@ -2,7 +2,7 @@ import json
 import os
 import sqlite3
 from contextlib import contextmanager
-from datetime import date
+from datetime import date, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Annotated, Literal
@@ -11,19 +11,16 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from advisory_rules import decision, requested_day
+from advisory_rules import INDIA, decision, needs_forecast, question_topic, requested_day
 from advisory_generation import ChatProvider, CitedClaim, render_with_provider
 from advisory_log import decision_signature, deliver, ensure_advisory_tables, latest_run
 from evidence_index import EvidenceIndexUnavailable
 from evidence_store import ensure_evidence_schema
+from live_weather import Forecast, fetch_forecast
+from locations import CONFIG, DISTRICTS, DEMO_DISTRICTS
 
 ROOT = Path(__file__).resolve().parent
-CONFIG = json.loads((ROOT / "dist" / "coverage.json").read_text(encoding="utf-8"))
 FIXTURES = json.loads((ROOT / "demo_advisories.json").read_text(encoding="utf-8"))
-DISTRICTS = {
-    state["id"]: {district["id"] for district in state["districts"] if district["enabled"]}
-    for state in CONFIG["coverage"]
-}
 CONTEXT_FIELDS = ("state_id", "district_id", "crop")
 Language = Literal["en", "te", "hi"]
 DemoStatus = Literal["supported", "conditional", "clarification", "coverageGap", "conflict"]
@@ -51,7 +48,7 @@ class AdvisoryRequest(BaseModel):
     @field_validator("crop")
     @classmethod
     def supported_crop(cls, value):
-        if value is not None and value not in CONFIG["crops"]:
+        if value is not None and value not in CONFIG["crop_stages"]:
             raise ValueError("Unsupported crop")
         return value
 
@@ -69,10 +66,12 @@ class AdvisoryRequest(BaseModel):
             if not (self.session_id and self.language) or self.model_fields_set - allowed:
                 raise ValueError("Translate with only the advisory ID, its session ID, and the new language.")
         if self.session_id is None:
-            required = (*CONTEXT_FIELDS, "crop_stage", "question", "language")
+            required = ("state_id", "district_id", "question", "language")
             missing = [field for field in required if getattr(self, field) is None]
             if missing:
                 raise ValueError(f"Required to start a session: {', '.join(missing)}")
+            if self.district_id not in DISTRICTS.get(self.state_id, set()):
+                raise ValueError("District does not belong to the selected state")
         return self
 
 
@@ -116,6 +115,7 @@ class AdvisoryResponse(BaseModel):
     crop_stage: str
     status: Status
     suggested_action: str
+    answer: str | None = None
     explanation: str
     follow_up_question: str | None
     follow_up_field: Literal["crop_stage", "field_observations"] | None
@@ -126,6 +126,8 @@ class AdvisoryResponse(BaseModel):
     claims: list[CitedClaim] = Field(default_factory=list)
     decision_code: str | None = None
     forecast_rainfall_mm: float | None = None
+    weather_snapshot: Forecast | None = None
+    answer_type: Literal["advice", "information"] = "advice"
     generation_outcome: Literal["system", "verified_template", "llm", "provider_error", "invalid_output", "demo"] = "system"
 
 
@@ -181,14 +183,14 @@ def evaluate_demo(session: AdvisorySession) -> AdvisoryResponse:
     )
 
 
-def evaluate(session: AdvisorySession, connection, advisory_id=None):
+def evaluate(session: AdvisorySession, connection, advisory_id=None, forecast=None):
     supported_location = session.district_id in DISTRICTS.get(session.state_id, set())
-    if session.demo_scenario and supported_location:
+    if session.demo_scenario and session.crop == "paddy" and session.state_id == "andhra-pradesh" and session.district_id in DEMO_DISTRICTS:
         response = evaluate_demo(session)
         return (response.model_copy(update={"advisory_id": advisory_id}) if advisory_id else response), {}
 
     try:
-        result = decision(session, connection, supported_location)
+        result = decision(session, connection, supported_location, forecast)
     except EvidenceIndexUnavailable as exc:
         raise HTTPException(503, detail="evidence_index_unavailable") from exc
     wording = result.pop("claim_wording", {})
@@ -200,10 +202,24 @@ def evaluate(session: AdvisorySession, connection, advisory_id=None):
     return response, wording
 
 
+def initial_session(request):
+    fields = request.model_dump(exclude={"session_id", "translate_advisory_id"})
+    fields["crop"] = request.crop or "none"
+    fields["crop_stage"] = request.crop_stage or "unknown"
+    session = AdvisorySession(session_id=uuid4(), **fields)
+    session.requested_date, session.date_explicit = requested_day(session.question, request.requested_date)
+    return session
+
+
+def validate_stage(session):
+    if session.crop_stage != "unknown" and session.crop_stage not in CONFIG["crop_stages"].get(session.crop, ()):
+        raise HTTPException(422, detail="stage_not_valid_for_crop")
+
+
 def load_session(connection, request: AdvisoryRequest) -> AdvisorySession:
     if request.session_id is None:
-        session = AdvisorySession(session_id=uuid4(), **request.model_dump(exclude={"session_id", "translate_advisory_id"}))
-        session.requested_date, session.date_explicit = requested_day(session.question, request.requested_date)
+        session = initial_session(request)
+        validate_stage(session)
         return session
 
     row = connection.execute(
@@ -228,6 +244,7 @@ def load_session(connection, request: AdvisoryRequest) -> AdvisorySession:
         session.field_observations = request.field_observations
     if request.language is not None:
         session.language = request.language
+    validate_stage(session)
     return session
 
 
@@ -274,12 +291,45 @@ def replay_request(connection, request, key, fingerprint):
 router = APIRouter()
 
 
+@router.get("/api/farm-config")
+def farm_config():
+    return CONFIG
+
+
+def weather_context(request, key, fingerprint):
+    if request.translate_advisory_id:
+        return None
+    if request.session_id or key:
+        with advisory_transaction() as connection:
+            replay = replay_request(connection, request, key, fingerprint)
+            if replay:
+                if "context" not in replay:
+                    return None
+                session = AdvisorySession.model_validate(replay["context"])
+                return None if latest_run(connection, replay["advisory_id"], session.session_id) else session
+            if request.session_id:
+                return load_session(connection, request)
+    session = initial_session(request)
+    validate_stage(session)
+    return session
+
+
+def live_forecast_for(session):
+    if not session or session.demo_scenario:
+        return None
+    if not needs_forecast(session.question, question_topic(session.question), session.date_explicit):
+        return None
+    return fetch_forecast(session.state_id, session.district_id, session.requested_date, datetime.now(INDIA))
+
+
 @router.post("/api/advisories")
 def create_advisory(
     request: AdvisoryRequest,
     idempotency_key: Annotated[str | None, Header(min_length=16, max_length=100)] = None,
 ) -> AdvisoryResponse:
     fingerprint = request_fingerprint(request)
+    context = weather_context(request, idempotency_key, fingerprint)
+    forecast = live_forecast_for(context)
     with advisory_transaction() as connection:
         replay = replay_request(connection, request, idempotency_key, fingerprint)
         translation_run = None
@@ -293,14 +343,18 @@ def create_advisory(
             return deliver(connection, session, previous)
         if replay:
             session = AdvisorySession.model_validate(replay["context"])
+            run = latest_run(connection, replay["advisory_id"], session.session_id)
+            if run:
+                forecast = AdvisoryResponse.model_validate_json(run["response"]).weather_snapshot
         elif translation_run:
             session = AdvisorySession.model_validate_json(translation_run["context"])
             session.language = request.language
+            forecast = AdvisoryResponse.model_validate_json(translation_run["response"]).weather_snapshot
         else:
-            session = load_session(connection, request)
+            session = load_session(connection, request) if request.session_id else context
             save_session(connection, session)
 
-        response, wording = evaluate(session, connection, UUID(replay["advisory_id"]) if replay else None)
+        response, wording = evaluate(session, connection, UUID(replay["advisory_id"]) if replay else None, forecast)
         signature = decision_signature(response)
         if translation_run and signature != translation_run["decision_signature"]:
             raise HTTPException(409, detail="advisory_changed")
@@ -322,7 +376,7 @@ def create_advisory(
     # Provider I/O runs outside the SQLite write lock.
     proposed = render_with_provider(provider, session, response, wording)
     with advisory_transaction() as connection:
-        fresh, _ = evaluate(session, connection, response.advisory_id)
+        fresh, _ = evaluate(session, connection, response.advisory_id, forecast)
         if decision_signature(fresh) != signature:
             if translation_run:
                 raise HTTPException(409, detail="advisory_changed")

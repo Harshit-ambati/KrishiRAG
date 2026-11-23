@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f6ee">
-  <meta name="description" content="Try the AgriRAG paddy advisory interface in English, Telugu, or Hindi.">
+  <meta name="description" content="Ask AgriRAG for weather, crop guidance, and farming answers in English, Telugu, or Hindi.">
   <title>AgriRAG · Farmer advisory</title>
   <link rel="stylesheet" href="/static/css/styles.css">
   <script type="module" src="/static/js/app.js"></script>
@@ -34,16 +34,15 @@
   <main class="shell">
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <p class="eyebrow" data-text="pilot">Andhra Pradesh pilot</p>
-        <h1 id="hero-title" data-text="heroTitle">Paddy field advisory</h1>
-        <p data-text="heroDescription">Ask about irrigation, drainage, or field operations in your district.</p>
+        <h1 id="hero-title" data-text="heroTitle">Agriculture answers for India</h1>
+        <p data-text="heroDescription">Ask about local weather, irrigation, and farming practices.</p>
       </div>
     </section>
 
     <div class="workspace">
       <section class="card" aria-labelledby="form-title">
         <h2 id="form-title" data-text="formTitle">Ask a question</h2>
-        <p class="section-description" data-text="formDescription">Tell us where your paddy is growing and what you need help with.</p>
+        <p class="section-description" data-text="formDescription">Select your location. Add crop details for a question about your field.</p>
         <form id="question-form" novalidate tabindex="-1">
           <div class="field-grid">
             <div class="field">
@@ -58,7 +57,7 @@
             </div>
             <div class="field">
               <label for="crop" data-text="crop">Crop</label>
-              <input id="crop" name="crop" value="Paddy" readonly>
+              <select id="crop" name="crop"></select>
             </div>
             <div class="field">
               <label for="stage" data-text="stage">Crop stage</label>
@@ -76,18 +75,17 @@
             <textarea id="observation" name="observation" rows="2" maxlength="1200" aria-describedby="observation-error" data-placeholder="observationPlaceholder" placeholder="For example, water is still standing after yesterday’s rain."></textarea>
             <p class="field-error" id="observation-error" hidden></p>
           </div>
-          <button id="submit" class="primary" type="submit" aria-controls="result-content"><span data-text="submit" id="submit-label">Get advisory</span></button>
+          <button id="submit" class="primary" type="submit" aria-controls="result-content"><span data-text="submit" id="submit-label">Get answer</span></button>
           <p class="request-error" id="request-error" role="alert" hidden></p>
         </form>
       </section>
 
       <section class="card result-card" aria-labelledby="result-title">
         <div class="result-heading">
-          <h2 id="result-title" data-text="resultTitle">Advisory result</h2>
+          <h2 id="result-title" data-text="resultTitle">Result</h2>
           <span class="demo-badge" id="demo-badge" data-text="demo" hidden>Mock demo</span>
         </div>
-        <p class="section-description" data-text="demoDescription">Uses reviewed evidence by default. Choose a demo scenario to try an example.</p>
-        <div class="field scenario-field">
+        <div class="field scenario-field" id="scenario-control" hidden>
           <label for="scenario" data-text="scenario">Mock scenario</label>
           <select id="scenario" aria-controls="result-content"></select>
         </div>
@@ -102,7 +100,7 @@
             <p id="result-status" class="result-status"></p>
             <p id="result-location" class="result-location"></p>
             <p id="result-requested-date" class="result-location" hidden><span data-text="requestedDate">Advisory date</span> <time id="advisory-date"></time></p>
-            <h3 data-text="action">Suggested action</h3>
+            <h3 id="result-primary-label" data-text="action">Suggested action</h3>
             <p id="result-action"></p>
             <h3 data-text="explanation">Why this result?</h3>
             <p id="result-explanation"></p>

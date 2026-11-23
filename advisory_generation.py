@@ -33,19 +33,20 @@ class ChatProvider:
 
     @classmethod
     def configured(cls):
-        url = os.environ.get("AGRIRAG_LLM_URL")
-        model = os.environ.get("AGRIRAG_LLM_MODEL")
-        if url and model:
-            return cls(url.rstrip("/"), model, os.environ.get("AGRIRAG_LLM_API_KEY"),
-                       float(os.environ.get("AGRIRAG_LLM_TIMEOUT", "20")))
-        return None
+        key = os.environ.get("OPENAI_API_KEY", "").strip()
+        if not key:
+            return None
+        model = os.environ.get("AGRIRAG_OPENAI_MODEL", "").strip() or "gpt-4.1-mini"
+        return cls("https://api.openai.com/v1", model, key,
+                   float(os.environ.get("AGRIRAG_LLM_TIMEOUT", "20")))
 
     def complete(self, instruction, data, schema, max_tokens=450):
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
         response = httpx.post(
             f"{self.base_url}/chat/completions", headers=headers, timeout=self.timeout,
             json={
-                "model": self.model, "temperature": 0, "max_tokens": max_tokens,
+                "model": self.model, "temperature": 0, "max_completion_tokens": max_tokens,
+                "store": False,
                 "response_format": {"type": "json_schema", "json_schema": {
                     "name": "agrirag_response", "strict": True, "schema": schema,
                 }},
@@ -107,6 +108,7 @@ def render_with_provider(provider, session, response, wording):
             return response.model_copy(update={"generation_outcome": "invalid_output"})
     return response.model_copy(update={
         "suggested_action": proposal.action.text,
+        "answer": proposal.action.text if response.answer_type == "information" else None,
         "explanation": " ".join(claim.text for claim in proposal.explanation),
         "claims": claims, "generation_outcome": "llm",
     })

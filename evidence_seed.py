@@ -6,6 +6,7 @@ from pathlib import Path
 from evidence_store import DOCUMENT_FIELDS, PASSAGE_FIELDS, evidence_db
 
 SEED = Path(__file__).with_name("pilot_evidence.json")
+EXPANSION_SEED = Path(__file__).with_name("expansion_evidence.json")
 
 
 def seed(snapshots: Path | None):
@@ -17,9 +18,10 @@ def seed(snapshots: Path | None):
             if sha256(data).hexdigest() != record["sha256"]:
                 raise ValueError(f'{record["filename"]} does not match the audited PDF.')
             files[record["id"]] = data
+    expansion = json.loads(EXPANSION_SEED.read_text(encoding="utf-8"))
 
     with evidence_db(write=True) as connection:
-        for record in records:
+        for record in [*records, *expansion]:
             document_id = record["id"]
             fields = (*DOCUMENT_FIELDS, "id", "filename", "sha256", "page_count", "status", "content")
             values = {
@@ -57,7 +59,9 @@ def seed(snapshots: Path | None):
                     **passage, "id": f"{document_id}-{index}", "document_id": document_id,
                     "status": "approved", "reviewed": True, "include": True, "statewide": passage.get("statewide", False),
                     "daily_rainfall": json.dumps(passage["daily_rainfall"]) if passage.get("daily_rainfall") else None,
-                    "extraction_note": "Manually reviewed against the rendered original PDF.",
+                    "review_notes": passage.get("review_notes") or record["metadata"].get("review_notes"),
+                    "extraction_note": "Reviewed against the original section." if record in expansion
+                    else "Manually reviewed against the rendered original PDF.",
                 }
                 connection.execute(
                     f"INSERT INTO evidence_passages ({', '.join(fields)}) VALUES ({', '.join('?' for _ in fields)})",
@@ -66,8 +70,8 @@ def seed(snapshots: Path | None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Load the reviewed Andhra Pradesh pilot evidence.")
+    parser = argparse.ArgumentParser(description="Load reviewed starter evidence.")
     parser.add_argument("--snapshots", type=Path, help="Directory containing the original PDFs named in pilot_evidence.json.")
     args = parser.parse_args()
     seed(args.snapshots)
-    print("Reviewed pilot evidence loaded.")
+    print("Reviewed starter evidence loaded.")

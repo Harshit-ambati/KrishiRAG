@@ -165,7 +165,7 @@ def main():
     args = parser.parse_args()
     provider = ChatProvider.configured()
     if provider is None:
-        parser.error("Set AGRIRAG_LLM_URL and AGRIRAG_LLM_MODEL for a real evaluation.")
+        parser.error("Set OPENAI_API_KEY and optionally AGRIRAG_OPENAI_MODEL for a real evaluation.")
     cases = json.loads((ROOT / "cases.json").read_text(encoding="utf-8"))
     rows = []
     os.environ.setdefault("AGRIRAG_CHROMA_PATH", str(ROOT.parent / "data" / "evaluation.chroma"))

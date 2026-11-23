@@ -38,12 +38,12 @@ def run(client, smoke):
     assert missing["status"] == "clarification" and missing["follow_up_field"] == "crop_stage"
     resolved = post(session_id=missing["session_id"], crop_stage="grain-filling")
     assert resolved["status"] == "supported"
-    print(f'2. Follow-up · {missing["follow_up_question"]} → {resolved["status"]}')
+    print(f'2. Follow-up · {missing["follow_up_question"]} -> {resolved["status"]}')
 
-    rejected = post(**(BASE | {"requested_date": "2026-11-29"}), question="What is the rain forecast?")
-    wrong = post(**(BASE | {"district_id": "eluru"}), question="What is the rain forecast?")
+    rejected = post(**(BASE | {"requested_date": "2026-11-10"}), question="What is the rain forecast?")
+    wrong = post(**(BASE | {"district_id": "eluru", "requested_date": "2026-11-03"}), question="What is the rain forecast?")
     assert rejected["status"] == wrong["status"] == "insufficient_evidence"
-    print("3. Rejected · expired on 29 November and unsupported Eluru district")
+    print("3. Rejected · no archived Krishna forecast on 10 November or Eluru forecast on 3 November")
 
     for language, question in (
         ("te", "వర్షం పడితే వరి పొలానికి నీరు పెట్టాలా?"),

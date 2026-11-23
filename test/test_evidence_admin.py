@@ -107,7 +107,8 @@ class EvidenceAdminTests(unittest.TestCase):
     def test_reviewed_seed_covers_only_verified_date_overlap(self):
         seed(None)
         seed(None)
-        self.assertEqual(len(self.client.get(BASE).json()), 3)
+        sources = self.client.get(BASE).json()
+        self.assertEqual(sum(source["state_id"] == "andhra-pradesh" for source in sources), 3)
         for district in ("krishna", "west-godavari"):
             for on_date, expected in (("2026-11-23", False), ("2026-11-24", True), ("2026-11-25", True), ("2026-11-26", False)):
                 with self.subTest(district=district, on_date=on_date):

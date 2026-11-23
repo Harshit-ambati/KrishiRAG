@@ -1,0 +1,117 @@
+[
+  {
+    "id": "pib-water-efficiency-2026",
+    "filename": "pib-water-efficiency-2026.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Press Information Bureau, Government of India",
+      "title": "Transforming Indian Agriculture through Water Efficiency",
+      "original_url": "https://www.pib.gov.in/PressNoteDetails.aspx?ModuleId=3&NoteId=159757&id=159757&lang=1&reg=46",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General irrigation technology definition, applicable nationally",
+      "issue_date": "2026-08-29",
+      "version": "2026-08-29",
+      "review_notes": "Reviewed the drip and sprinkler sections. Approved only for the two technology definitions."
+    },
+    "passages": [
+      {
+        "kind": "background",
+        "topic": "drip-irrigation-definition",
+        "section": "Types of Micro Irrigation Systems under PDMC / Drip Irrigation System",
+        "decision_code": "define_drip_irrigation",
+        "content": "In drip irrigation, small outlets called emitters on pipes or tubes deliver water slowly and directly to plant roots."
+      },
+      {
+        "kind": "background",
+        "topic": "sprinkler-irrigation-definition",
+        "section": "Types of Micro Irrigation Systems under PDMC / Sprinkler Irrigation System",
+        "decision_code": "define_sprinkler_irrigation",
+        "content": "Pressurised nozzles on a pipe network spray water through the air, simulating rainfall."
+      }
+    ]
+  },
+  {
+    "id": "tnau-organic-tomato-water",
+    "filename": "tnau-organic-tomato-water.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University Agritech Portal",
+      "title": "Organic Farming Practices — Tomato: Water Requirements",
+      "original_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_water.html",
+      "language": "en",
+      "state_id": "tamil-nadu",
+      "geographic_scope": "Tamil Nadu extension guidance for organic tomato production",
+      "version": "Updated Dec 2014",
+      "review_notes": "The HTML page credits Centre for Indian Knowledge Systems, Chennai. Only the general moisture principle was adopted. The page gives no day within the stated month."
+    },
+    "passages": [
+      {
+        "kind": "advisory",
+        "crop": "tomato",
+        "topic": "irrigation",
+        "section": "Water Requirements",
+        "statewide": true,
+        "decision_code": "tomato_even_water",
+        "content": "An even water supply supports tomato growth and fruit set. A dry period followed by sudden irrigation may crack the fruit."
+      }
+    ]
+  },
+  {
+    "id": "tnau-chilli-water",
+    "filename": "tnau-chilli-water.pdf",
+    "sha256": "236c1abbf30e7e0db0ac9accaa85a9b8a859bcdf7a816c8dfaa01f80775f9b9f",
+    "page_count": 12,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University Agritech Portal (PDF host)",
+      "title": "Model Bankable Scheme for Organic Cultivation of Chilli in Uttarakhand",
+      "original_url": "https://agritech.tnau.ac.in/banking/pdf/Chilli.pdf",
+      "language": "en",
+      "state_id": "uttarakhand",
+      "geographic_scope": "Organic chilli production in Uttarakhand",
+      "version": "Undated online PDF",
+      "review_notes": "Reviewed the general water-management passage in the TNAU-hosted document. The recommendation is limited to avoiding stagnant water."
+    },
+    "passages": [
+      {
+        "kind": "advisory",
+        "crop": "chilli",
+        "topic": "irrigation",
+        "section": "6.11 Irrigation",
+        "page_number": 7,
+        "statewide": true,
+        "decision_code": "chilli_avoid_stagnation",
+        "content": "Apply irrigation judiciously and prevent water from stagnating in chilli nursery beds and fields."
+      }
+    ]
+  },
+  {
+    "id": "tnau-bellary-onion-drainage",
+    "filename": "tnau-bellary-onion-drainage.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University Agritech Portal",
+      "title": "Horticulture — Vegetables: Bellary Onion",
+      "original_url": "https://agritech.tnau.ac.in/horticulture/horti_vegetables_bellaryonion.html",
+      "language": "en",
+      "state_id": "tamil-nadu",
+      "geographic_scope": "Tamil Nadu extension guidance for Bellary (large) onion",
+      "version": "Undated online guide",
+      "review_notes": "The Soil section identifies good drainage as preferred. This passage supports a general practice for large onion, not an irrigation interval or rate."
+    },
+    "passages": [
+      {
+        "kind": "advisory",
+        "crop": "onion",
+        "topic": "irrigation",
+        "section": "Soil",
+        "statewide": true,
+        "decision_code": "onion_good_drainage",
+        "content": "The Bellary onion guide prefers well-drained red loam to black soils."
+      }
+    ]
+  }
+]

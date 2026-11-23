@@ -1,4 +1,3 @@
-import { coverage, stages } from '../../archive/coverage.mjs';
 import { translations } from './translations.js';
 
 const byId = id => document.getElementById(id);
@@ -10,6 +9,15 @@ const submit = byId('submit');
 const announcement = byId('announcement');
 const resultContent = byId('result-content');
 
+const config = await fetch('/api/farm-config')
+  .then(response => {
+    if (!response.ok) throw new Error('Farm configuration unavailable');
+    return response.json();
+  })
+  .catch(() => null);
+const { coverage, crops, stages, crop_stages: cropStages, demo_districts: demoDistricts } = config ?? {
+  coverage: [], crops: {}, stages: {}, crop_stages: {}, demo_districts: [],
+};
 let language = languageSelect.value;
 let copy = translations[language];
 let validationStarted = false;
@@ -47,6 +55,21 @@ function renderDistricts() {
   fields.district.disabled = !districts.length;
 }
 
+function renderCropStages() {
+  setOptions(fields.stage, [
+    { value: 'unknown', label: copy.unknownStage },
+    ...(cropStages[fields.crop.value] ?? []).map(value => ({ value, label: localName(stages[value]) })),
+  ]);
+  fields.stage.disabled = pending || fields.crop.value === 'none';
+}
+
+function renderDemoAvailability() {
+  const available = fields.state.value === 'andhra-pradesh' && demoDistricts.includes(fields.district.value)
+    && fields.crop.value === 'paddy';
+  byId('scenario-control').hidden = !available;
+  if (!available) scenarioSelect.value = '';
+}
+
 function renderLanguage() {
   language = languageSelect.value;
   copy = translations[language];
@@ -58,15 +81,15 @@ function renderLanguage() {
 
   setOptions(fields.state, coverage.map(state => ({ value: state.id, label: localName(state.name) })), copy.selectState);
   renderDistricts();
-  setOptions(fields.stage, [
-    { value: 'unknown', label: copy.unknownStage },
-    ...Object.entries(stages).map(([value, names]) => ({ value, label: localName(names) })),
-  ], copy.selectStage);
+  setOptions(fields.crop, [{ value: 'none', label: copy.noCrop },
+    ...Object.entries(crops).map(([value, names]) => ({ value, label: localName(names) })),
+  ]);
+  renderCropStages();
   setOptions(scenarioSelect, [
     { value: '', label: copy.automatic },
     ...['supported', 'conditional', 'clarification', 'coverageGap', 'conflict'].map(value => ({ value, label: copy.statuses[value] })),
   ]);
-  fields.crop.value = copy.cropValue;
+  renderDemoAvailability();
 
   if (validationStarted) validate();
   renderResult();
@@ -133,8 +156,11 @@ function renderResult() {
   const stageName = answer.crop_stage === 'unknown' ? copy.unknownStage : localName(stages[answer.crop_stage]);
   const districtName = localName(district.name);
   const districtLabel = district.placeholder ? `${districtName} (${copy.placeholderDistrict})` : districtName;
-  byId('result-location').textContent = [districtLabel, localName(state.name), stageName].join(' · ');
-  byId('result-action').textContent = answer.suggested_action;
+  const details = answer.answer_type === 'information' || fields.crop.value === 'none'
+    ? [] : [localName(crops[fields.crop.value]), stageName];
+  byId('result-location').textContent = [districtLabel, localName(state.name), ...details].join(' · ');
+  byId('result-primary-label').textContent = copy[answer.answer_type === 'information' ? 'directAnswer' : 'action'];
+  byId('result-action').textContent = answer.answer ?? answer.suggested_action;
   byId('result-explanation').textContent = answer.explanation;
   byId('follow-up').hidden = !answer.follow_up_question;
   byId('answer-follow-up').disabled = pending;
@@ -175,7 +201,8 @@ function renderResult() {
   claimCitations.setAttribute('aria-label', copy.claimCitations);
   claimCitations.replaceChildren(...claims.map(claim => {
     const item = document.createElement('li');
-    item.append(copy.claimNames[claim.kind] + ' ');
+    const label = claim.kind === 'action' && answer.answer_type === 'information' ? copy.directAnswer : copy.claimNames[claim.kind];
+    item.append(label + ' ');
     for (const id of claim.passage_ids) {
       const number = sourceNumbers.get(id);
       if (!number) continue;
@@ -261,7 +288,12 @@ function fieldChanged(event) {
     fields.district.value = '';
     renderDistricts();
   }
-  if ([fields.state, fields.district, fields.question].includes(event.target)) resetSession();
+  if (event.target === fields.crop) {
+    fields.stage.value = 'unknown';
+    renderCropStages();
+  }
+  renderDemoAvailability();
+  if ([fields.state, fields.district, fields.crop, fields.question].includes(event.target)) resetSession();
   else if (requestError) {
     clearRequestError();
     renderResult();
@@ -269,7 +301,7 @@ function fieldChanged(event) {
   if (validationStarted) validate();
 }
 
-for (const field of [fields.state, fields.district, fields.stage]) field.addEventListener('change', fieldChanged);
+for (const field of [fields.state, fields.district, fields.crop, fields.stage]) field.addEventListener('change', fieldChanged);
 for (const field of [fields.question, fields.observation]) field.addEventListener('input', fieldChanged);
 languageSelect.addEventListener('change', () => {
   failedRequest = undefined;
@@ -286,9 +318,10 @@ byId('answer-follow-up').addEventListener('click', () => {
 
 function setPending(value) {
   pending = value;
-  for (const control of [fields.state, fields.stage, fields.question, fields.observation, scenarioSelect, languageSelect]) {
+  for (const control of [fields.state, fields.crop, fields.question, fields.observation, scenarioSelect, languageSelect]) {
     control.disabled = value;
   }
+  fields.stage.disabled = value || fields.crop.value === 'none';
   fields.district.disabled = value || !districtsFor(selectedState()).length;
 }
 
@@ -364,11 +397,13 @@ form.addEventListener('submit', event => {
     ...updates,
     state_id: state.id,
     district_id: district.id,
-    crop: 'paddy',
+    crop: fields.crop.value,
     question: fields.question.value.trim(),
     demo_scenario: scenarioSelect.value || null,
   };
   requestAdvisory(payload, { state, district });
 });
 
+if (!config) requestError = 'configError';
 renderLanguage();
+if (!config) submit.disabled = true;

@@ -15,8 +15,8 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 from pypdf import PdfReader
 
-from advisory_api import CONFIG, DISTRICTS
-from advisory_rules import ACTIONS, WEATHER_TOPIC
+from advisory_rules import ACTIONS, DEFINITIONS, WEATHER_TOPIC
+from locations import CONFIG, DISTRICTS
 from evidence_store import DOCUMENT_COLUMNS, DOCUMENT_FIELDS, PASSAGE_FIELDS, evidence_db
 
 ROOT = Path(__file__).resolve().parent
@@ -188,8 +188,11 @@ def admin_page():
 
 @admin.get("/api/admin/evidence/config")
 def admin_config():
-    return {"coverage": CONFIG["coverage"], "crops": CONFIG["crops"], "stages": CONFIG["stages"],
-            "decisions": {topic: list(codes) for topic, codes in ACTIONS.items()}}
+    national = {"id": "india", "name": {"en": "India (national background)"}, "districts": []}
+    decisions = {topic: list(codes) for topic, codes in ACTIONS.items()}
+    decisions.update({topic: [definition[0]] for topic, definition in DEFINITIONS.items()})
+    return {"coverage": [national, *CONFIG["coverage"]], "crops": CONFIG["crops"], "stages": CONFIG["stages"],
+            "decisions": decisions}
 
 
 @admin.get("/api/admin/evidence")
@@ -244,7 +247,7 @@ def upload_source(file: Annotated[UploadFile, File()]):
 @admin.put("/api/admin/evidence/{document_id}", dependencies=mutating)
 def save_source(document_id: str, draft: DraftUpdate):
     metadata = draft.metadata.model_dump(mode="json")
-    if metadata["state_id"] and metadata["state_id"] not in DISTRICTS:
+    if metadata["state_id"] and metadata["state_id"] != "india" and metadata["state_id"] not in DISTRICTS:
         raise HTTPException(422, "Choose a configured state.")
     requested_ids = [passage.id for passage in draft.passages if passage.id is not None]
     if len(set(requested_ids)) != len(requested_ids):
@@ -275,10 +278,14 @@ def save_passage(connection, document, metadata, passage):
         raise HTTPException(422, "Choose a configured passage crop.")
     if passage.stage_id and passage.stage_id not in CONFIG["stages"]:
         raise HTTPException(422, "Choose a configured crop stage.")
+    if passage.stage_id and passage.crop and passage.stage_id not in CONFIG["crop_stages"][passage.crop]:
+        raise HTTPException(422, "Choose a stage that applies to the selected crop.")
     if passage.statewide and passage.district_id:
         raise HTTPException(422, "District-specific passages cannot also be marked statewide.")
     if passage.decision_code and passage.decision_code not in ACTIONS.get(passage.topic, {}):
-        raise HTTPException(422, "The reviewed decision does not match the passage topic.")
+        definition = DEFINITIONS.get(passage.topic)
+        if not definition or passage.decision_code != definition[0]:
+            raise HTTPException(422, "The reviewed decision does not match the passage topic.")
     if passage.daily_rainfall and (passage.kind != "weather" or passage.topic != WEATHER_TOPIC):
         raise HTTPException(422, "Daily rainfall belongs on district-rainfall-forecast weather passages.")
     if passage.page_number and document["page_count"] and passage.page_number > document["page_count"]:
@@ -325,6 +332,11 @@ def validate_publication(document, passage):
         raise HTTPException(422, "A selected passage district no longer matches the source state.")
     if passage["kind"] == "advisory" and not passage["crop"]:
         raise HTTPException(422, "Select a crop for each advisory passage.")
+    if document["state_id"] == "india":
+        definition = DEFINITIONS.get(passage["topic"])
+        if (passage["kind"] != "background" or passage["crop"] or passage["stage_id"]
+                or not definition or passage["decision_code"] != definition[0]):
+            raise HTTPException(422, "National passages must be reviewed, crop-independent definitions.")
     start = passage["valid_from"] or document["valid_from"]
     if passage["kind"] == "weather" and not (passage["district_id"] and document["issue_date"] and start):
         raise HTTPException(422, "District weather passages need an issue date, district and explicit validity window.")
