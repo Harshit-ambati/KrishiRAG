@@ -17,16 +17,13 @@
         <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21v-8m0 3C6 16 3 13 3 7c5 0 8 2 9 6m0 2c0-6 3-9 9-10 0 6-3 10-9 10"/></svg></span>
         <span>Agri<span class="brand-accent">RAG</span></span>
       </a>
-      <div class="header-actions">
-        <a class="archive-link" href="/archive/" data-text="archive">Evidence archive</a>
-        <div class="language-control">
-          <label for="language" class="sr-only" data-text="language">Language</label>
-          <select id="language" name="language" form="question-form">
-            <option value="en" lang="en">English</option>
-            <option value="te" lang="te">తెలుగు</option>
-            <option value="hi" lang="hi">हिन्दी</option>
-          </select>
-        </div>
+      <div class="language-control">
+        <label for="language" class="sr-only" data-text="language">Language</label>
+        <select id="language" name="language" form="question-form">
+          <option value="en" lang="en">English</option>
+          <option value="te" lang="te">తెలుగు</option>
+          <option value="hi" lang="hi">हिन्दी</option>
+        </select>
       </div>
     </div>
   </header>
@@ -83,14 +80,7 @@
       </section>
 
       <section class="card result-card" aria-labelledby="result-title">
-        <div class="result-heading">
-          <h2 id="result-title" data-text="resultTitle">Result</h2>
-          <span class="demo-badge" id="demo-badge" data-text="demo" hidden>Mock demo</span>
-        </div>
-        <div class="field scenario-field" id="scenario-control" hidden>
-          <label for="scenario" data-text="scenario">Mock scenario</label>
-          <select id="scenario" aria-controls="result-content"></select>
-        </div>
+        <h2 id="result-title" data-text="resultTitle">Result</h2>
 
         <div id="result-content" aria-busy="false">
           <div id="result-placeholder" class="result-placeholder">

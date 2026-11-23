@@ -1,7 +1,9 @@
 import json
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -57,6 +59,35 @@ class CitedGenerationTests(unittest.TestCase):
             saved = connection.execute("SELECT response,provider_model FROM advisory_runs WHERE advisory_id = ?", (result["advisory_id"],)).fetchone()
         self.assertEqual(saved["provider_model"], "test-model")
         self.assertEqual([ref["version"] for ref in json.loads(saved["response"])["evidence"]], ["93/2026", "94/2026"])
+
+    def test_overlapping_provider_calls_deliver_one_response_per_retry_key(self):
+        entered = Barrier(2, timeout=10)
+
+        def first_succeeds(_, payload, schema, **kwargs):
+            if entered.wait():
+                return json.dumps(valid_proposal(payload))
+            raise httpx.ReadTimeout("provider stopped responding")
+
+        def submit():
+            return self.client.post("/api/advisories", json=REQUEST, headers={"Idempotency-Key": uuid.hex})
+
+        uuid = uuid4()
+        self.provider.complete.side_effect = first_succeeds
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            responses = [executor.submit(submit) for _ in range(2)]
+            first, second = [response.result(timeout=15).raise_for_status().json() for response in responses]
+        self.assertEqual(first, second)
+        with evidence_db() as connection:
+            count = connection.execute("SELECT count(*) FROM advisory_runs WHERE advisory_id = ?", (first["advisory_id"],)).fetchone()[0]
+        self.assertEqual(count, 1)
+
+    def test_clearing_observations_rechecks_the_original_advisory(self):
+        original = self.send()
+        response = self.client.post("/api/advisories", json={
+            "session_id": original["session_id"], "field_observations": None,
+        }).raise_for_status().json()
+        self.assertEqual(response["status"], "clarification")
+        self.assertEqual(response["follow_up_field"], "field_observations")
 
     def test_made_up_wrong_passage_and_unsupported_action_are_suppressed(self):
         attacks = ("invented-citation", "wrong-allowed-passage", "unsupported-action", "changed-weather")

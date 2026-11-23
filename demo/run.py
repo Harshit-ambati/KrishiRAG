@@ -28,6 +28,7 @@ def run(client, smoke):
         response.raise_for_status()
 
     assert client.get("/healthz").json()["status"] == "ok"
+    assert client.get("/readyz").json()["status"] == "ready"
     client.get("/").raise_for_status()
     print("Archived replay · 24 November 2026")
     english = post(**BASE, question="Should I irrigate paddy if rain is expected on this date?")

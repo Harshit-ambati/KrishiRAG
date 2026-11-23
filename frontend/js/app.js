@@ -4,7 +4,6 @@ const byId = id => document.getElementById(id);
 const form = byId('question-form');
 const fields = form.elements;
 const languageSelect = byId('language');
-const scenarioSelect = byId('scenario');
 const submit = byId('submit');
 const announcement = byId('announcement');
 const resultContent = byId('result-content');
@@ -15,8 +14,8 @@ const config = await fetch('/api/farm-config')
     return response.json();
   })
   .catch(() => null);
-const { coverage, crops, stages, crop_stages: cropStages, demo_districts: demoDistricts } = config ?? {
-  coverage: [], crops: {}, stages: {}, crop_stages: {}, demo_districts: [],
+const { coverage, crops, stages, crop_stages: cropStages } = config ?? {
+  coverage: [], crops: {}, stages: {}, crop_stages: {},
 };
 let language = languageSelect.value;
 let copy = translations[language];
@@ -96,13 +95,6 @@ function renderCropStages() {
   fields.stage.disabled = pending || fields.crop.value === 'none';
 }
 
-function renderDemoAvailability() {
-  const available = fields.state.value === 'andhra-pradesh' && demoDistricts.includes(fields.district.value)
-    && fields.crop.value === 'paddy';
-  byId('scenario-control').hidden = !available;
-  if (!available) scenarioSelect.value = '';
-}
-
 function renderCoverage() {
   const node = byId('coverage-summary');
   node.hidden = !fields.district.value;
@@ -166,11 +158,6 @@ function renderLanguage() {
   renderDistricts();
   renderCrops();
   renderCropStages();
-  setOptions(scenarioSelect, [
-    { value: '', label: copy.automatic },
-    ...['supported', 'conditional', 'clarification', 'coverageGap', 'conflict'].map(value => ({ value, label: copy.statuses[value] })),
-  ]);
-  renderDemoAvailability();
   renderCoverage();
   renderOutlook();
 
@@ -223,7 +210,6 @@ function renderResult() {
   error.textContent = requestError ? copy[requestError] : '';
   byId('result-placeholder').hidden = Boolean(result);
   byId('advisory').hidden = !result;
-  byId('demo-badge').hidden = !(result ? result.answer.is_demo : scenarioSelect.value);
 
   if (!result) {
     byId('placeholder-title').textContent = pending ? copy.loadingTitle : copy.emptyTitle;
@@ -483,7 +469,6 @@ function fieldChanged(event) {
     fields.stage.value = 'unknown';
     renderCropStages();
   }
-  renderDemoAvailability();
   if ([fields.state, fields.district, fields.crop, fields.stage].includes(event.target)) checkCoverage();
   if ([fields.state, fields.district].includes(event.target)) checkOutlook();
   if ([fields.state, fields.district, fields.crop, fields.question].includes(event.target)) resetSession();
@@ -497,13 +482,12 @@ function fieldChanged(event) {
 for (const field of [fields.state, fields.district, fields.crop, fields.stage]) field.addEventListener('change', fieldChanged);
 for (const field of [fields.question, fields.observation]) field.addEventListener('input', fieldChanged);
 languageSelect.addEventListener('change', () => {
-  failedRequest = undefined;
+  clearRequestError();
   renderLanguage();
-  if (result && !requestError) {
+  if (result && result.answer.language !== language) {
     requestAdvisory({ session_id: result.answer.session_id, translate_advisory_id: result.answer.advisory_id, language }, result);
   }
 });
-scenarioSelect.addEventListener('change', resetSession);
 byId('district-outlook').addEventListener('toggle', event => {
   if (event.target.open && !outlookData) checkOutlook();
 });
@@ -522,7 +506,7 @@ byId('answer-follow-up').addEventListener('click', () => {
 
 function setPending(value) {
   pending = value;
-  for (const control of [fields.state, fields.question, fields.observation, scenarioSelect, languageSelect]) {
+  for (const control of [fields.state, fields.question, fields.observation, languageSelect]) {
     control.disabled = value;
   }
   fields.crop.disabled = value || !selectedState();
@@ -552,6 +536,7 @@ async function requestAdvisory(payload, { state, district }, key = requestKey())
     if (response.ok) {
       result = { answer: await response.json(), state, district };
     } else if (payload.translate_advisory_id && response.status === 409) {
+      result = undefined;
       requestError = 'translationChanged';
     } else if (payload.session_id && [404, 409].includes(response.status)) {
       result = undefined;
@@ -598,13 +583,12 @@ form.addEventListener('submit', event => {
     field_observations: fields.observation.value.trim() || null,
     language,
   };
-  const payload = result ? { ...updates, session_id: result.answer.session_id } : {
+  const payload = result?.answer.follow_up_field ? { ...updates, session_id: result.answer.session_id } : {
     ...updates,
     state_id: state.id,
     district_id: district.id,
     crop: fields.crop.value,
     question: fields.question.value.trim(),
-    demo_scenario: scenarioSelect.value || null,
   };
   requestAdvisory(payload, { state, district });
 });

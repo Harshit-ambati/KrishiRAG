@@ -8,16 +8,18 @@ From this folder, install the server dependencies and start FastAPI.
 
 ```sh
 python -m pip install -r requirements.txt
+python evidence_seed.py
+python evidence_index.py --download-model
 python -m uvicorn main:app --host 127.0.0.1 --port 8765
 ```
 
-Open the [farmer interface](http://127.0.0.1:8765). The form and results are available in English, Telugu, and Hindi. Select a state or Union Territory and district. Crop details can be omitted for a forecast or general definition. The labeled demo selector is available for paddy in the two Andhra Pradesh pilot districts.
+Open the [farmer interface](http://127.0.0.1:8765). The form and results are available in English, Telugu, and Hindi. Select a state or Union Territory and district. Crop details can be omitted for a forecast or general definition.
 
 After choosing a state, the vegetable menu shows the ten catalog crops wherever the sources document their cultivation. The menu uses positive area or production in the 2017–18 crop tables, supplemented by the government and ICAR sources recorded in [`state_vegetables.json`](state_vegetables.json). These reports show cultivation somewhere in the state or Union Territory. The coverage panel checks reviewed advisory evidence for the selected district, crop, and stage. Paddy remains available under field crops. [Horticultural Statistics at a Glance 2018](https://nhb.gov.in/statistics/Publication/Horticulture%20Statistics%20at%20a%20Glance-2018.pdf)
 
 The stage menus include germination and establishment where applicable, panicle initiation for paddy, and crop-specific stages such as bulb formation, tuber growth, head and curd formation, and pod filling. Existing stage IDs remain valid. [Examples of crop growth stages in IMD agromet bulletins](https://www.agritech.tnau.ac.in/pdf/2013/Bulletin_27.09.2013.pdf)
 
-Open the [evidence archive](http://127.0.0.1:8765/archive/) for the original pilot lookup. Choose **View archived advisory** to load an example for Krishna on 3 November 2026.
+For internal testing, set `AGRIRAG_ENABLE_DEMOS=1` before starting the app to enable the original pilot lookup at `/archive/` and the mock API fixtures. Leave it disabled in deployed environments. The dated smoke test uses actual reviewed evidence and works with demos disabled.
 
 ## Advisory API
 
@@ -36,7 +38,7 @@ Open the [API documentation](http://127.0.0.1:8765/docs) to try `POST /api/advis
 
 When the response asks for the crop stage, send `session_id` from the response and `crop_stage`, such as `grain-filling`. When it asks about field conditions, send `session_id` and `field_observations`, such as “Standing water” or “The soil is drying.” Relative dates are interpreted in Asia/Kolkata and kept with the original question across follow-ups. An optional `requested_date` on a new session takes precedence over the question date. A follow-up can set `language` to `en`, `te`, or `hi`. To ask a new question, omit `session_id`.
 
-Get state, district, crop, and stage IDs from `GET /api/farm-config`. The API rejects a mismatched state and district or a stage outside the selected crop. The response puts direct factual answers in `answer` with `answer_type: "information"`. The existing `suggested_action` field still supplies the primary text to older clients. For a pilot demo, add `demo_scenario` with one of `supported`, `conditional`, `clarification`, `coverageGap`, and `conflict`. Evidence mode returns `insufficient_evidence` when applicable evidence is unavailable and `conflicting_evidence` when applicable sources disagree. A retry with the same `Idempotency-Key` retains its advisory ID and rechecks evidence approval. A delivered live forecast retains its provenance snapshot for retries and language changes.
+Get state, district, crop, and stage IDs from `GET /api/farm-config`. The API rejects a mismatched state and district or a stage outside the selected crop. The response puts direct factual answers in `answer` with `answer_type: "information"`. The existing `suggested_action` field still supplies the primary text to older clients. The API returns `insufficient_evidence` when applicable evidence is unavailable and `conflicting_evidence` when applicable sources disagree. A retry with the same `Idempotency-Key` retains its advisory ID and rechecks evidence approval. A delivered live forecast retains its provenance snapshot for retries and language changes.
 
 The farmer form uses `GET /api/coverage` before submission. Supply `state_id`, `district_id`, and optionally `crop`, `crop_stage`, and `on_date`. It checks today's reviewed coverage by default and reports whether a live lookup is configured. A live lookup can still fail when the farmer submits a question. Guidance may require a field observation or newer weather evidence for a particular decision.
 
@@ -119,11 +121,13 @@ For use by the decision engine, record the stated crop stage and map it to a sup
 
 ## Deploy and smoke-test
 
-Run `docker compose up -d --build` with the admin password and provider variables set in the deployment environment. Compose binds the app to loopback on port 8765 by default. Allow outbound HTTPS to the configured model provider and Open-Meteo when enabled. For native deployment, run the same seed and index commands, then start Uvicorn as in [Run locally](#run-locally). Use `/healthz` as the HTTP health check.
-
-The single FastAPI service uses `./data` as the persistent mount for the SQLite evidence catalog, source snapshots, advisory and feedback logs, Chroma, and E5 weights. Keep that mount across deploys and back it up. For public hosting, use a persistent volume, TLS, and server-managed secrets. Keep one application instance per SQLite/Chroma volume.
+1. Set the admin password and provider credentials in your host's secret configuration. Set `AGRIRAG_GEMINI_MODEL` explicitly to the model you tested. Use `AGRIRAG_DATA_DIR` to point to a persistent directory outside the release checkout. Keep one application instance per SQLite and Chroma volume.
+2. Run `docker compose up -d --build --wait --wait-timeout 300`. Compose binds to loopback on port 8765 by default. Put a TLS reverse proxy on the same host in front of it. Restrict access to `/admin` and `/api/admin/*` to staff, and apply request rate limits to advisory, forecast, and login traffic at the proxy. Allow outbound HTTPS to the model and weather providers and to Hugging Face for first-time model setup. The Docker readiness check uses `/readyz` to check the evidence database, model files, and Chroma collection. `/healthz` checks that the web process is responding.
+3. Back up the data directory with the app stopped to capture a consistent copy. It contains the SQLite catalog, source snapshots, advisory and feedback logs, Chroma, and E5 weights. Store backups with restricted access. To test recovery, use a copy in a separate data directory, start a separate Compose project on an unused port, and rerun the smoke test. The seed and indexing commands run on startup and preserve existing published and archived source versions.
 
 Run `python demo/run.py` against the running service. It replays the 24 November 2026 scenario with the two pilot districts, checks missing archived coverage, and compares equivalent English, Telugu, and Hindi answers. Use `--url` for a different deployment. Add `--smoke` with admin credentials set to submit test feedback and verify the protected admin view. See the [manual demo](demo/README.md), [language verification record](demo/VERIFICATION.md), and [farmer pilot plan](demo/PILOT.md).
+
+Before a farmer pilot, name an evidence reviewer and confirm current advisories for the supported districts. Farmer questions and observations are stored for session continuity and sent to the configured model provider on supported requests. Set and communicate your retention policy before collecting real farmer data.
 
 ## Evaluate
 

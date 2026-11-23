@@ -16,7 +16,7 @@ from advisory_rules import ACTIONS, INDIA, WEATHER_TOPIC, applicable, citation, 
 from advisory_generation import ChatProvider, CitedClaim, render_with_provider
 from advisory_log import decision_signature, deliver, ensure_advisory_tables, latest_run
 from evidence_index import EvidenceIndexUnavailable
-from evidence_store import ensure_evidence_schema, evidence_db
+from evidence_store import database_path, ensure_evidence_schema, evidence_db
 from live_weather import FORECAST_DAYS, Forecast, fetch_forecast, fetch_forecast_days, forecast_configured
 from locations import CONFIG, DISTRICTS, DEMO_DISTRICTS
 
@@ -213,6 +213,15 @@ def initial_session(request):
     return session
 
 
+def demos_enabled():
+    return os.environ.get("AGRIRAG_ENABLE_DEMOS") == "1"
+
+
+def validate_demo(scenario):
+    if scenario and not demos_enabled():
+        raise HTTPException(404, detail="demo_disabled")
+
+
 def validate_stage(session):
     if session.crop_stage != "unknown" and session.crop_stage not in CONFIG["crop_stages"].get(session.crop, ()):
         raise HTTPException(422, detail="stage_not_valid_for_crop")
@@ -230,6 +239,7 @@ def load_session(connection, request: AdvisoryRequest) -> AdvisorySession:
     if row is None:
         raise HTTPException(404, detail="session_not_found")
     session = AdvisorySession.model_validate_json(row[0])
+    validate_demo(session.demo_scenario)
     for field in (*CONTEXT_FIELDS, "demo_scenario"):
         value = getattr(request, field)
         if value is not None and value != getattr(session, field):
@@ -242,7 +252,7 @@ def load_session(connection, request: AdvisoryRequest) -> AdvisorySession:
     # A follow-up supplies context for the question already stored in this session.
     if request.crop_stage and request.crop_stage != "unknown":
         session.crop_stage = request.crop_stage
-    if request.field_observations:
+    if "field_observations" in request.model_fields_set and request.field_observations != "":
         session.field_observations = request.field_observations
     if request.language is not None:
         session.language = request.language
@@ -252,7 +262,7 @@ def load_session(connection, request: AdvisoryRequest) -> AdvisorySession:
 
 @contextmanager
 def advisory_transaction():
-    database = Path(os.environ.get("AGRIRAG_DB_PATH", ROOT / "data" / "advisories.sqlite3"))
+    database = database_path()
     database.parent.mkdir(parents=True, exist_ok=True)
 
     connection = sqlite3.connect(database, timeout=20)
@@ -295,7 +305,7 @@ router = APIRouter()
 
 @router.get("/api/farm-config")
 def farm_config():
-    return CONFIG
+    return CONFIG if demos_enabled() else {key: value for key, value in CONFIG.items() if key != "demo_districts"}
 
 
 @router.get("/api/forecast")
@@ -414,6 +424,7 @@ def create_advisory(
     request: AdvisoryRequest,
     idempotency_key: Annotated[str | None, Header(min_length=16, max_length=100)] = None,
 ) -> AdvisoryResponse:
+    validate_demo(request.demo_scenario)
     fingerprint = request_fingerprint(request)
     context = weather_context(request, idempotency_key, fingerprint)
     forecast = live_forecast_for(context)
@@ -441,6 +452,7 @@ def create_advisory(
             session = load_session(connection, request) if request.session_id else context
             save_session(connection, session)
 
+        validate_demo(session.demo_scenario)
         response, wording = evaluate(session, connection, UUID(replay["advisory_id"]) if replay else None, forecast)
         signature = decision_signature(response)
         if translation_run and signature != translation_run["decision_signature"]:
@@ -468,6 +480,10 @@ def create_advisory(
             if translation_run:
                 raise HTTPException(409, detail="advisory_changed")
             return deliver(connection, session, fresh)
+        if idempotency_key:
+            delivered = latest_run(connection, response.advisory_id, session.session_id)
+            if delivered and delivered["decision_signature"] == signature:
+                return AdvisoryResponse.model_validate_json(delivered["response"])
         return deliver(connection, session, proposed, provider.model)
 
 

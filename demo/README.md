@@ -2,7 +2,7 @@
 
 All four scenarios replay a fixed pilot archive. The reference date is **24 November 2026** unless a scenario explicitly uses a different date. The replay uses the forecast values as issued in the cited bulletins.
 
-Run `python demo/run.py` after starting FastAPI. Use `--url` to test a different deployment. To reproduce the same scenarios in the browser, leave **Use reviewed evidence** selected.
+Run `python demo/run.py` after starting FastAPI. Use `--url` to test a different deployment. To reproduce the same scenarios, enter the dated examples below in the regular farmer form.
 
 | Scenario | Form input | Expected result |
 | --- | --- | --- |

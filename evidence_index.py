@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from urllib.request import urlopen
 
-from evidence_store import PUBLISHED_PASSAGES, ROOT, evidence_db
+from evidence_store import PUBLISHED_PASSAGES, ROOT, database_path, evidence_db
 
 MODEL_NAME = "intfloat/multilingual-e5-small"
 MODEL_REVISION = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
@@ -107,8 +107,7 @@ def collection_at(path):
 
 
 def collection():
-    database = Path(os.environ.get("AGRIRAG_DB_PATH", ROOT / "data" / "advisories.sqlite3"))
-    path = os.environ.get("AGRIRAG_CHROMA_PATH", database.with_suffix(".chroma"))
+    path = os.environ.get("AGRIRAG_CHROMA_PATH", database_path().with_suffix(".chroma"))
     return collection_at(str(Path(path).resolve()))
 
 

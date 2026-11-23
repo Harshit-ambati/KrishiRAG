@@ -27,7 +27,9 @@ class AdvisoryApiTests(unittest.TestCase):
     def setUp(self):
         directory = self.enterContext(tempfile.TemporaryDirectory())
         self.database = Path(directory) / "sessions.sqlite3"
-        self.enterContext(patch.dict("os.environ", {"AGRIRAG_DB_PATH": str(self.database)}))
+        self.enterContext(patch.dict("os.environ", {
+            "AGRIRAG_DB_PATH": str(self.database), "AGRIRAG_ENABLE_DEMOS": "1",
+        }))
         self.client = self.enterContext(TestClient(app))
 
     def create(self, **changes):
@@ -68,6 +70,23 @@ class AdvisoryApiTests(unittest.TestCase):
                 self.assertTrue(result["is_demo"])
                 self.assertTrue(all(item["is_demo"] for item in result["evidence"]))
                 self.assertEqual(result["validity_window"] is not None, status == "supported")
+
+    def test_deployment_cannot_use_mock_advisories_or_existing_mock_sessions(self):
+        mock = self.create(demo_scenario="supported")
+        with patch.dict("os.environ", {"AGRIRAG_ENABLE_DEMOS": "0"}):
+            self.assertEqual(self.client.get("/archive/").status_code, 404)
+            self.assertNotIn("demo_districts", self.client.get("/api/farm-config").json())
+            for request in (QUESTION | {"demo_scenario": "supported"}, {"session_id": mock["session_id"]}):
+                response = self.client.post("/api/advisories", json=request)
+                self.assertEqual(response.status_code, 404)
+                self.assertEqual(response.json()["detail"], "demo_disabled")
+                self.assertEqual(response.headers["cache-control"], "no-store")
+
+    def test_running_process_is_not_ready_when_model_files_are_missing(self):
+        with patch.dict("os.environ", {"AGRIRAG_E5_DIR": str(self.database.parent / "missing-model")}):
+            self.assertEqual(self.client.get("/healthz").status_code, 200)
+            self.assertEqual(self.client.get("/readyz").status_code, 503)
+            self.assertFalse(self.database.exists())
 
     def test_clarification_preserves_original_question_and_context(self):
         initial = self.create(crop_stage="unknown", demo_scenario="supported")

@@ -45,9 +45,6 @@ svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.6; stroke
 .brand { display: inline-flex; gap: 9px; align-items: center; color: var(--ink); font-weight: 760; font-size: 1.38rem; letter-spacing: -.05em; text-decoration: none; }
 .brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--green); color: white; }
 .brand-accent { color: #3b7048; }
-.header-actions { display: flex; gap: clamp(10px, 3vw, 28px); align-items: center; }
-.archive-link { font-size: .91rem; font-weight: 650; text-decoration: none; }
-.archive-link:hover { text-decoration: underline; }
 .language-control { flex-shrink: 0; }
 .language-control select { min-width: 105px; font-size: .93rem; }
 
@@ -83,9 +80,6 @@ textarea::placeholder { color: #607068; opacity: 1; }
 .primary:hover { background: #173c29; }
 .primary[aria-disabled="true"] { cursor: progress; background: #496653; }
 
-.result-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; }
-.demo-badge { padding: 4px 9px; border-radius: 5px; background: #f6edcf; color: #6b4c10; font-size: .8rem; font-weight: 700; }
-.scenario-field { margin-top: 15px; }
 .result-placeholder { display: grid; place-content: center; justify-items: center; gap: 7px; min-height: 220px; margin-top: 15px; padding: 20px; text-align: center; border: 1px dashed #b8c9b6; border-radius: 10px; background: #f6f8f1; color: var(--muted); line-height: 1.5; }
 .placeholder-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: #e4eddf; color: var(--green); }
 .placeholder-title { font-weight: 700; color: var(--ink); }
@@ -133,8 +127,6 @@ textarea::placeholder { color: #607068; opacity: 1; }
 @media (max-width: 430px) {
   .card { padding: 16px; }
   .header-inner { gap: 8px; }
-  .header-actions { gap: 8px; }
-  .archive-link { font-size: .79rem; }
   .brand { font-size: 1.2rem; gap: 5px; }
   .brand-mark { width: 30px; height: 30px; }
   .language-control select { min-width: 0; }

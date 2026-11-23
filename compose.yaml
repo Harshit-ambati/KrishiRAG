@@ -1,11 +1,14 @@
 services:
   agrirag:
     build: .
+    init: true
+    restart: unless-stopped
     ports:
       - "127.0.0.1:${AGRIRAG_PORT:-8765}:8000"
     environment:
       AGRIRAG_ADMIN_USER: "${AGRIRAG_ADMIN_USER:-admin}"
       AGRIRAG_ADMIN_PASSWORD: "${AGRIRAG_ADMIN_PASSWORD:-}"
+      AGRIRAG_ENABLE_DEMOS: "${AGRIRAG_ENABLE_DEMOS:-0}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       AGRIRAG_GEMINI_MODEL: "${AGRIRAG_GEMINI_MODEL:-gemini-3.1-flash-lite}"
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
@@ -17,9 +20,9 @@ services:
       AGRIRAG_CHROMA_PATH: /app/data/advisories.chroma
       AGRIRAG_E5_DIR: /app/data/e5-small
     volumes:
-      - ./data:/app/data
+      - "${AGRIRAG_DATA_DIR:-./data}:/app/data"
     healthcheck:
-      test: ["CMD", "python", "-c", "from urllib.request import urlopen; assert urlopen('http://127.0.0.1:8000/healthz', timeout=3).status == 200"]
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; assert urlopen('http://127.0.0.1:8000/readyz', timeout=4).status == 200"]
       interval: 15s
       timeout: 5s
       start_period: 5m

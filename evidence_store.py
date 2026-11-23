@@ -67,9 +67,13 @@ def ensure_evidence_schema(connection):
         connection.commit()
 
 
+def database_path():
+    return Path(os.environ.get("AGRIRAG_DB_PATH", ROOT / "data" / "advisories.sqlite3"))
+
+
 @contextmanager
 def evidence_db(write=False):
-    database = Path(os.environ.get("AGRIRAG_DB_PATH", ROOT / "data" / "advisories.sqlite3"))
+    database = database_path()
     database.parent.mkdir(parents=True, exist_ok=True)
     with closing(sqlite3.connect(database)) as connection, connection:
         connection.row_factory = sqlite3.Row
