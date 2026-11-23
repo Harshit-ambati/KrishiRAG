@@ -6,7 +6,9 @@ import os
 import statistics
 import sys
 import tempfile
-from datetime import date
+from collections import Counter
+from dataclasses import replace
+from datetime import date, datetime
 from pathlib import Path
 from time import perf_counter
 from uuid import uuid4
@@ -18,19 +20,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from advisory_api import AdvisorySession, evaluate
 from advisory_generation import ChatProvider, render_with_provider
+from advisory_rules import requested_day
 from evidence_index import rank
 from evidence_seed import seed
 from evidence_store import PUBLISHED_PASSAGES, evidence_db
+from live_weather import Forecast, forecast_passage
+from locations import LOCATIONS
 
 ROOT = Path(__file__).resolve().parent
-MODES = ("llm_alone", "basic_rag", "checked_rag")
+MODES = ("llm_alone", "basic_rag", "checked_rag", "templates")
 
 
 class BaselineAnswer(BaseModel):
     model_config = ConfigDict(extra="forbid")
     status: Literal["supported", "clarification", "insufficient_evidence", "conflicting_evidence"]
     code: Literal["maintain_moisture", "avoid_irrigation_while_standing", "avoid_irrigation", "harvest_at_maturity",
-                  "plan_with_district_forecast", "wait_until_dry", "other", "none"]
+                  "plan_with_district_forecast", "wait_until_dry", "tomato_even_water", "chilli_avoid_stagnation",
+                  "onion_good_drainage", "define_drip_irrigation", "define_sprinkler_irrigation", "other", "none"]
     follow_up: Literal["crop_stage", "field_observations", "none"]
     source_ids: list[str]
     rainfall_mm: float
@@ -86,18 +92,32 @@ def basic_excerpt(row):
 
 
 def run_case(case, language, corpus, provider, mode):
+    weather_fixture = case.get("forecast_fixture")
+    usage = []
+    if provider and mode != "templates":
+        provider = replace(provider, record_usage=usage.append)
+    question = case["questions"][language]
+    if case.get("clock"):
+        day, explicit = requested_day(question, now=datetime.fromisoformat(case["clock"]))
+    else:
+        day, explicit = date.fromisoformat(case["day"]), case.get("date_explicit", True)
     session = AdvisorySession(
-        session_id=uuid4(), state_id="andhra-pradesh", district_id=case.get("district", "krishna"),
-        crop="paddy", crop_stage=case.get("stage", "unknown"), question=case["questions"][language],
-        language=language, field_observations=case.get("observation"), requested_date=date.fromisoformat(case["day"]),
-        date_explicit=True,
+        session_id=uuid4(), state_id=case.get("state", "andhra-pradesh"), district_id=case.get("district", "krishna"),
+        crop=case.get("crop", "paddy"), crop_stage=case.get("stage", "unknown"), question=question,
+        language=language, field_observations=case.get("observation"), requested_date=day, date_explicit=explicit,
     )
+    forecast = None
+    live_passage = None
+    if weather_fixture:
+        latitude, longitude = LOCATIONS[session.state_id, session.district_id]
+        forecast = Forecast(latitude=latitude, longitude=longitude, **weather_fixture)
+        live_passage = forecast_passage(forecast, session.state_id, session.district_id)
     started = perf_counter()
     error = None
-    if mode == "checked_rag":
+    if mode in {"checked_rag", "templates"}:
         with evidence_db() as connection:
-            response, wording = evaluate(session, connection)
-        if wording:
+            response, wording = evaluate(session, connection, forecast=forecast)
+        if wording and mode == "checked_rag":
             response = render_with_provider(provider, session, response, wording)
         prediction = {
             "status": response.status, "code": response.decision_code, "follow_up": response.follow_up_field,
@@ -105,7 +125,8 @@ def run_case(case, language, corpus, provider, mode):
             "generation": response.generation_outcome,
         }
     else:
-        retrieved = rank(session.question, corpus)[:3] if mode == "basic_rag" else []
+        candidates = [*corpus, live_passage] if live_passage else corpus
+        retrieved = rank(session.question, candidates)[:3] if mode == "basic_rag" else []
         farm = session.model_dump(mode="json", exclude={"session_id", "demo_scenario", "date_explicit"})
         aliases = {f"P{i}": row["id"] for i, row in enumerate(retrieved, 1)}
         passages = [dict(basic_excerpt(row), id=alias) for alias, row in zip(aliases, retrieved)]
@@ -124,31 +145,46 @@ def run_case(case, language, corpus, provider, mode):
         correct = correct and prediction.get("code") == case["code"]
         if "rain" in case:
             correct = correct and prediction.get("rainfall_mm") == case["rain"]
+        if weather_fixture:
+            correct = correct and session.requested_date == forecast.day
     elif case.get("follow_up"):
         correct = correct and prediction.get("follow_up") == case["follow_up"]
     cites = set(prediction["source_ids"])
+    expected_sources = set(case.get("sources", []))
+    if case.get("cite_forecast_fixture"):
+        expected_sources.add(live_passage["id"])
     return {
         "case": case["id"], "category": case["category"], "language": language, "mode": mode,
         "expected_status": case["status"], "expected_code": case.get("code"), "correct": correct,
-        "citation_supported": bool(supported and cites and cites == set(case.get("sources", []))),
+        "citation_supported": bool(supported and cites and cites == expected_sources),
         "elapsed_ms": round(elapsed, 2), "output": prediction, "error": error,
+        "provider_usage": usage,
     }
 
 
-def summarize(rows):
+def summarize(rows, rates=None):
     result = {}
     for mode in MODES:
         items = [row for row in rows if row["mode"] == mode]
+        if not items:
+            continue
         gold = [row for row in items if row["expected_status"] == "supported"]
         alternatives = [row for row in items if row["expected_status"] != "supported"]
         answers = [row for row in items if row["output"]["status"] == "supported"]
+        usage = [usage for row in items for usage in row["provider_usage"]]
+        input_tokens = sum(entry.get("prompt_tokens", 0) for entry in usage)
+        output_tokens = sum(entry.get("completion_tokens", 0) for entry in usage)
         result[mode] = {
             "recommendation_correctness": [sum(row["correct"] for row in gold), len(gold)],
             "citation_support": [sum(row["citation_supported"] for row in answers), len(answers)],
             "appropriate_clarification_or_withholding": [sum(row["correct"] for row in alternatives), len(alternatives)],
             "answer_coverage": [len(answers), len(items)],
             "median_ms": round(statistics.median(row["elapsed_ms"] for row in items), 1),
+            "median_answer_ms": round(statistics.median(row["elapsed_ms"] for row in answers), 1) if answers else None,
             "invalid_outputs": sum(row["output"]["status"] == "invalid" for row in items),
+            "generation_outcomes": dict(Counter(row["output"]["generation"] for row in items if "generation" in row["output"])),
+            "provider_usage": {"responses_reporting_usage": len(usage), "input_tokens": input_tokens,
+                               "output_tokens": output_tokens},
             "language_agreement": [sum(
                 len({(row["output"]["status"], row["output"].get("code"), row["output"].get("follow_up"),
                       tuple(sorted(set(row["output"]["source_ids"]))), row["output"].get("rainfall_mm"))
@@ -156,17 +192,29 @@ def summarize(rows):
                 for case_id in {row["case"] for row in items}
             ), len({row["case"] for row in items})],
         }
+        if rates and usage:
+            cost = (input_tokens * rates[0] + output_tokens * rates[1]) / 1_000_000
+            result[mode]["estimated_usd_for_reported_tokens"] = round(cost, 6)
+            result[mode]["estimated_usd_per_answer"] = round(cost / len(answers), 6) if answers else None
     return result
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=Path, default=ROOT / "results.json")
+    parser.add_argument("--output", type=Path, default=ROOT.parent / "data" / "evaluation-results.json")
+    parser.add_argument("--templates-only", action="store_true")
+    parser.add_argument("--input-usd-per-million", type=float)
+    parser.add_argument("--output-usd-per-million", type=float)
     args = parser.parse_args()
-    provider = ChatProvider.configured()
-    if provider is None:
+    provider = None if args.templates_only else ChatProvider.configured()
+    if provider is None and not args.templates_only:
         parser.error("Set OPENAI_API_KEY and optionally AGRIRAG_OPENAI_MODEL for a real evaluation.")
+    rates = (args.input_usd_per_million, args.output_usd_per_million)
+    if any(rate is not None for rate in rates) and not all(rate is not None and 0 <= rate < float("inf") for rate in rates):
+        parser.error("Supply both non-negative token prices when estimating API cost.")
     cases = json.loads((ROOT / "cases.json").read_text(encoding="utf-8"))
+    cases.extend(json.loads((ROOT / "expansion_cases.json").read_text(encoding="utf-8")))
+    modes = ("templates",) if args.templates_only else MODES
     rows = []
     os.environ.setdefault("AGRIRAG_CHROMA_PATH", str(ROOT.parent / "data" / "evaluation.chroma"))
     with tempfile.TemporaryDirectory() as temporary:
@@ -177,10 +225,12 @@ def main():
             if overlay not in catalogues:
                 catalogues[overlay] = fixture(overlay)
             for language in ("en", "te", "hi"):
-                for mode in MODES:
+                for mode in modes:
                     rows.append(run_case(case, language, catalogues[overlay], provider, mode))
             print(f"{case['id']}: {len(rows)} runs", flush=True)
-    output = {"model": provider.model, "cases": len(cases) * 3, "metrics": summarize(rows), "runs": rows}
+    output = {"model": provider.model if provider else None, "cases": len(cases) * 3,
+              "uses_forecast_fixtures": True, "metrics": summarize(rows, rates if rates[0] is not None else None), "runs": rows}
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(output["metrics"], indent=2))
 

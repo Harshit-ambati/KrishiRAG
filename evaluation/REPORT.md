@@ -28,3 +28,19 @@ Recommendation correctness checks the labeled decision code and the expected rai
 The checks improved decision coverage and distinguished missing context from evidence gaps and conflicts in this labeled pilot. The local model supplied accepted wording for **1 of 18** supported cases. The other 17 used cited templates after **9 validation failures and 8 provider errors**. The measured correctness comes primarily from the decision rules, evidence checks, and fallback. No Telugu or Hindi model wording passed validation in this run.
 
 Basic RAG produced 18 schema-validation failures and one timeout. These results apply to this model, prompt, fixtures, and hardware. The evaluation uses developer-authored labels on a small repeatable acceptance set. An independent agronomic or linguistic reviewer has not reviewed the labels.
+
+## Expanded template baseline, 23 November 2026
+
+I ran `python evaluation/run.py --templates-only --output data/evaluation-templates-81.json` with the original 60 cases and [21 expansion cases](expansion_cases.json). This run used the local evidence index and verified templates.
+
+| Metric | Verified templates |
+| --- | ---: |
+| Correct decision or information on cases that warranted an answer | 33 / 33 |
+| Exact expected citations on issued answers | 33 / 33 |
+| Correct clarification or withholding | 48 / 48 |
+| Answer coverage | 33 / 81 |
+| Agreement across all three languages | 27 / 27 scenario families |
+| Median response time | 24.1 ms |
+| Median issued answer time | 29.0 ms |
+
+The weather replay used a fixed synthetic forecast and a clock set near midnight in Asia/Kolkata. The timer includes local retrieval and response construction. OpenAI measurements are pending an API credential. The older Qwen results above apply to the original corpus and its previous implementation.

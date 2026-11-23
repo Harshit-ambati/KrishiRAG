@@ -1,0 +1,46 @@
+[
+  {
+    "id": "tomato-coimbatore", "category": "vegetables", "day": "2026-11-23", "date_explicit": false,
+    "state": "tamil-nadu", "district": "lgd-569", "crop": "tomato", "stage": "fruiting",
+    "questions": {"en": "How should I irrigate my tomatoes?", "te": "నా టమాటా పంటకు ఎలా నీరు పెట్టాలి?", "hi": "टमाटर की सिंचाई कैसे करूँ?"},
+    "status": "supported", "code": "tomato_even_water", "sources": ["tnau-organic-tomato-water-1"]
+  },
+  {
+    "id": "chilli-dehradun", "category": "vegetables", "day": "2026-11-23", "date_explicit": false,
+    "state": "uttarakhand", "district": "lgd-49", "crop": "chilli", "stage": "flowering",
+    "questions": {"en": "How should I irrigate my chilli crop?", "te": "నా మిరప పంటకు ఎలా నీరు పెట్టాలి?", "hi": "मिर्च की सिंचाई कैसे करूँ?"},
+    "status": "supported", "code": "chilli_avoid_stagnation", "sources": ["tnau-chilli-water-1"]
+  },
+  {
+    "id": "onion-coimbatore", "category": "vegetables", "day": "2026-11-23", "date_explicit": false,
+    "state": "tamil-nadu", "district": "lgd-569", "crop": "onion",
+    "questions": {"en": "What drainage is suitable for Bellary onion?", "te": "బెల్లారి ఉల్లిలో నీటి పారుదల ఎలా ఉండాలి?", "hi": "बेल्लारी प्याज़ के लिए जल निकासी कैसी होनी चाहिए?"},
+    "status": "supported", "code": "onion_good_drainage", "sources": ["tnau-bellary-onion-drainage-1"]
+  },
+  {
+    "id": "tomato-outside-reviewed-state", "category": "wrong_state", "day": "2026-11-23", "date_explicit": false,
+    "state": "maharashtra", "district": "lgd-490", "crop": "tomato", "stage": "fruiting",
+    "questions": {"en": "How should I irrigate my tomatoes?", "te": "నా టమాటా పంటకు ఎలా నీరు పెట్టాలి?", "hi": "टमाटर की सिंचाई कैसे करूँ?"},
+    "status": "insufficient_evidence"
+  },
+  {
+    "id": "drip-definition-outside-pilot", "category": "information", "day": "2026-11-23", "date_explicit": false,
+    "state": "maharashtra", "district": "lgd-490", "crop": "none",
+    "questions": {"en": "What is drip irrigation?", "te": "బిందు సేద్యం అంటే ఏమిటి?", "hi": "ड्रिप सिंचाई क्या है?"},
+    "status": "supported", "code": "define_drip_irrigation", "sources": ["pib-water-efficiency-2026-1"]
+  },
+  {
+    "id": "pune-relative-forecast", "category": "live_weather_fixture", "clock": "2026-11-23T19:00:00+00:00",
+    "state": "maharashtra", "district": "lgd-490", "crop": "none",
+    "forecast_fixture": {"day": "2026-11-25", "retrieved_at": "2026-11-24T00:30:00+05:30", "rainfall_mm": 2.5, "low_c": 18, "high_c": 29, "wind_kmh": 12},
+    "cite_forecast_fixture": true,
+    "questions": {"en": "Will it rain tomorrow?", "te": "రేపు వర్షం పడుతుందా?", "hi": "क्या कल बारिश होगी?"},
+    "status": "supported", "code": "plan_with_district_forecast", "rain": 2.5
+  },
+  {
+    "id": "ambiguous-weather-date-range", "category": "ambiguous_date", "clock": "2026-11-23T19:00:00+00:00",
+    "state": "maharashtra", "district": "lgd-490", "crop": "none",
+    "questions": {"en": "Will it rain next week?", "te": "వచ్చే వారం వర్షం పడుతుందా?", "hi": "क्या अगले सप्ताह बारिश होगी?"},
+    "status": "insufficient_evidence"
+  }
+]

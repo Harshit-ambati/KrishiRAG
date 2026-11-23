@@ -3,7 +3,7 @@
 import json
 import os
 from dataclasses import dataclass
-from typing import Annotated, Literal
+from typing import Annotated, Callable, Literal
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -30,6 +30,7 @@ class ChatProvider:
     model: str
     api_key: str | None = None
     timeout: float = 20.0
+    record_usage: Callable[[dict], None] | None = None
 
     @classmethod
     def configured(cls):
@@ -57,7 +58,10 @@ class ChatProvider:
             },
         )
         response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+        body = response.json()
+        if self.record_usage and isinstance(body.get("usage"), dict):
+            self.record_usage(body["usage"])
+        return body["choices"][0]["message"]["content"]
 
 
 INSTRUCTION = (

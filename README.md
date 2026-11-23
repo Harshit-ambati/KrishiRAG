@@ -113,11 +113,13 @@ Run `docker compose up -d --build` with the admin password and provider variable
 
 The single FastAPI service uses `./data` as the persistent mount for the SQLite evidence catalog, source snapshots, advisory and feedback logs, Chroma, and E5 weights. Keep that mount across deploys and back it up. For public hosting, use a persistent volume, TLS, and server-managed secrets. Keep one application instance per SQLite/Chroma volume.
 
-Run `python demo/run.py` against the running service. It replays the 24 November 2026 scenario with the two pilot districts, checks missing archived coverage, and compares equivalent English, Telugu, and Hindi answers. Use `--url` for a different deployment. Add `--smoke` with admin credentials set to submit test feedback and verify the protected admin view. See the [manual demo](demo/README.md) and [language verification record](demo/VERIFICATION.md).
+Run `python demo/run.py` against the running service. It replays the 24 November 2026 scenario with the two pilot districts, checks missing archived coverage, and compares equivalent English, Telugu, and Hindi answers. Use `--url` for a different deployment. Add `--smoke` with admin credentials set to submit test feedback and verify the protected admin view. See the [manual demo](demo/README.md), [language verification record](demo/VERIFICATION.md), and [farmer pilot plan](demo/PILOT.md).
 
 ## Evaluate
 
-See the [measured evaluation](evaluation/REPORT.md) and its [labeled cases](evaluation/cases.json). Run `python evaluation/run.py --output evaluation/results.json` with the provider variables set. The 20 scenario families each have English, Telugu, and Hindi variants. The evaluator builds temporary SQLite catalogs for the wrong-district, archived, and conflict fixtures.
+Run `python evaluation/run.py --templates-only` for a credential-free baseline. With `OPENAI_API_KEY` exported, run `python evaluation/run.py` for LLM alone, basic RAG, checked RAG, and verified templates. The default output is `data/evaluation-results.json`. The 27 scenario families each have English, Telugu, and Hindi variants. They include clarification, date and district restrictions, vegetable guidance, direct answers, and a fixed weather response replayed across the India date boundary. See the [historical comparison and new baseline](evaluation/REPORT.md) and [expansion cases](evaluation/expansion_cases.json).
+
+The runner records output acceptance, fallback, latency, and the token usage reported by the provider. Pass `--input-usd-per-million` and `--output-usd-per-million` together to estimate cost using the rates for the configured model. The estimate bills all reported input tokens at the supplied input rate and may differ from the invoice.
 
 ## Pilot evidence
 
@@ -131,7 +133,7 @@ Use the protected admin workflow to publish crop guidance. Capture the source UR
 
 ## Recommended next tasks
 
-1. Add a coverage matrix by state, district, crop, stage, and topic. Prioritize reviewing tomato, chilli, and onion irrigation guidance from relevant state universities and KVKs before adding more crops.
+1. Use the maintenance report to prioritize reviewing tomato, chilli, and onion irrigation guidance from relevant state universities and KVKs.
 2. Add opt-in farm coordinates, short forecast caching, and provider outage monitoring. Evaluate field-point forecasts against IMD where they overlap.
 3. Expand reviewed direct questions and answer templates, including soil, crop stages, and harvest information. Have fluent Telugu and Hindi reviewers check wording against the source.
 4. Rerun the labeled evaluation with OpenAI and add cases for nationwide district selection, live dates, vegetables, and direct answers. Publish measured citation support, coverage, latency, and cost.
