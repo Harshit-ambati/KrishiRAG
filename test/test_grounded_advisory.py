@@ -105,9 +105,9 @@ class GroundedAdvisoryTests(unittest.TestCase):
         self.assertEqual(final["requested_date"], first["requested_date"])
         self.assertEqual(self.ask(crop_stage="tillering")["status"], "insufficient_evidence")
 
-    def test_sqlite_mode_skips_model_and_preserves_evidence_decisions(self):
+    def test_render_defaults_to_sqlite_and_preserves_evidence_decisions(self):
         with (
-            patch.dict("os.environ", {"AGRIRAG_EVIDENCE_MODE": "sqlite", "AGRIRAG_LIVE_WEATHER": "0",
+            patch.dict("os.environ", {"RENDER": "true", "AGRIRAG_EVIDENCE_MODE": "", "AGRIRAG_LIVE_WEATHER": "0",
                                       "GEMINI_API_KEY": "", "OPENAI_API_KEY": ""}),
             patch("evidence_index.download_model") as download,
             patch("evidence_index.collection") as vector_index,
@@ -131,6 +131,12 @@ class GroundedAdvisoryTests(unittest.TestCase):
             download.assert_not_called()
             vector_index.assert_not_called()
             readiness_index.assert_not_called()
+
+    def test_explicit_retrieval_mode_overrides_host_default(self):
+        with patch.dict("os.environ", {"RENDER": "true", "AGRIRAG_EVIDENCE_MODE": "chroma"}):
+            self.assertEqual(evidence_index.evidence_mode(), "chroma")
+        with patch.dict("os.environ", {"RENDER": "false", "AGRIRAG_EVIDENCE_MODE": ""}):
+            self.assertEqual(evidence_index.evidence_mode(), "chroma")
 
     def test_wrong_district_and_expired_or_future_weather(self):
         unsupported = self.ask(district_id="eluru")

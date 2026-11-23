@@ -30,7 +30,9 @@ class EvidenceIndexUnavailable(RuntimeError):
 
 
 def evidence_mode():
-    mode = os.environ.get("AGRIRAG_EVIDENCE_MODE", "chroma")
+    mode = os.environ.get("AGRIRAG_EVIDENCE_MODE", "").strip()
+    if not mode:
+        return "sqlite" if os.environ.get("RENDER") == "true" else "chroma"
     if mode not in ("chroma", "sqlite"):
         raise ValueError("AGRIRAG_EVIDENCE_MODE must be chroma or sqlite.")
     return mode
