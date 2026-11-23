@@ -1,6 +1,6 @@
 # AgriRAG
 
-AgriRAG answers questions about weather, crop practices, and field decisions in English, Telugu, and Hindi. Its location catalog includes 783 district entries across India's 36 states and Union Territories. Crop advice has narrower evidence coverage. The starter catalog includes paddy guidance for Krishna and West Godavari, tomato and Bellary onion practices for Tamil Nadu, and organic chilli guidance for Uttarakhand. It also supports general irrigation definitions from a national source.
+AgriRAG answers questions about weather, crop practices, and field decisions in English, Telugu, and Hindi. Its location catalog includes 783 district entries across India's 36 states and Union Territories. Crop advice has narrower evidence coverage. The starter catalog includes paddy guidance for Krishna and West Godavari, tomato, Bellary onion, okra, and brinjal practices for Tamil Nadu, and organic chilli guidance for Uttarakhand. It also supports general irrigation definitions from a national source.
 
 ## Run locally
 

@@ -44,7 +44,7 @@ class ExpandedCoverageTests(unittest.TestCase):
         config = self.client.get("/api/farm-config").json()
         self.assertEqual(len(config["coverage"]), 36)
         self.assertGreaterEqual(sum(len(state["districts"]) for state in config["coverage"]), 780)
-        self.assertEqual(set(config["crops"]), {"paddy", "tomato", "chilli", "onion"})
+        self.assertEqual(set(config["crops"]), {"paddy", "tomato", "chilli", "onion", "okra", "brinjal"})
         for fields in (PUNE | {"state_id": "andhra-pradesh"},
                        COIMBATORE | {"crop": "tomato", "crop_stage": "tillering"}):
             response = self.client.post("/api/advisories", json=fields | {"question": "Rain?", "language": "en"})
@@ -88,6 +88,29 @@ class ExpandedCoverageTests(unittest.TestCase):
                 connection.execute("UPDATE source_documents SET status='archived' WHERE id='imd-agromet-ap-93-2026'")
             self.assertNotIn({"topic": "irrigation", "status": "reviewed"}, lookup(crop_stage="grain-filling")["crop_topics"])
             network.assert_not_called()
+
+    def test_okra_stage_and_brinjal_drainage_have_scoped_coverage(self):
+        for language, query in (
+            ("en", "How should I irrigate my okra?"),
+            ("te", "నా బెండకు ఎలా నీరు పెట్టాలి?"),
+            ("hi", "भिंडी की सिंचाई कैसे करूँ?"),
+        ):
+            with self.subTest(language=language):
+                response = self.ask(COIMBATORE, query, crop="okra", language=language, requested_date=None)
+                self.assertEqual(response["follow_up_field"], "crop_stage")
+                self.assertEqual(response["status"], "clarification")
+                answer = self.client.post("/api/advisories", json={
+                    "session_id": response["session_id"], "crop_stage": "flowering",
+                }).json()
+                self.assertEqual(answer["decision_code"], "okra_moisture_at_fruit_set")
+                self.assertEqual(answer["evidence"][0]["passage_id"], "tnau-organic-okra-water-1")
+        okra = self.ask(PUNE, "How should I irrigate my okra?", crop="okra", crop_stage="flowering", requested_date=None)
+        self.assertEqual(okra["status"], "insufficient_evidence")
+        early = self.ask(COIMBATORE, "How should I irrigate my okra?", crop="okra", crop_stage="seedling", requested_date=None)
+        self.assertEqual(early["status"], "insufficient_evidence")
+        brinjal = self.ask(COIMBATORE, "How should I manage brinjal drainage?", crop="brinjal", requested_date=None)
+        self.assertEqual(brinjal["decision_code"], "brinjal_rainy_season_drainage")
+        self.assertEqual(brinjal["evidence"][0]["passage_id"], "tnau-brinjal-rainy-season-drainage-1")
 
     def test_direct_definition_in_all_three_languages_without_crop_details(self):
         for language, question in (("en", "What is drip irrigation?"), ("hi", "ड्रिप सिंचाई क्या है?"),

@@ -19,6 +19,10 @@ WEATHER_TOPIC = "district-rainfall-forecast"
 RAIN_TERMS = ("rain", "forecast", "weather", "बारिश", "वर्षा", "मौसम", "వర్ష", "వాతావరణ")
 OTHER_WEATHER_TERMS = ("temperature", "wind", "तापमान", "हवा", "ఉష్ణోగ్రత", "గాలి")
 TIMING_TOPICS = {"irrigation", "spraying", "harvest"}
+GENERAL_VEGETABLE_IRRIGATION = {
+    "tomato_even_water", "chilli_avoid_stagnation", "onion_good_drainage",
+    "okra_moisture_at_fruit_set", "brinjal_rainy_season_drainage",
+}
 DEFINITIONS = {
     "drip-irrigation-definition": ("define_drip_irrigation", "drip", {
         "what is drip irrigation", "define drip irrigation", "how does drip irrigation work", "ड्रिप सिंचाई क्या है",
@@ -55,6 +59,16 @@ ACTIONS = {
             "For Bellary (large) onion, use soil that drains well.",
             "బెల్లారి (పెద్ద రకం) ఉల్లికి నీరు బాగా ఇంకిపోయే నేలను ఎంచుకోండి.",
             "बेल्लारी (बड़े आकार वाली) प्याज़ के लिए अच्छी जल निकासी वाली मिट्टी चुनें।",
+        ),
+        "okra_moisture_at_fruit_set": (
+            "For organic okra, keep the soil moist during flowering and fruit set and avoid waterlogging.",
+            "సేంద్రియ బెండలో పూత, కాయ పట్టే దశల్లో నేల తేమగా ఉంచండి. నీరు నిలవకుండా చూసుకోండి.",
+            "जैविक भिंडी में फूल आने और फल लगने के दौरान मिट्टी नम रखें और जलभराव से बचें।",
+        ),
+        "brinjal_rainy_season_drainage": (
+            "During the rainy season, keep water from standing in the brinjal field.",
+            "వర్షాకాలంలో వంకాయ పొలంలో నీరు నిలవకుండా చూసుకోండి.",
+            "बरसात के मौसम में बैंगन के खेत में पानी जमा न होने दें।",
         ),
     },
     "harvest": {
@@ -369,7 +383,7 @@ def decision(session, connection, covered_location, forecast=None):
             action = message("standing")
             code = "avoid_irrigation_while_standing"
 
-    general_vegetable_practice = code in {"tomato_even_water", "chilli_avoid_stagnation", "onion_good_drainage"} and needs_weather
+    general_vegetable_practice = code in GENERAL_VEGETABLE_IRRIGATION and needs_weather
     practice_copy = message("vegetable_timing_gap") if general_vegetable_practice else None
     weather_copy = f'{point_copy} {message("point_scope")}' if point_copy else None
     return support(code, action, practices[:1], practice_rows=practices[:1], weather_rows=weather,

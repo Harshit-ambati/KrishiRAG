@@ -66,6 +66,8 @@ CONFIG = {
         "tomato": {"en": "Tomato", "te": "టమాటా", "hi": "टमाटर"},
         "chilli": {"en": "Chilli", "te": "మిరప", "hi": "मिर्च"},
         "onion": {"en": "Onion", "te": "ఉల్లి", "hi": "प्याज़"},
+        "okra": {"en": "Okra (bhindi)", "te": "బెండకాయ", "hi": "भिंडी"},
+        "brinjal": {"en": "Brinjal (eggplant)", "te": "వంకాయ", "hi": "बैंगन"},
     },
     "stages": {**PILOT_CONFIG["stages"], **VEGETABLE_STAGES},
     "crop_stages": {
@@ -73,6 +75,8 @@ CONFIG = {
         "tomato": ["seedling", "vegetative", "flowering", "fruiting", "mature", "post-harvest"],
         "chilli": ["seedling", "vegetative", "flowering", "fruiting", "mature", "post-harvest"],
         "onion": ["seedling", "vegetative", "bulb-development", "mature", "post-harvest"],
+        "okra": ["seedling", "vegetative", "flowering", "fruiting", "mature", "post-harvest"],
+        "brinjal": ["seedling", "vegetative", "flowering", "fruiting", "mature", "post-harvest"],
         "none": [],
     },
     "demo_districts": sorted(DEMO_DISTRICTS),

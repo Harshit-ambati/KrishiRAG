@@ -113,5 +113,73 @@
         "content": "The Bellary onion guide prefers well-drained red loam to black soils."
       }
     ]
+  },
+  {
+    "id": "tnau-organic-okra-water",
+    "filename": "tnau-organic-okra-water.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University Agritech Portal",
+      "title": "Organic Farming Practices — Okra: Water Requirements",
+      "original_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_bhendi_water.html",
+      "language": "en",
+      "state_id": "tamil-nadu",
+      "geographic_scope": "Tamil Nadu extension guidance for organic okra",
+      "version": "Updated Dec 2014",
+      "review_notes": "The page credits the Centre for Indian Knowledge Systems, Chennai. Reviewed the soil-moisture and waterlogging guidance. The coded practice covers flowering and fruit set."
+    },
+    "passages": [
+      {
+        "kind": "advisory",
+        "crop": "okra",
+        "crop_stage": "Flowering",
+        "stage_id": "flowering",
+        "topic": "irrigation",
+        "section": "Water Requirements",
+        "statewide": true,
+        "decision_code": "okra_moisture_at_fruit_set",
+        "content": "Maintain moist soil without waterlogging. Flowering and fruit set are sensitive to moisture stress."
+      },
+      {
+        "kind": "advisory",
+        "crop": "okra",
+        "crop_stage": "Fruit set",
+        "stage_id": "fruiting",
+        "topic": "irrigation",
+        "section": "Water Requirements",
+        "statewide": true,
+        "decision_code": "okra_moisture_at_fruit_set",
+        "content": "Maintain moist soil without waterlogging. Flowering and fruit set are sensitive to moisture stress."
+      }
+    ]
+  },
+  {
+    "id": "tnau-brinjal-rainy-season-drainage",
+    "filename": "tnau-brinjal-rainy-season-drainage.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University Agritech Portal",
+      "title": "Horticulture — Vegetables: Brinjal (Tamil guide)",
+      "original_url": "https://agritech.tnau.ac.in/ta/horticulture/horti_vegetables_brinjal_ta.html",
+      "language": "ta",
+      "state_id": "tamil-nadu",
+      "geographic_scope": "Tamil Nadu extension guidance for rainy-season brinjal drainage",
+      "version": "Undated Tamil online guide",
+      "review_notes": "The Water Management section describes avoiding standing water during the rainy season. The coded practice is limited to drainage."
+    },
+    "passages": [
+      {
+        "kind": "advisory",
+        "crop": "brinjal",
+        "topic": "irrigation",
+        "section": "நீர் நிர்வாகம் (Water Management)",
+        "language": "en",
+        "statewide": true,
+        "decision_code": "brinjal_rainy_season_drainage",
+        "content": "Prevent water from stagnating in the field during the rainy season."
+      }
+    ]
   }
 ]
