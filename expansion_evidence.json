@@ -181,5 +181,45 @@
         "content": "Prevent water from stagnating in the field during the rainy season."
       }
     ]
+  },
+  {
+    "id": "tnau-organic-okra-harvest",
+    "filename": "tnau-organic-okra-harvest.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University Agritech Portal",
+      "title": "Organic Farming Practices — Okra: Harvesting",
+      "original_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_bhendi_harvesting.html",
+      "language": "en",
+      "state_id": "tamil-nadu",
+      "geographic_scope": "Tamil Nadu extension guidance for organic okra",
+      "version": "Updated Dec 2014",
+      "review_notes": "The page credits the Centre for Indian Knowledge Systems, Chennai. Approved the tenderness and typical length guidance in the Timing paragraph, including variety and market caveats."
+    },
+    "passages": [
+      {
+        "kind": "advisory",
+        "crop": "okra",
+        "crop_stage": "Fruiting and market-ready pods",
+        "stage_id": "fruiting",
+        "topic": "harvest",
+        "section": "Harvesting / Timing",
+        "statewide": true,
+        "decision_code": "okra_harvest_tender",
+        "content": "Tender pods roughly 7–10 cm long are usually picked. Size at harvest differs by variety or hybrid and market preference."
+      },
+      {
+        "kind": "advisory",
+        "crop": "okra",
+        "crop_stage": "Harvesting",
+        "stage_id": "harvesting",
+        "topic": "harvest",
+        "section": "Harvesting / Timing",
+        "statewide": true,
+        "decision_code": "okra_harvest_tender",
+        "content": "Tender pods roughly 7–10 cm long are usually picked. Size at harvest differs by variety or hybrid and market preference."
+      }
+    ]
   }
 ]

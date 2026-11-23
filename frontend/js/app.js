@@ -28,6 +28,9 @@ let failedRequest;
 let coverageRequest;
 let coverageResult;
 let coverageFailed = false;
+let outlookRequest;
+let outlookData;
+let outlookFailed = false;
 const feedback = new Map();
 
 const selectedState = () => coverage.find(state => state.id === fields.state.value);
@@ -169,6 +172,7 @@ function renderLanguage() {
   ]);
   renderDemoAvailability();
   renderCoverage();
+  renderOutlook();
 
   if (validationStarted) validate();
   renderResult();
@@ -239,14 +243,15 @@ function renderResult() {
     ? [] : [localName(crops[fields.crop.value]), stageName];
   byId('result-location').textContent = [districtLabel, localName(state.name), ...details].join(' · ');
   byId('result-primary-label').textContent = copy[answer.answer_type === 'information' ? 'directAnswer' : 'action'];
-  byId('result-action').textContent = answer.answer ?? answer.suggested_action;
-  byId('result-explanation').textContent = answer.explanation;
   byId('follow-up').hidden = !answer.follow_up_question;
+  const observations = byId('observation-choices');
+  observations.hidden = answer.follow_up_kind !== 'soil_moisture';
+  for (const button of observations.querySelectorAll('button')) button.disabled = pending;
   byId('answer-follow-up').disabled = pending;
   byId('result-follow-up').textContent = answer.follow_up_question ?? '';
   byId('result-requested-date').hidden = !answer.requested_date;
   renderDate('advisory-date', answer.requested_date);
-  for (const id of ['result-status', 'result-action', 'result-explanation', 'result-follow-up', 'result-sources']) {
+  for (const id of ['result-status', 'result-action', 'result-explanation', 'result-weather', 'result-follow-up', 'result-sources']) {
     byId(id).lang = answer.language;
   }
 
@@ -274,25 +279,46 @@ function renderResult() {
     }
     return item;
   }));
-  const claimCitations = byId('claim-citations');
   const claims = answer.claims ?? [];
-  claimCitations.hidden = !claims.length;
-  claimCitations.setAttribute('aria-label', copy.claimCitations);
-  claimCitations.replaceChildren(...claims.map(claim => {
-    const item = document.createElement('li');
-    const label = claim.kind === 'action' && answer.answer_type === 'information' ? copy.directAnswer : copy.claimNames[claim.kind];
-    item.append(label + ' ');
+  const action = claims.find(claim => claim.kind === 'action');
+  const weather = answer.answer_type === 'advice' ? claims.find(claim => claim.kind === 'weather') : undefined;
+  const explanation = claims.filter(claim => claim.kind !== 'action' && claim !== weather);
+  const primary = byId('result-action');
+  const reason = byId('result-explanation');
+  const forecastText = byId('result-weather');
+  primary.textContent = answer.answer ?? answer.suggested_action;
+  reason.textContent = '';
+  forecastText.textContent = '';
+  byId('answer-weather').hidden = !weather;
+  if (action) appendReferences(primary, action);
+  if (explanation.length) {
+    for (const claim of explanation) {
+      if (reason.hasChildNodes()) reason.append(' ');
+      reason.append(claim.text);
+      appendReferences(reason, claim);
+    }
+  } else if (!weather) {
+    reason.textContent = answer.explanation;
+  }
+  reason.hidden = !reason.textContent;
+  byId('result-explanation-title').hidden = reason.hidden;
+  if (weather) {
+    forecastText.textContent = weather.text;
+    appendReferences(forecastText, weather);
+  }
+
+  function appendReferences(node, claim) {
     for (const id of claim.passage_ids) {
       const number = sourceNumbers.get(id);
       if (!number) continue;
       const reference = document.createElement('a');
+      reference.className = 'claim-reference';
       reference.href = '#advisory-source-' + number;
       reference.textContent = '[' + number + ']';
       reference.setAttribute('aria-label', copy.sources + ' ' + number);
-      item.append(reference, ' ');
+      node.append(' ', reference);
     }
-    return item;
-  }));
+  }
   sources.hidden = !answer.evidence.length;
   byId('no-sources').hidden = Boolean(answer.evidence.length);
   byId('validity').hidden = !answer.validity_window;
@@ -304,6 +330,79 @@ function renderResult() {
 function formattedDate(value) {
   return new Intl.DateTimeFormat(language + '-IN', { dateStyle: 'medium', timeZone: 'UTC' })
     .format(new Date(value + 'T00:00:00Z'));
+}
+
+function renderOutlook() {
+  const panel = byId('district-outlook');
+  const district = districtsFor(selectedState()).find(entry => entry.id === fields.district.value);
+  panel.hidden = !district;
+  if (!district) return;
+  const table = byId('outlook-table');
+  const status = byId('outlook-status');
+  table.hidden = !outlookData;
+  byId('outlook-point-note').hidden = !outlookData?.live_retrieved_at;
+  if (!outlookData) {
+    status.textContent = outlookFailed ? copy.outlookError : panel.open ? copy.outlookLoading : '';
+    return;
+  }
+  const number = new Intl.NumberFormat(language + '-IN', { maximumFractionDigits: 2 });
+  status.textContent = localName(district.name) + ' · ' + copy.outlookDateScope;
+  byId('outlook-rows').replaceChildren(...outlookData.days.map(day => {
+    const row = document.createElement('tr');
+    const dateCell = document.createElement('th');
+    dateCell.scope = 'row';
+    dateCell.textContent = formattedDate(day.date);
+    row.append(dateCell);
+    const rain = document.createElement('td');
+    rain.textContent = day.rainfall_mm == null
+      ? copy[day.rain_status === 'conflicting' ? 'outlookConflict' : 'outlookUnavailable'] : number.format(day.rainfall_mm);
+    for (const source of day.sources) {
+      if (!source.original_url?.startsWith('https://')) continue;
+      const reference = document.createElement('a');
+      const url = new URL(source.original_url);
+      if (source.page_number) url.hash = 'page=' + source.page_number;
+      reference.href = url.href;
+      reference.target = '_blank';
+      reference.rel = 'noopener noreferrer';
+      reference.textContent = source.version;
+      reference.setAttribute('aria-label', source.title + ' ' + source.version);
+      rain.append(' ', reference);
+    }
+    row.append(rain);
+    for (const value of [day.low_c == null ? null : number.format(day.low_c) + '–' + number.format(day.high_c),
+                         day.wind_kmh == null ? null : number.format(day.wind_kmh)]) {
+      const cell = document.createElement('td');
+      cell.textContent = value ?? '–';
+      if (value === null) cell.setAttribute('aria-label', copy.outlookUnavailable);
+      row.append(cell);
+    }
+    return row;
+  }));
+}
+
+async function checkOutlook() {
+  outlookRequest?.abort();
+  outlookData = undefined;
+  outlookFailed = false;
+  renderOutlook();
+  if (!fields.district.value || !byId('district-outlook').open) return;
+  const request = new AbortController();
+  outlookRequest = request;
+  const query = new URLSearchParams({
+    state_id: fields.state.value, district_id: fields.district.value, days: byId('outlook-days').value,
+  });
+  try {
+    const response = await fetch('/api/forecast?' + query, {
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(9000)]),
+    });
+    if (!response.ok) throw new Error('Forecast unavailable');
+    const forecast = await response.json();
+    if (!request.signal.aborted) outlookData = forecast;
+  } catch {
+    if (!request.signal.aborted) outlookFailed = true;
+  } finally {
+    if (!request.signal.aborted) renderOutlook();
+  }
 }
 
 function renderFeedback() {
@@ -375,6 +474,7 @@ function fieldChanged(event) {
   }
   renderDemoAvailability();
   if ([fields.state, fields.district, fields.crop, fields.stage].includes(event.target)) checkCoverage();
+  if ([fields.state, fields.district].includes(event.target)) checkOutlook();
   if ([fields.state, fields.district, fields.crop, fields.question].includes(event.target)) resetSession();
   else if (requestError) {
     clearRequestError();
@@ -393,6 +493,17 @@ languageSelect.addEventListener('change', () => {
   }
 });
 scenarioSelect.addEventListener('change', resetSession);
+byId('district-outlook').addEventListener('toggle', event => {
+  if (event.target.open && !outlookData) checkOutlook();
+});
+byId('outlook-days').addEventListener('change', checkOutlook);
+byId('observation-choices').addEventListener('click', event => {
+  const choice = event.target.closest('button[data-observation]');
+  if (!choice || pending || result?.answer.follow_up_kind !== 'soil_moisture') return;
+  fields.observation.value = copy.observationValues[choice.dataset.observation];
+  clearRequestError();
+  form.requestSubmit(submit);
+});
 byId('answer-follow-up').addEventListener('click', () => {
   const field = result.answer.follow_up_field === 'crop_stage' ? fields.stage : fields.observation;
   field.focus();

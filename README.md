@@ -40,6 +40,8 @@ Get state, district, crop, and stage IDs from `GET /api/farm-config`. The API re
 
 The farmer form uses `GET /api/coverage` before submission. Supply `state_id`, `district_id`, and optionally `crop`, `crop_stage`, and `on_date`. It checks today's reviewed coverage by default and reports whether a live lookup is configured. A live lookup can still fail when the farmer submits a question. Guidance may require a field observation or newer weather evidence for a particular decision.
 
+The answer card puts citations beside each claim and shows the forecast used for a dated field decision separately. A paddy irrigation follow-up can be answered using the soil-moisture buttons or a field note, with the original question retained. If a reviewed source gives general irrigation guidance without a water quantity, the answer says so. The archived paddy harvest example shows maturity and storage-moisture thresholds. Tamil Nadu organic okra harvest guidance includes pod length, tenderness, and variety and market caveats. [TNAU okra harvest guide](https://agritech.tnau.ac.in/org_farm/orgfarm_bhendi_harvesting.html)
+
 The server stores the original question and farm context in `data/advisories.sqlite3` by default. Set `AGRIRAG_DB_PATH` to use a different SQLite file.
 
 Each supported result links its proposed action and explanation to the original passage IDs. Source cards show the publisher, issue date, original title, version, and PDF page or section. The server stores the exact response and source versions for each delivered advisory. The language switch translates the decision already displayed, with the same evidence IDs, validity, dates, and quantities. If the evidence changes, the interface asks the farmer to resubmit.
@@ -72,6 +74,8 @@ Use Postman to send `POST http://127.0.0.1:8765/api/advisories` with `Content-Ty
 ```
 
 Verify `status: "supported"`, `answer_type: "information"`, the local `requested_date`, the values in `weather_snapshot`, and an Open-Meteo citation. Check that a different district produces a different requested point. For a direct knowledge answer, submit “What is drip irrigation?” or “What is sprinkler irrigation?” and confirm that the response cites the original PIB section. To try vegetable guidance, select Coimbatore (`tamil-nadu`, `lgd-569`), choose Tomato, and ask “How should I irrigate my tomatoes?”
+
+Open **District forecast** in the farmer interface to compare 3, 5, or 7 days. This calls `GET /api/forecast?state_id=maharashtra&district_id=lgd-490&days=5`, also usable in Postman. A window starts today in Asia/Kolkata unless `start_date` is supplied. Each day shows reviewed district rainfall when available and live temperature and wind for the district's reference point. If reviewed rainfall is unavailable, a validated live value can be shown. Conflicting or unavailable rainfall is flagged. Multi-day outlooks are for planning. Crop decisions continue to use evidence for the specific requested date. [Open-Meteo forecast documentation](https://open-meteo.com/en/docs)
 
 ## Prepare the evidence index
 

@@ -12,12 +12,28 @@ TOPICS = {
     "grain-drying": ("grain dry", "dry grain", "dry harvested", "drying", "grain moisture", "अनाज सुख", "धान सुख", "దాన్యం ఆర", "ధాన్యం ఆర", "ధాన్యం తేమ"),
     "spraying": ("spray", "छिड़क", "छिडक", "పిచికార"),
     "harvest": ("harvest", "कटाई", "काट", "కోత", "కోయ"),
-    "irrigation": ("irrigat", "drain", "waterlog", "watering", "water my", "water the", "standing water", "सिंचाई", "पानी", "जल निकासी", "సాగునీ", "నీరు", "నీటి", "నీళ్లు", "కాలువ"),
+    "irrigation": ("irrigat", "drain", "waterlog", "watering", "water my", "water the", "how much water",
+                   "standing water", "सिंचाई", "पानी", "जल निकासी", "సాగునీ", "నీరు", "నీటి", "నీళ్లు", "కాలువ"),
     "district-rainfall-forecast": ("rain", "forecast", "weather", "temperature", "wind", "बारिश", "वर्षा", "मौसम", "तापमान", "हवा", "వర్ష", "వాతావరణ", "ఉష్ణోగ్రత", "గాలి"),
 }
 WEATHER_TOPIC = "district-rainfall-forecast"
 RAIN_TERMS = ("rain", "forecast", "weather", "बारिश", "वर्षा", "मौसम", "వర్ష", "వాతావరణ")
 OTHER_WEATHER_TERMS = ("temperature", "wind", "तापमान", "हवा", "ఉష్ణోగ్రత", "గాలి")
+IRRIGATION_QUANTITY_TERMS = ("how much water", "how much irrigation", "irrigation depth", "water depth",
+                            "litre", "liter", "कितना पानी", "पानी की गहराई", "ఎంత నీరు", "నీటి లోతు")
+UNKNOWN_MOISTURE = (
+    "I’m not sure about soil moisture", "నేల తేమ గురించి నాకు తెలియదు", "मुझे मिट्टी की नमी पता नहीं",
+)
+REVIEWED_HARVEST_TEXT = (
+    "Harvest at physiological maturity, when roughly 80–85% of grains in a panicle are mature. "
+    "Dry grain to 12–14% moisture before storage."
+)
+MULTI_DAY_REQUEST = re.compile(
+    r"\b(next week|next month|this week|this weekend|today and tomorrow)\b"
+    r"|\b(?:next|coming|following)\s+(?:\d+|two|three|four|five|six|seven|few)\s+days\b"
+    r"|अगले हफ्ते|अगले सप्ताह|(?:अगले|आने वाले)\s+(?:\d+|दो|तीन|चार|पाँच|छह|सात|कुछ)\s+दिन"
+    r"|వచ్చే వారం|(?:వచ్చే|రాబోయే)\s+(?:\d+|రెండు|మూడు|నాలుగు|ఐదు|ఆరు|ఏడు|కొన్ని)\s+రోజు"
+)
 TIMING_TOPICS = {"irrigation", "spraying", "harvest"}
 GENERAL_VEGETABLE_IRRIGATION = {
     "tomato_even_water", "chilli_avoid_stagnation", "onion_good_drainage",
@@ -78,6 +94,11 @@ ACTIONS = {
             "फसल के पूरी तरह पकने पर कटाई करें और भंडारण से पहले धान सुखाएँ। पकने और नमी की सीमाएँ दिए गए स्रोत में देखें।",
         ),
         "delay_harvest": ("Wait before harvesting.", "కోతను వాయిదా వేయండి.", "कटाई टालें।"),
+        "okra_harvest_tender": (
+            "Pick organic okra while the pods are tender. Around 7–10 cm is typical. The right size varies by variety and market.",
+            "సేంద్రియ బెండకాయలు లేతగా ఉన్నప్పుడే కోయండి. సాధారణంగా 7–10 సెం.మీ. పొడవు ఉంటుంది. రకం, మార్కెట్‌ను బట్టి తగిన పరిమాణం మారుతుంది.",
+            "जैविक भिंडी की फलियाँ कोमल होने पर तोड़ें। आम तौर पर 7–10 सेमी लंबाई ठीक होती है। सही आकार किस्म और बाज़ार पर निर्भर करता है।",
+        ),
     },
     "spraying": {
         "wait_until_dry": (
@@ -97,6 +118,31 @@ ACTIONS = {
 }
 
 MESSAGES = {
+    "crop_selection": ("Select the crop to check what guidance applies to your field.",
+                       "మీ పొలానికి వర్తించే సూచన కోసం పంటను ఎంచుకోండి.",
+                       "अपने खेत पर लागू मार्गदर्शन देखने के लिए फसल चुनें।"),
+    "crop_stage_gap": ("Reviewed guidance exists for this crop and location, but none applies to the selected crop stage on that date.",
+                       "ఈ పంటకు, ప్రాంతానికి సమీక్షించిన సూచనలు ఉన్నాయి. అడిగిన తేదీన ఎంచుకున్న పంట దశకు వర్తించే సూచన లేదు.",
+                       "इस फसल और स्थान के लिए समीक्षा की गई सलाह है, लेकिन उस तारीख पर चुनी गई फसल अवस्था के लिए सलाह उपलब्ध नहीं है।"),
+    "weather_available": ("A forecast is available for the requested date.", "అడిగిన తేదీకి వాతావరణ అంచనా అందుబాటులో ఉంది.",
+                          "पूछी गई तारीख का मौसम पूर्वानुमान उपलब्ध है।"),
+    "weather_needed": ("A forecast for that date is needed for a weather-sensitive decision.",
+                       "వాతావరణంపై ఆధారపడే నిర్ణయానికి ఆ తేదీ అంచనా అవసరం.",
+                       "मौसम पर निर्भर फैसले के लिए उस तारीख का पूर्वानुमान चाहिए।"),
+    "forecast_range": ("Open District forecast to compare the next 3, 5, or 7 days.",
+                       "రాబోయే 3, 5 లేదా 7 రోజులను పోల్చడానికి జిల్లా వాతావరణ అంచనా తెరవండి.",
+                       "अगले 3, 5 या 7 दिनों की तुलना के लिए ज़िले का मौसम पूर्वानुमान खोलें।"),
+    "moisture_unknown": ("Check whether water is standing or the soil has begun to dry, then update your field observation.",
+                         "పొలంలో నీరు నిలిచిందా లేక నేల ఆరడం మొదలైందా చూసి, మీరు గమనించిన వివరాన్ని జోడించండి.",
+                         "देखें कि खेत में पानी खड़ा है या मिट्टी सूखने लगी है, फिर खेत का विवरण अपडेट करें।"),
+    "water_quantity_gap": ("The cited crop guidance does not specify how much water to apply.",
+                           "చూపిన పంట సూచనలో ఎంత నీరు పెట్టాలో పేర్కొనలేదు.",
+                           "दिए गए फसल स्रोत में सिंचाई के लिए पानी की मात्रा नहीं बताई गई है।"),
+    "harvest_thresholds": (
+        "Harvest when roughly 80–85% of the grains in a panicle are mature. Before storage, dry the grain to 12–14% moisture.",
+        "ఒక కంకిలో దాదాపు 80–85% గింజలు పండినప్పుడు కోయండి. నిల్వకు ముందు ధాన్యాన్ని 12–14% తేమ వరకు ఆరబెట్టండి.",
+        "बाली के करीब 80–85% दाने पकने पर कटाई करें। भंडारण से पहले दानों को 12–14% नमी तक सुखाएँ।",
+    ),
     "answer_unavailable": ("A verified answer is unavailable.", "ధృవీకరించిన సమాధానం అందుబాటులో లేదు.", "सत्यापित जवाब उपलब्ध नहीं है।"),
     "sprinkler_definition": ("Sprinkler irrigation sprays water through the air using nozzles on pressurised pipes.",
                             "తుంపర సేద్యంలో ఒత్తిడితో గొట్టాల్లోకి పంపిన నీటిని నాజిళ్ల ద్వారా గాల్లోకి చల్లుతారు.",
@@ -119,6 +165,9 @@ MESSAGES = {
     "vegetable_timing_gap": ("The crop source supports a general practice. It does not determine whether to irrigate on this date.",
                              "పంట మూలం సాధారణ పద్ధతిని సూచిస్తుంది. ఈ తేదీన నీరు పెట్టాలా అనేది అది నిర్ధారించదు.",
                              "फसल का स्रोत सामान्य तरीका बताता है। उससे तय नहीं होता कि इस तारीख को सिंचाई करनी चाहिए या नहीं।"),
+    "harvest_timing_gap": ("The crop source describes when pods are ready to pick. It does not establish whether the weather is suitable for picking on this date.",
+                           "పంట మూలం కాయలు ఎప్పుడు కోతకు సిద్ధంగా ఉంటాయో చెబుతుంది. ఈ తేదీన కోతకు వాతావరణం అనుకూలమో నిర్ధారించదు.",
+                           "फसल का स्रोत बताता है कि फलियाँ कब तोड़ने लायक होती हैं। उससे यह तय नहीं होता कि इस तारीख को तुड़ाई के लिए मौसम अनुकूल है।"),
     "withhold": ("No action is recommended.", "ఇప్పుడు నిర్దిష్ట చర్యను సూచించలేం.", "अभी किसी कार्रवाई की सलाह नहीं दी जा सकती।"),
     "location": ("The district is unavailable for the selected state or Union Territory.", "ఎంచుకున్న రాష్ట్రం లేదా కేంద్రపాలిత ప్రాంతంలో ఈ జిల్లా అందుబాటులో లేదు.", "चुने हुए राज्य या केंद्रशासित प्रदेश में यह ज़िला उपलब्ध नहीं है।"),
     "topic": ("The question does not match a covered advisory topic.", "ఈ ప్రశ్నకు వర్తించే సలహా అంశం అందుబాటులో లేదు.", "इस सवाल के विषय पर सलाह उपलब्ध नहीं है।"),
@@ -149,7 +198,7 @@ def requested_day(question, supplied=None, now=None):
     today = (now or datetime.now(INDIA)).astimezone(INDIA).date()
     text = question.casefold()
     dates = set(re.findall(r"\b\d{4}-\d{2}-\d{2}\b", text))
-    if len(dates) > 1 or re.search(r"\b(next week|next month|this week|this weekend|today and tomorrow)\b|अगले हफ्ते|अगले सप्ताह|వచ్చే వారం", text):
+    if len(dates) > 1 or MULTI_DAY_REQUEST.search(text):
         return None, True
     if dates:
         try:
@@ -302,7 +351,8 @@ def decision(session, connection, covered_location, forecast=None):
     if not covered_location:
         return result("insufficient_evidence", message("location"))
     if session.requested_date is None:
-        return result("insufficient_evidence", message("date"))
+        reason = "forecast_range" if topic == WEATHER_TOPIC and MULTI_DAY_REQUEST.search(session.question.casefold()) else "date"
+        return result("insufficient_evidence", message(reason))
     day = session.requested_date.isoformat()
     if topic is None:
         return result("insufficient_evidence", message("topic"))
@@ -322,6 +372,14 @@ def decision(session, connection, covered_location, forecast=None):
                        practice_copy=message(f"{copy}_explanation"))
 
     needs_weather = needs_forecast(session.question, topic, session.date_explicit)
+    candidates = [row for row in applicable(connection, session, topic, day) if row["kind"] != "weather"
+                  and (row["stage_id"] or not row["crop_stage"])] if topic != WEATHER_TOPIC else []
+    stage_candidates = [row for row in candidates if row["stage_id"] in (None, session.crop_stage)]
+
+    def crop_gap():
+        reason = "crop_selection" if session.crop == "none" else "crop_stage_gap" if candidates else "crop"
+        return message(reason)
+
     weather = []
     amount = None
     point_copy = None
@@ -346,14 +404,16 @@ def decision(session, connection, covered_location, forecast=None):
                                  high=forecast.high_c, wind=forecast.wind_kmh)
         else:
             reason = "weather_gap" if only_missing_metrics or session.crop != "paddy" else "weather"
-            return result("insufficient_evidence", message(reason))
+            explanation = message(reason)
+            if topic != WEATHER_TOPIC:
+                explanation = (" ".join((crop_gap(), explanation)) if not stage_candidates and not (
+                    candidates and session.crop_stage == "unknown") else " ".join((explanation, message("weather_needed"))))
+            return result("insufficient_evidence", explanation)
         if topic == WEATHER_TOPIC:
             return support("plan_with_district_forecast", point_copy or message("rain", date=day, amount=amount),
                            weather, weather_rows=weather, amount=amount,
                            weather_copy=message("point_scope" if snapshot else "bulletin_scope"), snapshot=snapshot)
 
-    candidates = [row for row in applicable(connection, session, topic, day) if row["kind"] != "weather"
-                  and (row["stage_id"] or not row["crop_stage"])]
     if session.crop_stage == "unknown":
         generic = preferred([row for row in candidates if row["stage_id"] is None])
         specific = [row for row in candidates if row["stage_id"]]
@@ -363,10 +423,10 @@ def decision(session, connection, covered_location, forecast=None):
             len(generic_codes) != 1 or any(row["decision_code"] not in generic_codes for row in specific)
         ):
             return result("clarification", message("stage_why"), field="crop_stage", follow_up="stage")
-    candidates = [row for row in candidates if row["stage_id"] in (None, session.crop_stage)]
-    practices = preferred(rank(session.question, candidates))
+    practices = preferred(rank(session.question, stage_candidates))
     if not practices:
-        return result("insufficient_evidence", message("crop"))
+        explanation = " ".join((message("weather_available"), crop_gap())) if weather else crop_gap()
+        return result("insufficient_evidence", explanation, weather)
     codes = {row["decision_code"] for row in practices}
     supported_codes = codes & ACTIONS[topic].keys()
     if len(supported_codes) > 1:
@@ -375,17 +435,28 @@ def decision(session, connection, covered_location, forecast=None):
         return result("insufficient_evidence", message("unencoded"), practices)
     code = next(iter(supported_codes))
     action = localize(ACTIONS[topic][code], session.language)
+    if code == "harvest_at_maturity" and practices[0]["content"] == REVIEWED_HARVEST_TEXT:
+        action = message("harvest_thresholds")
     if topic == "irrigation" and needs_weather and code == "maintain_moisture":
+        if (session.field_observations or "").casefold() in {text.casefold() for text in UNKNOWN_MOISTURE}:
+            return result("insufficient_evidence", message("moisture_unknown"), weather)
         moisture = moisture_observation(session.field_observations)
         if moisture is None:
-            return result("clarification", message("observation_why"), field="field_observations", follow_up="observation")
+            return result("clarification", message("observation_why"), field="field_observations",
+                          follow_up="observation") | {"follow_up_kind": "soil_moisture"}
         if moisture == "standing":
             action = message("standing")
             code = "avoid_irrigation_while_standing"
 
     general_vegetable_practice = code in GENERAL_VEGETABLE_IRRIGATION and needs_weather
+    general_okra_harvest = code == "okra_harvest_tender" and needs_weather
+    quantity_requested = topic == "irrigation" and has_terms(session.question.casefold(), IRRIGATION_QUANTITY_TERMS)
     practice_copy = message("vegetable_timing_gap") if general_vegetable_practice else None
+    if general_okra_harvest:
+        practice_copy = message("harvest_timing_gap")
+    if quantity_requested:
+        practice_copy = " ".join(filter(None, (practice_copy, message("water_quantity_gap"))))
     weather_copy = f'{point_copy} {message("point_scope")}' if point_copy else None
     return support(code, action, practices[:1], practice_rows=practices[:1], weather_rows=weather,
                    amount=amount, practice_copy=practice_copy, weather_copy=weather_copy, snapshot=snapshot,
-                   status="conditional" if general_vegetable_practice else "supported")
+                   status="conditional" if general_vegetable_practice or general_okra_harvest or quantity_requested else "supported")

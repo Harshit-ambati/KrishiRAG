@@ -104,18 +104,26 @@
             <p id="result-requested-date" class="result-location" hidden><span data-text="requestedDate">Advisory date</span> <time id="advisory-date"></time></p>
             <h3 id="result-primary-label" data-text="action">Suggested action</h3>
             <p id="result-action"></p>
-            <h3 data-text="explanation">Why this result?</h3>
+            <h3 id="result-explanation-title" data-text="explanation">Why this result?</h3>
             <p id="result-explanation"></p>
+            <section id="answer-weather" aria-labelledby="answer-weather-title" hidden>
+              <h3 id="answer-weather-title" data-text="answerWeather">Forecast used for this answer</h3>
+              <p id="result-weather"></p>
+            </section>
             <section id="follow-up" class="follow-up" aria-labelledby="follow-up-title" hidden>
               <h3 id="follow-up-title" data-text="followUp">Follow-up question</h3>
               <p id="result-follow-up"></p>
+              <div id="observation-choices" class="feedback-actions" hidden>
+                <button type="button" data-text="soilStanding" data-observation="soilStanding">Standing water</button>
+                <button type="button" data-text="soilDrying" data-observation="soilDrying">Soil is drying</button>
+                <button type="button" data-text="soilUnsure" data-observation="soilUnsure">I’m not sure</button>
+              </div>
               <button id="answer-follow-up" class="follow-up-button" type="button" data-text="answerFollowUp">Add the missing detail</button>
             </section>
             <section class="sources" aria-labelledby="source-title">
               <h3 id="source-title" data-text="sources">Sources</h3>
               <p id="no-sources" data-text="noSources" hidden>No sources are attached to this result.</p>
               <ol id="result-sources"></ol>
-              <ul id="claim-citations" class="claim-citations" aria-label="Claim citations"></ul>
               <p id="validity" class="validity" hidden><span data-text="validity">Evidence validity</span> <time id="validity-start"></time> – <time id="validity-date"></time></p>
             </section>
             <section class="feedback" aria-labelledby="feedback-title">
@@ -129,6 +137,31 @@
             </section>
           </div>
         </div>
+        <details id="district-outlook" class="district-outlook" hidden>
+          <summary data-text="outlookTitle">District forecast</summary>
+          <div class="field">
+            <label for="outlook-days" data-text="outlookRange">Forecast range</label>
+            <select id="outlook-days">
+              <option value="3" data-text="nextThreeDays">Next 3 days</option>
+              <option value="5" data-text="nextFiveDays">Next 5 days</option>
+              <option value="7" data-text="nextSevenDays">Next 7 days</option>
+            </select>
+          </div>
+          <p id="outlook-status" class="section-description" role="status"></p>
+          <table class="outlook-table" id="outlook-table" hidden>
+            <caption class="sr-only" data-text="outlookTitle">District forecast</caption>
+            <thead><tr>
+              <th scope="col" data-text="outlookDate">Date</th>
+              <th scope="col" data-text="outlookRain">Rain (mm)</th>
+              <th scope="col" data-text="outlookTemperature">Low–high (°C)</th>
+              <th scope="col" data-text="outlookWind">Max wind (km/h)</th>
+            </tr></thead>
+            <tbody id="outlook-rows"></tbody>
+          </table>
+          <p id="outlook-point-note" class="section-description" hidden><span data-text="outlookPoint">Open-Meteo values are forecasts for a representative point in the district.</span>
+            <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
+          </p>
+        </details>
         <p id="announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
       </section>
     </div>

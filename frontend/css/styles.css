@@ -106,7 +106,13 @@ textarea::placeholder { color: #607068; opacity: 1; }
 .sources :is(ul, ol) { margin: 3px 0 0; padding-left: 1.2em; }
 .sources .validity { margin-top: 6px; color: var(--muted); font-size: .89rem; }
 .validity time { font-weight: 650; }
-.claim-citations { font-size: .89rem; padding-left: 1.2em; overflow-wrap: anywhere; }
+#result-action { font-size: 1.1rem; font-weight: 650; }
+.claim-reference { white-space: nowrap; font-size: .88em; }
+.district-outlook { margin-top: 18px; padding-top: 12px; border-top: 1px solid #d8e2d5; }
+.district-outlook summary { cursor: pointer; font-weight: 650; }
+.district-outlook .field { margin: 12px 0; }
+.outlook-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: .91rem; }
+.outlook-table th, .outlook-table td { padding: 6px 4px; border-bottom: 1px solid #d8e2d5; text-align: start; overflow-wrap: anywhere; }
 .feedback { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 2px; }
 .feedback-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
 .feedback-actions button { border: 1px solid #9ab1a0; border-radius: 7px; background: var(--surface); min-height: 44px; padding: 6px 11px; }

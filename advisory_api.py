@@ -2,22 +2,22 @@ import json
 import os
 import sqlite3
 from contextlib import contextmanager
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from advisory_rules import ACTIONS, INDIA, WEATHER_TOPIC, applicable, decision, needs_forecast, preferred, question_topic, rainfall_on, requested_day
+from advisory_rules import ACTIONS, INDIA, WEATHER_TOPIC, applicable, citation, decision, needs_forecast, preferred, question_topic, rainfall_on, requested_day
 from advisory_generation import ChatProvider, CitedClaim, render_with_provider
 from advisory_log import decision_signature, deliver, ensure_advisory_tables, latest_run
 from evidence_index import EvidenceIndexUnavailable
 from evidence_store import ensure_evidence_schema, evidence_db
-from live_weather import Forecast, fetch_forecast, forecast_configured
+from live_weather import FORECAST_DAYS, Forecast, fetch_forecast, fetch_forecast_days, forecast_configured
 from locations import CONFIG, DISTRICTS, DEMO_DISTRICTS
 
 ROOT = Path(__file__).resolve().parent
@@ -120,6 +120,7 @@ class AdvisoryResponse(BaseModel):
     explanation: str
     follow_up_question: str | None
     follow_up_field: Literal["crop_stage", "field_observations"] | None
+    follow_up_kind: Literal["soil_moisture"] | None = None
     evidence: list[EvidenceReference | DemoEvidence]
     validity_window: ValidityWindow | None
     is_demo: bool
@@ -295,6 +296,50 @@ router = APIRouter()
 @router.get("/api/farm-config")
 def farm_config():
     return CONFIG
+
+
+@router.get("/api/forecast")
+def district_forecast(state_id: Identifier, district_id: Identifier,
+                      days: Annotated[int, Query(ge=1, le=FORECAST_DAYS)] = 3,
+                      start_date: date | None = None):
+    if district_id not in DISTRICTS.get(state_id, ()):
+        raise HTTPException(422, detail="district_not_in_state")
+    now = datetime.now(INDIA)
+    first_day = start_date or now.date()
+    try:
+        last_day = first_day + timedelta(days=days - 1)
+    except OverflowError as exc:
+        raise HTTPException(422, detail="invalid_forecast_range") from exc
+    live = fetch_forecast_days(state_id, district_id, first_day, last_day, now)
+    context = SimpleNamespace(state_id=state_id, district_id=district_id, crop="none")
+    outlook = []
+    with evidence_db() as connection:
+        for offset in range(days):
+            day = first_day + timedelta(days=offset)
+            key = day.isoformat()
+            weather = preferred([row for row in applicable(connection, context, WEATHER_TOPIC, key)
+                                 if row["kind"] == "weather" and row["stage_id"] is None and not row["crop_stage"]])
+            amounts = {rainfall_on(row, key) for row in weather}
+            point = live.get(day)
+            rain, sources = None, []
+            if len(amounts - {None}) > 1:
+                rain_status = "conflicting"
+                sources = [citation(row) for row in weather]
+            elif len(amounts) == 1 and None not in amounts:
+                rain = next(iter(amounts))
+                rain_status = "reviewed"
+                sources = [citation(row) for row in weather]
+            elif point:
+                rain, rain_status = point.rainfall_mm, "live"
+            else:
+                rain_status = "unavailable"
+            outlook.append({
+                "date": day, "rainfall_mm": rain, "rain_status": rain_status,
+                "low_c": point.low_c if point else None, "high_c": point.high_c if point else None,
+                "wind_kmh": point.wind_kmh if point else None, "sources": sources,
+            })
+    return {"state_id": state_id, "district_id": district_id, "timezone": "Asia/Kolkata",
+            "live_retrieved_at": now if live else None, "days": outlook}
 
 
 @router.get("/api/coverage")
