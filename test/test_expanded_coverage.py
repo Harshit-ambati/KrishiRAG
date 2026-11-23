@@ -84,7 +84,10 @@ class ExpandedCoverageTests(unittest.TestCase):
         self.assertEqual(states["tamil-nadu"]["crop_ids"], ["brinjal", "okra", "onion", "tomato"])
         self.assertEqual(states["uttarakhand"]["crop_ids"], ["chilli"])
         self.assertEqual(states["delhi"]["crop_ids"], [])
-        self.assertEqual(states["maharashtra"]["crop_ids"], [])
+        self.assertEqual(states["maharashtra"]["crop_ids"], ["paddy"])
+        maharashtra = {item["id"]: item["crop_ids"] for item in states["maharashtra"]["districts"]}
+        self.assertEqual(maharashtra["lgd-484"], ["paddy"])
+        self.assertEqual(maharashtra[PUNE["district_id"]], [])
         districts = {item["id"]: item["crop_ids"] for item in states["andhra-pradesh"]["districts"]}
         self.assertEqual(districts["krishna"], ["paddy"])
         self.assertEqual(districts["west-godavari"], ["paddy"])
@@ -97,6 +100,21 @@ class ExpandedCoverageTests(unittest.TestCase):
         states = coverage()
         self.assertNotIn("tomato", states["tamil-nadu"]["crop_ids"])
         self.assertEqual(states["uttarakhand"]["crop_ids"], [])
+
+    def test_nagpur_paddy_harvest_preserves_weather_and_district_scope(self):
+        nagpur = {"state_id": "maharashtra", "district_id": "lgd-484"}
+        question = "Can I harvest my paddy if rain is expected?"
+        selected = {"crop": "paddy", "crop_stage": "mature", "requested_date": "2026-11-25"}
+        result = self.ask(nagpur, question, **selected)
+        self.assertEqual(result["status"], "supported")
+        self.assertEqual(result["decision_code"], "harvest_mature_paddy_in_dry_weather")
+        self.assertEqual(result["forecast_rainfall_mm"], 0)
+        self.assertEqual(result["validity_window"], {"valid_from": "2026-11-24", "valid_until": "2026-11-27"})
+        self.assertEqual([item["passage_id"] for item in result["evidence"]],
+                         ["imd-nagpur-2026-11-23-1", "imd-nagpur-2026-11-23-2"])
+        self.assertEqual(self.ask(PUNE, question, **selected)["status"], "insufficient_evidence")
+        self.assertEqual(self.ask(nagpur, question, **(selected | {"requested_date": "2026-11-28"}))["status"],
+                         "insufficient_evidence")
 
     def test_vegetable_guidance_respects_crop_and_state(self):
         question = "How do I irrigate the crop?"

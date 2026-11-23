@@ -221,5 +221,49 @@
         "content": "Tender pods roughly 7–10 cm long are usually picked. Size at harvest differs by variety or hybrid and market preference."
       }
     ]
+  },
+  {
+    "id": "imd-nagpur-2026-11-23",
+    "filename": "nagpur-2026-11-23.pdf",
+    "sha256": "1505a8b7150da66b6f409728e47fea7ddd9d9e1b08bd279e963e707a6b77d19d",
+    "page_count": 5,
+    "metadata": {
+      "publisher": "India Meteorological Department / ICAR Central Institute for Cotton Research, Nagpur",
+      "title": "Agromet Advisory Bulletin for Nagpur District",
+      "original_url": "https://mausam.imd.gov.in/imd_latest/contents/agromet/agromet-data/district/current/english-pdf/Nagpur.pdf",
+      "language": "en",
+      "state_id": "maharashtra",
+      "geographic_scope": "Nagpur district, Maharashtra",
+      "issue_date": "2026-11-23",
+      "version": "2026-11-23",
+      "review_notes": "Visually checked the district header, issue date, rainfall row and mature-paddy note on PDF page 1. The forecast table and narrative have different date ranges, so crop advice is limited to their overlap."
+    },
+    "passages": [
+      {
+        "kind": "advisory",
+        "district_id": "lgd-484",
+        "crop": "paddy",
+        "crop_stage": "Mature",
+        "stage_id": "mature",
+        "topic": "harvest",
+        "page_number": 1,
+        "section": "General Advisory, mature paddy",
+        "decision_code": "harvest_mature_paddy_in_dry_weather",
+        "valid_from": "2026-11-24",
+        "valid_until": "2026-11-27",
+        "content": "The dry-weather advisory supports harvesting and threshing mature paddy."
+      },
+      {
+        "kind": "weather",
+        "district_id": "lgd-484",
+        "topic": "district-rainfall-forecast",
+        "page_number": 1,
+        "section": "District forecast table, rainfall (mm)",
+        "valid_from": "2026-11-24",
+        "valid_until": "2026-11-28",
+        "daily_rainfall": {"2026-11-24": 0.0, "2026-11-25": 0.0, "2026-11-26": 0.0, "2026-11-27": 0.0, "2026-11-28": 0.0},
+        "content": "The district forecast table lists zero rainfall for Nagpur on 24–28 November 2026."
+      }
+    ]
   }
 ]

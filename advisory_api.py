@@ -1,7 +1,6 @@
 import json
 import os
 import sqlite3
-from collections import defaultdict
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 from hashlib import sha256
@@ -17,7 +16,8 @@ from advisory_rules import ACTIONS, INDIA, WEATHER_TOPIC, applicable, citation, 
 from advisory_generation import ChatProvider, CitedClaim, render_with_provider
 from advisory_log import decision_signature, deliver, ensure_advisory_tables, latest_run
 from evidence_index import EvidenceIndexUnavailable
-from evidence_store import PUBLISHED_PASSAGES, database_path, ensure_evidence_schema, evidence_db
+from evidence_coverage import reviewed_crops
+from evidence_store import database_path, ensure_evidence_schema, evidence_db
 from live_weather import FORECAST_DAYS, Forecast, fetch_forecast, fetch_forecast_days, forecast_configured
 from locations import CONFIG, DISTRICTS, DEMO_DISTRICTS
 
@@ -310,20 +310,7 @@ router = APIRouter()
 def farm_config(response: Response):
     response.headers["Cache-Control"] = "no-store"
     with evidence_db() as connection:
-        rows = connection.execute(PUBLISHED_PASSAGES + """
-            AND p.kind IN ('advisory', 'background') AND p.crop IS NOT NULL
-            AND (p.stage_id IS NOT NULL OR COALESCE(p.crop_stage, '') = '')
-        """).fetchall()
-
-    scoped_crops = defaultdict(set)
-    for row in rows:
-        state, district, crop = row["state_id"], row["district_id"], row["crop"]
-        if crop not in CONFIG["crops"] or row["decision_code"] not in ACTIONS.get(row["topic"], {}):
-            continue
-        if row["stage_id"] and row["stage_id"] not in CONFIG["crop_stages"][crop]:
-            continue
-        if district in DISTRICTS.get(state, ()) or (district is None and row["statewide"]):
-            scoped_crops[state, district].add(crop)
+        scoped_crops = reviewed_crops(connection)
 
     coverage = []
     for state in CONFIG["coverage"]:

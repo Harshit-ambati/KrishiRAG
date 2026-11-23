@@ -93,6 +93,11 @@ ACTIONS = {
             "పంట పూర్తిగా పండిన తర్వాత కోయండి. నిల్వకు ముందు ధాన్యాన్ని ఆరబెట్టండి. పరిపక్వత, తేమ పరిమితుల కోసం మూలాన్ని చూడండి.",
             "फसल के पूरी तरह पकने पर कटाई करें और भंडारण से पहले धान सुखाएँ। पकने और नमी की सीमाएँ दिए गए स्रोत में देखें।",
         ),
+        "harvest_mature_paddy_in_dry_weather": (
+            "Harvest and thresh mature paddy while field conditions are dry.",
+            "పొలం పరిస్థితులు పొడిగా ఉన్నప్పుడు పండిన వరిని కోసి, నూర్పిడి చేయండి.",
+            "खेत की स्थिति सूखी होने पर पके धान की कटाई और मड़ाई करें।",
+        ),
         "delay_harvest": ("Wait before harvesting.", "కోతను వాయిదా వేయండి.", "कटाई टालें।"),
         "okra_harvest_tender": (
             "Pick organic okra while the pods are tender. Around 7–10 cm is typical. The right size varies by variety and market.",

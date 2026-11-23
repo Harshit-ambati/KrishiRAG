@@ -337,6 +337,39 @@ byId('feedback-review').addEventListener('toggle', event => {
 byId('refresh-feedback').addEventListener('click', () => loadFeedback(true));
 byId('more-feedback').addEventListener('click', () => loadFeedback());
 
+function renderNationalCoverage(inventory) {
+  const container = byId('national-coverage');
+  container.replaceChildren();
+  if (!inventory) return;
+  const { summary, states } = inventory;
+  const heading = document.createElement('h3');
+  heading.textContent = 'Evidence coverage by state and district';
+  const overview = document.createElement('p');
+  overview.textContent = `${summary.state_count} states and union territories · ${summary.district_count} districts. ` +
+    `${summary.districts_with_crop_guidance} districts have applicable crop guidance, including ` +
+    `${summary.districts_with_local_crop_guidance} with district-specific guidance. ` +
+    `${summary.districts_with_reviewed_rainfall} districts have reviewed rainfall forecasts.`;
+  container.append(heading, overview);
+  for (const state of states) {
+    const details = document.createElement('details');
+    const label = document.createElement('summary');
+    const covered = state.districts.filter(district => district.usable_crop_ids.length).length;
+    const rainfall = state.districts.filter(district => district.reviewed_rainfall === 'reviewed').length;
+    label.textContent = `${state.state} · Crop guidance ${covered}/${state.districts.length} · Rainfall ${rainfall}/${state.districts.length}`;
+    const districts = document.createElement('ul');
+    for (const district of state.districts) {
+      const line = document.createElement('li');
+      const names = ids => ids.map(id => config?.crops[id]?.en ?? id).join(', ') || 'None';
+      const weather = { reviewed: 'reviewed', conflicting: 'conflicting', missing: 'unavailable' };
+      line.textContent = `${district.district} · District crop guidance ${names(district.local_crop_ids)} · ` +
+        `Statewide crop guidance ${names(state.statewide_crop_ids)} · District rainfall ${weather[district.reviewed_rainfall]}`;
+      districts.append(line);
+    }
+    details.append(label, districts);
+    container.append(details);
+  }
+}
+
 async function loadMaintenance() {
   const status = byId('maintenance-status');
   const button = byId('refresh-maintenance');
@@ -346,6 +379,7 @@ async function loadMaintenance() {
     const response = await fetch('/api/admin/maintenance', { cache: 'no-store' });
     if (!response.ok) throw new Error('Maintenance could not be loaded.');
     const report = await response.json();
+    renderNationalCoverage(report.national_coverage);
     const groups = [
       ['Forecasts expired or ending within seven days', report.forecast_review.map(row =>
         [row.status, row.title, row.version, row.district_id, row.valid_until].join(' · '))],

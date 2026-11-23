@@ -51,7 +51,7 @@ class EvidenceAdminTests(unittest.TestCase):
         seed(None)
         forecast_rows = maintenance_report(date(2026, 11, 28))["forecast_review"]
         self.assertEqual([(row["district_id"], row["status"]) for row in forecast_rows],
-                         [("krishna", "expiring"), ("west-godavari", "expiring")])
+                         [("lgd-484", "expiring"), ("krishna", "expiring"), ("west-godavari", "expiring")])
         self.assertEqual({row["status"] for row in maintenance_report(date(2026, 11, 29))["forecast_review"]}, {"expired"})
         response = self.client.get("/api/admin/maintenance")
         self.assertEqual(response.status_code, 200)
@@ -84,6 +84,26 @@ class EvidenceAdminTests(unittest.TestCase):
             "state_id": "andhra-pradesh", "district_id": "krishna", "crop": "paddy", "crop_stage": "unknown",
             "topic": "unclassified", "sessions": 1,
         }])
+
+    def test_inventory_separates_statewide_crop_guidance_and_district_forecasts(self):
+        seed(None)
+        report = maintenance_report(date(2026, 11, 25))["national_coverage"]
+        districts = {row["district_id"]: row for state in report["states"] for row in state["districts"]}
+        self.assertEqual(report["summary"]["state_count"], 36)
+        self.assertEqual(report["summary"]["district_count"], len(districts))
+        self.assertEqual(report["summary"]["districts_with_local_crop_guidance"], 3)
+        self.assertEqual(report["summary"]["districts_with_reviewed_rainfall"], 3)
+        self.assertEqual(districts["lgd-484"]["reviewed_rainfall"], "reviewed")
+        self.assertEqual(districts["lgd-484"]["local_crop_ids"], ["paddy"])
+        self.assertEqual(districts["lgd-569"]["local_crop_ids"], [])
+        self.assertIn("tomato", districts["lgd-569"]["usable_crop_ids"])
+        with evidence_db(write=True) as connection:
+            connection.execute("UPDATE source_documents SET status = 'archived' WHERE id = 'imd-nagpur-2026-11-23'")
+        archived = maintenance_report(date(2026, 11, 25))["national_coverage"]["summary"]
+        self.assertEqual(archived["districts_with_local_crop_guidance"], 2)
+        self.assertEqual(archived["districts_with_reviewed_rainfall"], 2)
+        expired = maintenance_report(date(2026, 11, 29))["national_coverage"]["summary"]
+        self.assertEqual(expired["districts_with_reviewed_rainfall"], 0)
 
     def test_scanned_pdf_remains_draft_and_original_is_preserved(self):
         pdf = PdfWriter()

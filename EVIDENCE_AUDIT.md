@@ -21,3 +21,13 @@ The reviewed IMD paddy and district forecast editions already have exact origina
 The original Uttarakhand organic chilli PDF was attached to the approved record after its checksum matched the audited edition.
 
 IMD's Andhra Pradesh Agromet Bulletin **94/2026**, issued **23 November 2026** and covering **24–28 November 2026**, was saved in the local review inbox as `data/evidence-inbox/ap-agromet-2026-11-23.pdf`. Its SHA-256 is `7a930941f6df33265f048acad099763611e85f7814ce44a87d036015206ad7de`. Treat it as a candidate. Review the specific Krishna and West Godavari crop rows, stages, and recommended actions before publishing any passages. The separate district forecast needs its own edition and date check. [IMD agromet bulletin](https://mausam.imd.gov.in/visakhapatnam/mcdata/APAgromet.pdf)
+
+## Nationwide coverage baseline
+
+The seeded catalog evaluated for **24 November 2026** includes **36 states and union territories and 783 districts**. It has applicable crop guidance in **54 districts across four states**, including **three districts with district-specific guidance**. Three districts have an approved rainfall forecast for that date. All 783 districts have a reference point for optional live weather. A reference point is distinct from a reviewed district forecast.
+
+| Official source and edition | Reviewed scope and locator | Applicability |
+| --- | --- | --- |
+| IMD and ICAR Central Institute for Cotton Research, *Agromet Advisory Bulletin for Nagpur District*, issued 23 November 2026 | Nagpur district, Maharashtra. PDF page 1, rainfall row and mature-paddy note in General Advisory. | The table lists **0 mm** for 24–28 November. The accompanying dry-weather narrative ends on 27 November, so harvest and threshing guidance for mature paddy applies only during **24–27 November**. The audited SHA-256 is `1505a8b7150da66b6f409728e47fea7ddd9d9e1b08bd279e963e707a6b77d19d`. [IMD Nagpur bulletin](https://mausam.imd.gov.in/imd_latest/contents/agromet/agromet-data/district/current/english-pdf/Nagpur.pdf) |
+
+The [IMD district bulletin index](https://mausam.imd.gov.in/responsive/agromet_adv_ser_district_current_en.php) and [ICAR-CRIDA district contingency plan directory](https://www.icar-crida.res.in/Crop_Contingency_Plan.html) are starting points for finding sources. Match the publisher’s district heading and boundaries to the current district ID. Contingency plans support only their stated rainfall, season, crop, and field conditions. The documented IMD district rainfall distribution API returned HTTP 401 when checked without credentials. Its documented station coverage percentages are distinct from rainfall amounts in millimetres. [IMD API reference](https://api.imd.gov.in/public/api_reference.html)

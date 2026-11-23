@@ -9,6 +9,7 @@ from pathlib import Path
 
 from advisory_log import ensure_advisory_tables
 from advisory_rules import INDIA, question_topic
+from evidence_coverage import national_coverage_inventory
 from evidence_store import PUBLISHED_PASSAGES, evidence_db
 
 MAX_SNAPSHOT_BYTES = 12 * 1024 * 1024
@@ -17,6 +18,7 @@ MAX_SNAPSHOT_BYTES = 12 * 1024 * 1024
 def maintenance_report(day):
     with evidence_db() as connection:
         ensure_advisory_tables(connection)
+        inventory = national_coverage_inventory(connection, day)
         weather = connection.execute(f"""
             SELECT DISTINCT source_id AS id, title, version, state_id, district_id, effective_until AS valid_until
             FROM ({PUBLISHED_PASSAGES})
@@ -47,6 +49,7 @@ def maintenance_report(day):
             gaps[farm["state_id"], farm["district_id"], farm["crop"], farm["crop_stage"], topic] += 1
     return {
         "as_of": day.isoformat(),
+        "national_coverage": inventory,
         "forecast_review": [
             {**row, "status": "expired" if row["valid_until"] < day.isoformat() else "expiring"}
             for row in forecasts
