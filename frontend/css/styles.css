@@ -48,7 +48,7 @@ svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.6; stroke
 .language-control { flex-shrink: 0; }
 .language-control select { min-width: 105px; font-size: .93rem; }
 
-.hero { margin-block: 26px 20px; min-height: 219px; overflow: hidden; border-radius: 18px; display: flex; align-items: center; color: white; background: linear-gradient(90deg, #102a1c 0%, #143420ed 28%, #133320ab 54%, #13332016 100%), url('/archive/assets/paddy-field.webp') center 55% / cover #203b25; }
+.hero { margin-block: 26px 20px; min-height: 219px; overflow: hidden; border-radius: 18px; display: flex; align-items: center; color: white; background: linear-gradient(90deg, #102a1c 0%, #143420ed 28%, #133320ab 54%, #13332016 100%), url('/static/assets/paddy-field.webp') center 55% / cover #203b25; }
 .hero-copy { max-width: 690px; padding: 24px 36px; }
 .eyebrow { display: inline-block; color: #e3f1d3; font-size: .84rem; font-weight: 700; padding: 4px 9px; border: 1px solid #b6d9a76b; border-radius: 5px; background: #d3e8c019; }
 .hero h1 { margin-block: 8px 9px; font: 500 clamp(2.15rem, 5vw, 3.7rem)/1.12 Georgia, 'Nirmala UI', serif; letter-spacing: -.035em; }
@@ -63,7 +63,7 @@ html:not([lang="en"]) .hero h1 { font-family: inherit; font-weight: 650; line-he
 .field label { display: block; margin-bottom: 5px; font-size: .91rem; font-weight: 650; }
 .field :is(input, select, textarea) { display: block; width: 100%; }
 :is(input, select, textarea) { min-width: 0; min-height: 44px; padding: 8px 11px; border: 1px solid #c8d4c8; border-radius: 8px; background-color: #fcfcf7; }
-select { appearance: none; padding-right: 34px; background-image: url('/archive/assets/chevron.svg'); background-repeat: no-repeat; background-position: right 10px center; text-overflow: ellipsis; }
+select { appearance: none; padding-right: 34px; background-image: url('/static/assets/chevron.svg'); background-repeat: no-repeat; background-position: right 10px center; text-overflow: ellipsis; }
 :is(select:disabled, input:read-only) { background-color: #eff2e9; color: var(--muted); }
 select:disabled { cursor: default; }
 textarea { resize: vertical; line-height: 1.45; }
@@ -120,7 +120,7 @@ textarea::placeholder { color: #607068; opacity: 1; }
 @media (max-width: 760px) {
   .shell { width: calc(100% - 32px); }
   .workspace { grid-template-columns: minmax(0, 1fr); }
-  .hero { margin-top: 16px; min-height: 195px; background-image: linear-gradient(90deg, #102a1cf5 0%, #143420e6 47%, #13332079 100%), url('/archive/assets/paddy-field.webp'); }
+  .hero { margin-top: 16px; min-height: 195px; background-image: linear-gradient(90deg, #102a1cf5 0%, #143420e6 47%, #13332079 100%), url('/static/assets/paddy-field.webp'); }
   .hero-copy { padding-inline: 23px; }
 }
 

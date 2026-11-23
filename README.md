@@ -133,6 +133,12 @@ For a Render Free test deployment, use Docker, leave the root directory and star
 
 Before a farmer pilot, name an evidence reviewer and confirm current advisories for the supported districts. Farmer questions and observations are stored for session continuity and sent to the configured model provider on supported requests. Set and communicate your retention policy before collecting real farmer data.
 
+### Render backend with a Vercel frontend
+
+1. Deploy the Docker service on Render and verify that its public HTTPS URL returns `{"status":"ready"}` at `/readyz`. Configure Gemini, live weather, and the admin password in Render.
+2. Import this repository and the `main` branch on Vercel. Leave the root directory at `./` and select **Other** as the framework preset. Use the repository build configuration. Vercel publishes the static farmer interface and forwards its advisory, forecast, coverage, and feedback requests to `https://krishirag.onrender.com`. Set `RENDER_BACKEND_URL` only if using a different Render HTTPS origin.
+3. Deploy and test `/api/farm-config` on the Vercel domain, then submit a question and feedback. Open `/admin` on the Render domain for evidence and feedback review.
+
 ## Evaluate
 
 Run `python evaluation/run.py --templates-only` for a credential-free baseline. With `GEMINI_API_KEY` or `OPENAI_API_KEY` exported, run `python evaluation/run.py` for LLM alone, basic RAG, checked RAG, and verified templates. The default output is `data/evaluation-results.json`. The 27 scenario families each have English, Telugu, and Hindi variants. They include clarification, date and district restrictions, vegetable guidance, direct answers, and a fixed weather response replayed across the India date boundary. See the [historical comparison and new baseline](evaluation/REPORT.md) and [expansion cases](evaluation/expansion_cases.json).

@@ -1,5 +1,6 @@
 .git
 .venv
+.vercel-farmer
 .env*
 data
 __pycache__
