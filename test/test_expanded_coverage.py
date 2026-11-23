@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from dataclasses import replace
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -8,7 +9,7 @@ from uuid import uuid4
 import httpx
 from fastapi.testclient import TestClient
 
-from advisory_generation import ChatProvider
+from advisory_generation import ChatProvider, ModelAdvisory
 from advisory_rules import INDIA
 from evidence_seed import seed
 from live_weather import DAILY_UNITS, Forecast, fetch_forecast, fetch_forecast_days
@@ -28,6 +29,7 @@ class ExpandedCoverageTests(unittest.TestCase):
         self.enterContext(patch.dict("os.environ", {
             "AGRIRAG_DB_PATH": str(Path(directory) / "test.sqlite3"),
             "AGRIRAG_LIVE_WEATHER": "0",
+            "GEMINI_API_KEY": "",
             "OPENAI_API_KEY": "",
         }))
         self.enterContext(patch("advisory_rules.rank", side_effect=lambda _, rows: rows))
@@ -274,7 +276,7 @@ class ProviderIntegrationTests(unittest.TestCase):
                 self.assertIsNone(fetch_forecast(*PUNE.values(), DAY, NOW))
 
     def test_openai_endpoint_and_auth_are_server_side(self):
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key", "AGRIRAG_OPENAI_MODEL": "",
+        with patch.dict("os.environ", {"GEMINI_API_KEY": "", "OPENAI_API_KEY": "test-key", "AGRIRAG_OPENAI_MODEL": "",
                                        "AGRIRAG_LLM_URL": "http://localhost:8879/v1"}):
             provider = ChatProvider.configured()
             with patch("advisory_generation.httpx.post") as post:
@@ -287,3 +289,24 @@ class ProviderIntegrationTests(unittest.TestCase):
                 self.assertEqual(payload["model"], "gpt-4.1-mini")
                 self.assertTrue(payload["response_format"]["json_schema"]["strict"])
                 self.assertFalse(payload["store"])
+
+    def test_gemini_takes_priority_and_uses_native_structured_output(self):
+        with patch.dict("os.environ", {"GEMINI_API_KEY": "gemini-test-key", "AGRIRAG_GEMINI_MODEL": "",
+                                       "OPENAI_API_KEY": "openai-test-key"}):
+            usage = []
+            provider = replace(ChatProvider.configured(), record_usage=usage.append)
+            self.assertNotIn("gemini-test-key", repr(provider))
+            schema = ModelAdvisory.model_json_schema()
+            with patch("advisory_generation.httpx.post") as post:
+                post.return_value = httpx.Response(200, json={
+                    "candidates": [{"finishReason": "STOP", "content": {"parts": [
+                        {"text": "internal", "thought": True}, {"text": "{}"},
+                    ]}}],
+                    "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 4, "thoughtsTokenCount": 2},
+                }, request=httpx.Request("POST", "https://example.com"))
+                self.assertEqual(provider.complete("Use verified wording", {}, schema), "{}")
+                self.assertEqual(post.call_args.args[0],
+                                 "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent")
+                self.assertEqual(post.call_args.kwargs["headers"], {"x-goog-api-key": "gemini-test-key"})
+                self.assertEqual(post.call_args.kwargs["json"]["generationConfig"]["responseJsonSchema"], schema)
+                self.assertEqual(usage, [{"prompt_tokens": 10, "completion_tokens": 6}])

@@ -48,15 +48,17 @@ Each supported result links its proposed action and explanation to the original 
 
 ## Configure the model
 
-AgriRAG uses the OpenAI API for structured rendering, with [GPT-4.1 mini](https://developers.openai.com/api/docs/models/gpt-4.1-mini) as the default. For Docker, copy `.env.example` to `.env` if it does not already exist. Set `OPENAI_API_KEY` there and run `docker compose up -d --build`. For native Uvicorn, export the variables in its launching shell.
+AgriRAG supports the Gemini and OpenAI APIs for structured rendering. For Docker, copy `.env.example` to `.env` if it does not already exist. Fill in `GEMINI_API_KEY` and run `docker compose up -d --build`. Gemini takes priority when both keys are configured. For native Uvicorn, export the variables in its launching shell. [Gemini 3.1 Flash-Lite](https://aistudio.google.com/docs/models/gemini-3.1-flash-lite)
 
 | Variable | Purpose |
 | --- | --- |
+| `GEMINI_API_KEY` | Server-side Gemini credential |
+| `AGRIRAG_GEMINI_MODEL` | Optional Gemini model override. Defaults to `gemini-3.1-flash-lite`. |
 | `OPENAI_API_KEY` | Server-side OpenAI credential |
-| `AGRIRAG_OPENAI_MODEL` | Optional override for a compatible structured-output model |
+| `AGRIRAG_OPENAI_MODEL` | Optional OpenAI model override. Defaults to `gpt-4.1-mini`. |
 | `AGRIRAG_LLM_TIMEOUT` | Request timeout in seconds, defaults to 20 |
 
-OpenAI receives the question, farm context, and eligible passages for covered requests. AgriRAG validates the generated wording and citations before display. The app uses its cited verified templates when a key is absent, the provider fails, or the output fails validation. The existing evaluation report records the earlier Qwen run. Its scores do not measure the OpenAI integration.
+The selected provider receives the question, farm context, and eligible passages for covered requests. AgriRAG validates the generated wording and citations before display. The app uses its cited verified templates when a key is absent, the provider fails, or the output fails validation. The historical Qwen report applies to its recorded model and fixtures.
 
 ## Verify live weather in Postman
 
@@ -117,7 +119,7 @@ For use by the decision engine, record the stated crop stage and map it to a sup
 
 ## Deploy and smoke-test
 
-Run `docker compose up -d --build` with the admin password and provider variables set in the deployment environment. Compose binds the app to loopback on port 8765 by default. Allow outbound HTTPS to OpenAI and Open-Meteo when those services are enabled. For native deployment, run the same seed and index commands, then start Uvicorn as in [Run locally](#run-locally). Use `/healthz` as the HTTP health check.
+Run `docker compose up -d --build` with the admin password and provider variables set in the deployment environment. Compose binds the app to loopback on port 8765 by default. Allow outbound HTTPS to the configured model provider and Open-Meteo when enabled. For native deployment, run the same seed and index commands, then start Uvicorn as in [Run locally](#run-locally). Use `/healthz` as the HTTP health check.
 
 The single FastAPI service uses `./data` as the persistent mount for the SQLite evidence catalog, source snapshots, advisory and feedback logs, Chroma, and E5 weights. Keep that mount across deploys and back it up. For public hosting, use a persistent volume, TLS, and server-managed secrets. Keep one application instance per SQLite/Chroma volume.
 
@@ -125,7 +127,7 @@ Run `python demo/run.py` against the running service. It replays the 24 November
 
 ## Evaluate
 
-Run `python evaluation/run.py --templates-only` for a credential-free baseline. With `OPENAI_API_KEY` exported, run `python evaluation/run.py` for LLM alone, basic RAG, checked RAG, and verified templates. The default output is `data/evaluation-results.json`. The 27 scenario families each have English, Telugu, and Hindi variants. They include clarification, date and district restrictions, vegetable guidance, direct answers, and a fixed weather response replayed across the India date boundary. See the [historical comparison and new baseline](evaluation/REPORT.md) and [expansion cases](evaluation/expansion_cases.json).
+Run `python evaluation/run.py --templates-only` for a credential-free baseline. With `GEMINI_API_KEY` or `OPENAI_API_KEY` exported, run `python evaluation/run.py` for LLM alone, basic RAG, checked RAG, and verified templates. The default output is `data/evaluation-results.json`. The 27 scenario families each have English, Telugu, and Hindi variants. They include clarification, date and district restrictions, vegetable guidance, direct answers, and a fixed weather response replayed across the India date boundary. See the [historical comparison and new baseline](evaluation/REPORT.md) and [expansion cases](evaluation/expansion_cases.json).
 
 The runner records output acceptance, fallback, latency, and the token usage reported by the provider. Pass `--input-usd-per-million` and `--output-usd-per-million` together to estimate cost using the rates for the configured model. The estimate bills all reported input tokens at the supplied input rate and may differ from the invoice.
 

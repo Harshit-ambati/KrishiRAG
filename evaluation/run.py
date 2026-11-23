@@ -208,7 +208,7 @@ def main():
     args = parser.parse_args()
     provider = None if args.templates_only else ChatProvider.configured()
     if provider is None and not args.templates_only:
-        parser.error("Set OPENAI_API_KEY and optionally AGRIRAG_OPENAI_MODEL for a real evaluation.")
+        parser.error("Set GEMINI_API_KEY or OPENAI_API_KEY for a provider evaluation.")
     rates = (args.input_usd_per_million, args.output_usd_per_million)
     if any(rate is not None for rate in rates) and not all(rate is not None and 0 <= rate < float("inf") for rate in rates):
         parser.error("Supply both non-negative token prices when estimating API cost.")

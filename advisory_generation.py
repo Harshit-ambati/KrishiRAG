@@ -2,11 +2,13 @@
 
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Annotated, Callable, Literal
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+GEMINI_MODEL = "gemini-3.1-flash-lite"
 
 
 class CitedClaim(BaseModel):
@@ -28,12 +30,17 @@ class ModelAdvisory(BaseModel):
 class ChatProvider:
     base_url: str
     model: str
-    api_key: str | None = None
+    api_key: str | None = field(default=None, repr=False)
     timeout: float = 20.0
     record_usage: Callable[[dict], None] | None = None
 
     @classmethod
     def configured(cls):
+        gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+        if gemini_key:
+            model = os.environ.get("AGRIRAG_GEMINI_MODEL", "").strip() or GEMINI_MODEL
+            return GeminiProvider("https://generativelanguage.googleapis.com/v1beta", model, gemini_key,
+                                  float(os.environ.get("AGRIRAG_LLM_TIMEOUT", "20")))
         key = os.environ.get("OPENAI_API_KEY", "").strip()
         if not key:
             return None
@@ -62,6 +69,34 @@ class ChatProvider:
         if self.record_usage and isinstance(body.get("usage"), dict):
             self.record_usage(body["usage"])
         return body["choices"][0]["message"]["content"]
+
+
+class GeminiProvider(ChatProvider):
+    def complete(self, instruction, data, schema, max_tokens=450):
+        response = httpx.post(
+            f"{self.base_url}/models/{self.model}:generateContent",
+            headers={"x-goog-api-key": self.api_key},
+            timeout=self.timeout,
+            json={
+                "systemInstruction": {"parts": [{"text": instruction}]},
+                "contents": [{"role": "user", "parts": [{"text": json.dumps(data, ensure_ascii=False)}]}],
+                "generationConfig": {
+                    "maxOutputTokens": max_tokens, "responseMimeType": "application/json", "responseJsonSchema": schema,
+                },
+            },
+        )
+        response.raise_for_status()
+        body = response.json()
+        usage = body.get("usageMetadata")
+        if self.record_usage and isinstance(usage, dict):
+            self.record_usage({
+                "prompt_tokens": usage.get("promptTokenCount", 0),
+                "completion_tokens": usage.get("candidatesTokenCount", 0) + usage.get("thoughtsTokenCount", 0),
+            })
+        candidate = body["candidates"][0]
+        if candidate.get("finishReason") != "STOP":
+            raise ValueError("Gemini did not return a complete response.")
+        return "".join(part.get("text", "") for part in candidate["content"]["parts"] if not part.get("thought"))
 
 
 INSTRUCTION = (
