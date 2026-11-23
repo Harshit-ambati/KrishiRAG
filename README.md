@@ -94,6 +94,8 @@ The index uses the pinned multilingual E5-small ONNX model on CPU. The setup com
 
 SQLite supplies the eligible reviewed passage IDs and citation metadata. Chroma ranks only those passages for the requested topic. The backend separately validates live forecasts for the configured district point and date. General crop guidance can apply at state scope when its source supports that scope. The rules use reviewer-selected stage and decision codes. A more specific applicable scope takes precedence, and a newer applicable edition of the same publication replaces its older edition. Incomparable conflicting sources are cited and the system withholds an action.
 
+Set `AGRIRAG_EVIDENCE_MODE=sqlite` on memory-constrained hosts. Startup skips the embedding model download and Chroma initialization. The app uses the full set of SQLite candidates with the same topic, district, crop, stage, approval, date and conflict checks, ordering applicable passages by ID instead of semantic relevance. `chroma` remains the default.
+
 ## Verify
 
 Run `node --test` to verify the archive retrieval, or install the API test dependencies and run the Python suite. The real multilingual ranking test runs when the E5 model is installed.
@@ -126,6 +128,8 @@ For use by the decision engine, record the stated crop stage and map it to a sup
 3. Back up the data directory with the app stopped to capture a consistent copy. It contains the SQLite catalog, source snapshots, advisory and feedback logs, Chroma, and E5 weights. Store backups with restricted access. To test recovery, use a copy in a separate data directory, start a separate Compose project on an unused port, and rerun the smoke test. The seed and indexing commands run on startup and preserve existing published and archived source versions.
 
 Run `python demo/run.py` against the running service. It replays the 24 November 2026 scenario with the two pilot districts, checks missing archived coverage, and compares equivalent English, Telugu, and Hindi answers. Use `--url` for a different deployment. Add `--smoke` with admin credentials set to submit test feedback and verify the protected admin view. See the [manual demo](demo/README.md), [language verification record](demo/VERIFICATION.md), and [farmer pilot plan](demo/PILOT.md).
+
+For a Render Free test deployment, use Docker, leave the root directory and start command at their defaults, set `AGRIRAG_EVIDENCE_MODE=sqlite` in the service's environment, and set the health check path to `/readyz`. Keep Gemini credentials as runtime environment variables. Render Free recreates local state after restarts, so use test data only. [Render Free service limits](https://render.com/docs/free)
 
 Before a farmer pilot, name an evidence reviewer and confirm current advisories for the supported districts. Farmer questions and observations are stored for session continuity and sent to the configured model provider on supported requests. Set and communicate your retention policy before collecting real farmer data.
 

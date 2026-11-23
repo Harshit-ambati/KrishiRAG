@@ -29,6 +29,13 @@ class EvidenceIndexUnavailable(RuntimeError):
     pass
 
 
+def evidence_mode():
+    mode = os.environ.get("AGRIRAG_EVIDENCE_MODE", "chroma")
+    if mode not in ("chroma", "sqlite"):
+        raise ValueError("AGRIRAG_EVIDENCE_MODE must be chroma or sqlite.")
+    return mode
+
+
 def model_directory():
     return Path(os.environ.get("AGRIRAG_E5_DIR", ROOT / "data" / "e5-small"))
 
@@ -137,6 +144,9 @@ def sync(index, passages):
 def rank(question, passages):
     if not passages:
         return []
+    if evidence_mode() == "sqlite":
+        # Applicability is checked before ranking. Keep every candidate for conflict detection.
+        return sorted(passages, key=lambda row: row["id"])
     index = collection()
     sync(index, passages)
     query_embedding = embed([question], "query")
@@ -151,14 +161,21 @@ def rank(question, passages):
     return [by_id[id_] for _, id_ in sorted(distances)]
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Build the local Chroma index for the published evidence catalog.")
-    parser.add_argument("--download-model", action="store_true", help="Install the pinned E5 ONNX artifacts and verify their checksums.")
-    args = parser.parse_args()
-    if args.download_model:
+def prepare_index(install_model):
+    if evidence_mode() == "sqlite":
+        print("SQLite evidence mode enabled. Vector indexing skipped.")
+        return
+    if install_model:
         download_model()
     with evidence_db() as connection:
         published = connection.execute(PUBLISHED_PASSAGES).fetchall()
     if published:
         sync(collection(), published)
     print(f"Indexed {len(published)} published evidence passages.")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Prepare retrieval for the published evidence catalog.")
+    parser.add_argument("--download-model", action="store_true", help="Install the pinned E5 ONNX artifacts and verify their checksums.")
+    args = parser.parse_args()
+    prepare_index(args.download_model)

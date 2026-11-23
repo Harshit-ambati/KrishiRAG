@@ -105,6 +105,33 @@ class GroundedAdvisoryTests(unittest.TestCase):
         self.assertEqual(final["requested_date"], first["requested_date"])
         self.assertEqual(self.ask(crop_stage="tillering")["status"], "insufficient_evidence")
 
+    def test_sqlite_mode_skips_model_and_preserves_evidence_decisions(self):
+        with (
+            patch.dict("os.environ", {"AGRIRAG_EVIDENCE_MODE": "sqlite", "AGRIRAG_LIVE_WEATHER": "0",
+                                      "GEMINI_API_KEY": "", "OPENAI_API_KEY": ""}),
+            patch("evidence_index.download_model") as download,
+            patch("evidence_index.collection") as vector_index,
+            patch("main.collection") as readiness_index,
+            patch("builtins.print"),
+        ):
+            evidence_index.prepare_index(install_model=True)
+            self.assertEqual(self.client.get("/readyz").json(), {"status": "ready"})
+            answer = self.ask()
+            self.assertEqual(answer["status"], "supported")
+            self.assertEqual([row["passage_id"] for row in answer["evidence"]],
+                             ["imd-agromet-ap-93-2026-1", "imd-value-added-ap-94-2026-1"])
+            self.assertEqual(self.ask(district_id="eluru")["status"], "insufficient_evidence")
+            self.assertEqual(self.ask(requested_date="2026-11-29")["status"], "insufficient_evidence")
+            self.assertEqual(self.ask(crop_stage="unknown")["status"], "clarification")
+            self.add_alternative()
+            self.assertEqual(self.ask()["status"], "conflicting_evidence")
+            with evidence_db(write=True) as connection:
+                connection.execute("UPDATE source_documents SET status = 'archived' WHERE id = 'alternative'")
+            self.assertEqual(self.ask()["status"], "supported")
+            download.assert_not_called()
+            vector_index.assert_not_called()
+            readiness_index.assert_not_called()
+
     def test_wrong_district_and_expired_or_future_weather(self):
         unsupported = self.ask(district_id="eluru")
         self.assertEqual(unsupported["status"], "insufficient_evidence")

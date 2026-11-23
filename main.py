@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from advisory_api import demos_enabled, router as advisory_router
 from advisory_feedback import router as feedback_router
 from evidence_admin import admin as evidence_admin_router, public as evidence_router
-from evidence_index import MODEL_FILES, collection, model_directory
+from evidence_index import MODEL_FILES, collection, evidence_mode, model_directory
 from evidence_store import PUBLISHED_PASSAGES, database_path
 
 ROOT = Path(__file__).resolve().parent
@@ -50,12 +50,14 @@ def health():
 
 @app.get("/readyz", include_in_schema=False)
 def readiness():
-    if not all((model_directory() / name).is_file() for name in MODEL_FILES):
-        return JSONResponse({"status": "not_ready"}, status_code=503)
     try:
+        uses_vectors = evidence_mode() == "chroma"
+        if uses_vectors and not all((model_directory() / name).is_file() for name in MODEL_FILES):
+            return JSONResponse({"status": "not_ready"}, status_code=503)
         with closing(sqlite3.connect(database_path().resolve().as_uri() + "?mode=ro", uri=True, timeout=2)) as connection:
             connection.execute(PUBLISHED_PASSAGES + " LIMIT 1").fetchone()
-        collection().count()
+        if uses_vectors:
+            collection().count()
         return {"status": "ready"}
     except Exception:
         logger.exception("Evidence readiness check failed")
