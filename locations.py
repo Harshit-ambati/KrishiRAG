@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 PILOT_CONFIG = json.loads((ROOT / "dist" / "coverage.json").read_text(encoding="utf-8"))
 DIRECTORY = json.loads((ROOT / "india_districts.json").read_text(encoding="utf-8"))
+CULTIVATION = json.loads((ROOT / "state_vegetables.json").read_text(encoding="utf-8"))
 STATE_IDS = {1: "jammu-and-kashmir", 35: "andaman-and-nicobar-islands",
              38: "dadra-and-nagar-haveli-and-daman-and-diu"}
 STATE_NAMES = {
@@ -34,6 +35,12 @@ DEMO_DISTRICTS = set(PILOT_NAMES)
 def build_directory():
     coverage = []
     locations = {}
+    vegetables = {int(code): set() for code in DIRECTORY["states"]}
+    for crop, record in CULTIVATION["crops"].items():
+        for code in record["states"]:
+            vegetables[code].add(crop)
+    for record in CULTIVATION["supplements"]:
+        vegetables[record["state"]].update(record["crops"])
     for code, state in DIRECTORY["states"].items():
         code = int(code)
         state_id = STATE_IDS.get(code, re.sub(r"[^a-z]+", "-", state["name"].lower()).strip("-"))
@@ -47,18 +54,36 @@ def build_directory():
                 "enabled": True, "lgd_code": lgd, "live_weather": bool(point),
             })
             locations[state_id, district_id] = tuple(point) if point else None
-        coverage.append({"id": state_id, "name": name, "lgd_code": code, "districts": districts})
+        coverage.append({
+            "id": state_id, "name": name, "lgd_code": code, "districts": districts,
+            "vegetable_ids": sorted(vegetables[code]),
+        })
     return sorted(coverage, key=lambda state: state["name"]["en"]), locations
 
 
 COVERAGE, LOCATIONS = build_directory()
-VEGETABLE_STAGES = {
+ADDITIONAL_STAGES = {
+    "germination": {"en": "Germination", "te": "మొలకెత్తే దశ", "hi": "अंकुरण"},
     "seedling": {"en": "Seedling / transplanting", "te": "మొక్క / నాటే దశ", "hi": "पौध / रोपाई"},
+    "establishment": {"en": "Plant establishment", "te": "మొక్క వేరు పట్టే దశ", "hi": "पौध जमने की अवस्था"},
     "vegetative": {"en": "Leaf growth", "te": "ఆకుల పెరుగుదల", "hi": "पत्तियों की बढ़वार"},
+    "panicle-initiation": {"en": "Panicle initiation", "te": "కంకి ఏర్పడటం మొదలయ్యే దశ", "hi": "बाली बनना शुरू"},
+    "flower-buds": {"en": "Flower buds forming", "te": "పూల మొగ్గలు ఏర్పడే దశ", "hi": "फूल की कलियाँ बनना"},
     "flowering": {"en": "Flowering", "te": "పూత", "hi": "फूल आना"},
     "fruiting": {"en": "Fruit development", "te": "కాయ పెరుగుదల", "hi": "फल की बढ़वार"},
+    "bulb-initiation": {"en": "Bulb formation begins", "te": "ఉల్లి గడ్డ ఏర్పడటం మొదలు", "hi": "कंद बनना शुरू"},
     "bulb-development": {"en": "Bulb development", "te": "ఉల్లి గడ్డ పెరుగుదల", "hi": "कंद का विकास"},
+    "tuber-initiation": {"en": "Tubers forming", "te": "దుంపలు ఏర్పడే దశ", "hi": "आलू के कंद बनना"},
+    "tuber-bulking": {"en": "Tubers enlarging", "te": "దుంపలు పెరిగే దశ", "hi": "आलू के कंद बढ़ना"},
+    "head-formation": {"en": "Head formation", "te": "క్యాబేజీ తల ఏర్పడే దశ", "hi": "पत्तागोभी का सिर बनना"},
+    "curd-formation": {"en": "Curd formation", "te": "కాలీఫ్లవర్ పువ్వు ఏర్పడే దశ", "hi": "फूलगोभी का फूल बनना"},
+    "pod-formation": {"en": "Pod formation", "te": "పొట్లకాయలు ఏర్పడే దశ", "hi": "फलियाँ बनना"},
+    "pod-filling": {"en": "Pod filling", "te": "పొట్లకాయల్లో గింజలు నిండే దశ", "hi": "फलियों में दाने भरना"},
+    "harvesting": {"en": "Harvesting / picking", "te": "కోత / కాయలు కోసే దశ", "hi": "कटाई / तुड़ाई"},
 }
+VEGETABLE_START = ["germination", "seedling", "establishment", "vegetative"]
+HARVEST_STAGES = ["mature", "harvesting", "post-harvest"]
+FRUITING_STAGES = [*VEGETABLE_START, "flower-buds", "flowering", "fruiting", *HARVEST_STAGES]
 CONFIG = {
     "coverage": COVERAGE,
     "crops": {
@@ -68,15 +93,26 @@ CONFIG = {
         "onion": {"en": "Onion", "te": "ఉల్లి", "hi": "प्याज़"},
         "okra": {"en": "Okra (bhindi)", "te": "బెండకాయ", "hi": "भिंडी"},
         "brinjal": {"en": "Brinjal (eggplant)", "te": "వంకాయ", "hi": "बैंगन"},
+        "bottle-gourd": {"en": "Bottle gourd", "te": "సొరకాయ", "hi": "लौकी"},
+        "cabbage": {"en": "Cabbage", "te": "క్యాబేజీ", "hi": "पत्तागोभी"},
+        "cauliflower": {"en": "Cauliflower", "te": "కాలీఫ్లవర్", "hi": "फूलगोभी"},
+        "peas": {"en": "Peas", "te": "పచ్చి బఠాణీలు", "hi": "मटर"},
+        "potato": {"en": "Potato", "te": "బంగాళాదుంప", "hi": "आलू"},
     },
-    "stages": {**PILOT_CONFIG["stages"], **VEGETABLE_STAGES},
+    "stages": {**PILOT_CONFIG["stages"], **ADDITIONAL_STAGES},
     "crop_stages": {
-        "paddy": list(PILOT_CONFIG["stages"]),
-        "tomato": ["seedling", "vegetative", "flowering", "fruiting", "mature", "post-harvest"],
-        "chilli": ["seedling", "vegetative", "flowering", "fruiting", "mature", "post-harvest"],
-        "onion": ["seedling", "vegetative", "bulb-development", "mature", "post-harvest"],
-        "okra": ["seedling", "vegetative", "flowering", "fruiting", "mature", "post-harvest"],
-        "brinjal": ["seedling", "vegetative", "flowering", "fruiting", "mature", "post-harvest"],
+        "paddy": ["germination", "nursery", "establishment", "tillering", "panicle-initiation",
+                  "reproductive", "grain-filling", *HARVEST_STAGES],
+        "tomato": FRUITING_STAGES,
+        "chilli": FRUITING_STAGES,
+        "onion": [*VEGETABLE_START, "bulb-initiation", "bulb-development", *HARVEST_STAGES],
+        "okra": FRUITING_STAGES,
+        "brinjal": FRUITING_STAGES,
+        "bottle-gourd": FRUITING_STAGES,
+        "cabbage": [*VEGETABLE_START, "head-formation", *HARVEST_STAGES],
+        "cauliflower": [*VEGETABLE_START, "curd-formation", *HARVEST_STAGES],
+        "peas": [*VEGETABLE_START, "flowering", "pod-formation", "pod-filling", *HARVEST_STAGES],
+        "potato": ["establishment", "vegetative", "tuber-initiation", "tuber-bulking", *HARVEST_STAGES],
         "none": [],
     },
     "demo_districts": sorted(DEMO_DISTRICTS),

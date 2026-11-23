@@ -58,6 +58,33 @@ function renderDistricts() {
   fields.district.disabled = !districts.length;
 }
 
+function renderCrops() {
+  const state = selectedState();
+  const cropSelect = fields.crop;
+  const current = cropSelect.value;
+  const vegetables = state?.vegetable_ids ?? [];
+  cropSelect.replaceChildren(new Option(state ? copy.noCrop : copy.chooseStateFirst, 'none'));
+  if (state) {
+    const fieldCrops = document.createElement('optgroup');
+    fieldCrops.label = copy.fieldCrops;
+    fieldCrops.append(new Option(localName(crops.paddy), 'paddy'));
+    cropSelect.append(fieldCrops);
+  }
+  if (vegetables.length) {
+    const group = document.createElement('optgroup');
+    group.label = copy.stateVegetables;
+    vegetables.map(value => new Option(localName(crops[value]), value))
+      .sort((a, b) => a.text.localeCompare(b.text, language))
+      .forEach(option => group.append(option));
+    cropSelect.append(group);
+  }
+  cropSelect.value = Array.from(cropSelect.options).some(option => option.value === current) ? current : 'none';
+  cropSelect.disabled = pending || !state;
+  const note = byId('crop-availability');
+  note.hidden = !state;
+  note.textContent = vegetables.length ? copy.cultivationNote : copy.cultivationGap;
+}
+
 function renderCropStages() {
   setOptions(fields.stage, [
     { value: 'unknown', label: copy.unknownStage },
@@ -134,9 +161,7 @@ function renderLanguage() {
 
   setOptions(fields.state, coverage.map(state => ({ value: state.id, label: localName(state.name) })), copy.selectState);
   renderDistricts();
-  setOptions(fields.crop, [{ value: 'none', label: copy.noCrop },
-    ...Object.entries(crops).map(([value, names]) => ({ value, label: localName(names) })),
-  ]);
+  renderCrops();
   renderCropStages();
   setOptions(scenarioSelect, [
     { value: '', label: copy.automatic },
@@ -155,7 +180,7 @@ function renderLanguage() {
 function validate() {
   const state = selectedState();
   const district = districtsFor(state).find(entry => entry.id === fields.district.value);
-  const validStage = fields.stage.value === 'unknown' || Object.hasOwn(stages, fields.stage.value);
+  const validStage = fields.stage.value === 'unknown' || cropStages[fields.crop.value]?.includes(fields.stage.value);
   const errors = {
     state: state ? '' : copy.stateError,
     district: state && !district ? (fields.district.disabled ? copy.noDistricts : copy.districtError) : '',
@@ -341,6 +366,8 @@ function fieldChanged(event) {
   if (event.target === fields.state) {
     fields.district.value = '';
     renderDistricts();
+    renderCrops();
+    renderCropStages();
   }
   if (event.target === fields.crop) {
     fields.stage.value = 'unknown';
@@ -373,9 +400,10 @@ byId('answer-follow-up').addEventListener('click', () => {
 
 function setPending(value) {
   pending = value;
-  for (const control of [fields.state, fields.crop, fields.question, fields.observation, scenarioSelect, languageSelect]) {
+  for (const control of [fields.state, fields.question, fields.observation, scenarioSelect, languageSelect]) {
     control.disabled = value;
   }
+  fields.crop.disabled = value || !selectedState();
   fields.stage.disabled = value || fields.crop.value === 'none';
   fields.district.disabled = value || !districtsFor(selectedState()).length;
 }

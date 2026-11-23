@@ -44,11 +44,29 @@ class ExpandedCoverageTests(unittest.TestCase):
         config = self.client.get("/api/farm-config").json()
         self.assertEqual(len(config["coverage"]), 36)
         self.assertGreaterEqual(sum(len(state["districts"]) for state in config["coverage"]), 780)
-        self.assertEqual(set(config["crops"]), {"paddy", "tomato", "chilli", "onion", "okra", "brinjal"})
+        self.assertEqual(set(config["crops"]), {
+            "paddy", "tomato", "chilli", "onion", "okra", "brinjal", "bottle-gourd",
+            "cabbage", "cauliflower", "peas", "potato",
+        })
+        states = {state["id"]: set(state["vegetable_ids"]) for state in config["coverage"]}
+        self.assertEqual(states["chandigarh"], {"onion", "potato"})
+        self.assertEqual(states["andhra-pradesh"], set(config["crops"]) - {"paddy"})
+        self.assertIn("chilli", states["uttarakhand"])
+        self.assertTrue(all(vegetables and vegetables <= config["crops"].keys() for vegetables in states.values()))
+        self.assertIn("panicle-initiation", config["crop_stages"]["paddy"])
+        self.assertIn("curd-formation", config["crop_stages"]["cauliflower"])
+        self.assertIn("tuber-bulking", config["crop_stages"]["potato"])
         for fields in (PUNE | {"state_id": "andhra-pradesh"},
-                       COIMBATORE | {"crop": "tomato", "crop_stage": "tillering"}):
+                       COIMBATORE | {"crop": "tomato", "crop_stage": "tillering"},
+                       COIMBATORE | {"crop": "okra", "crop_stage": "tuber-initiation"}):
             response = self.client.post("/api/advisories", json=fields | {"question": "Rain?", "language": "en"})
             self.assertEqual(response.status_code, 422)
+
+    def test_new_stage_and_new_crop_are_valid_without_broadening_advice(self):
+        for crop, stage in (("okra", "establishment"), ("potato", "tuber-initiation")):
+            result = self.ask(COIMBATORE, "How should I irrigate?", crop=crop, crop_stage=stage, requested_date=None)
+            self.assertEqual(result["crop_stage"], stage)
+            self.assertEqual(result["status"], "insufficient_evidence")
 
     def test_vegetable_guidance_respects_crop_and_state(self):
         question = "How do I irrigate the crop?"

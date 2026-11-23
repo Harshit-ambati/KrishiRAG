@@ -57,7 +57,8 @@
             </div>
             <div class="field">
               <label for="crop" data-text="crop">Crop</label>
-              <select id="crop" name="crop"></select>
+              <select id="crop" name="crop" aria-describedby="crop-availability" disabled></select>
+              <p id="crop-availability" class="section-description" role="status" hidden></p>
             </div>
             <div class="field">
               <label for="stage" data-text="stage">Crop stage</label>

@@ -1,0 +1,98 @@
+{
+  "statistics": {
+    "year": "2017–18",
+    "source": "https://nhb.gov.in/statistics/Publication/Horticulture%20Statistics%20at%20a%20Glance-2018.pdf"
+  },
+  "crops": {
+    "bottle-gourd": { "table": "7.3.18", "states": [1, 3, 6, 8, 9, 10, 11, 13, 16, 17, 18, 20, 21, 22, 23, 27, 28, 29, 32, 33, 36] },
+    "brinjal": { "table": "7.3.19", "states": [1, 2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 27, 28, 29, 32, 33, 36] },
+    "cabbage": { "table": "7.3.20", "states": [1, 2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 27, 28, 29, 32, 33, 36] },
+    "cauliflower": { "table": "7.3.23", "states": [1, 2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 27, 28, 29, 32, 33, 36] },
+    "chilli": { "table": "7.3.25", "states": [1, 2, 3, 6, 9, 10, 11, 12, 13, 14, 16, 20, 22, 23, 27, 28, 29, 32, 33, 36] },
+    "okra": { "table": "7.3.27", "states": [1, 2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 27, 28, 29, 32, 33, 36] },
+    "onion": { "table": "7.3.28", "states": [1, 2, 3, 5, 6, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 27, 28, 29, 32, 33, 36] },
+    "peas": { "table": "7.3.29", "states": [1, 2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 27, 28, 29, 32, 33, 36] },
+    "potato": { "table": "7.3.30", "states": [1, 2, 3, 5, 6, 8, 9, 10, 11, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 27, 28, 29, 32, 33, 36] },
+    "tomato": { "table": "7.3.34", "states": [1, 2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 27, 28, 29, 32, 33, 36] }
+  },
+  "supplements": [
+    {
+      "state": 4,
+      "crops": ["onion", "potato"],
+      "source": "https://chandigarh.gov.in/files/stat2022/stat22-agricul.pdf",
+      "locator": "Agriculture, table 4.4, 2021–22"
+    },
+    {
+      "state": 5,
+      "crops": ["chilli"],
+      "source": "https://agritech.tnau.ac.in/banking/pdf/Chilli.pdf",
+      "locator": "Table 1, Uttarakhand, 2005–06"
+    },
+    {
+      "state": 7,
+      "crops": ["brinjal", "cabbage", "cauliflower", "chilli", "okra", "tomato"],
+      "source": "https://www.icar.gov.in/hi/node/17262",
+      "locator": "Delhi, horticulture overview"
+    },
+    {
+      "state": 14,
+      "crops": ["brinjal", "potato"],
+      "source": "https://dcimanipur.gov.in/en/sectors/food-processing-industry/",
+      "locator": "Common horticulture crops grown in Manipur"
+    },
+    {
+      "state": 30,
+      "crops": ["brinjal", "chilli", "okra"],
+      "source": "https://gsbb.goa.gov.in/wp-content/uploads/2025/05/action-plan.pdf",
+      "locator": "Goa State Biodiversity Strategy and Action Plan, agricultural crop diversity"
+    },
+    {
+      "state": 31,
+      "crops": ["brinjal", "cabbage", "cauliflower", "chilli", "okra", "tomato"],
+      "source": "https://cpcri.gov.in/filemgr/webfs/publication/Coconut_farming_in_Lakshadweep1.pdf",
+      "locator": "Vegetables grown in terrace containers"
+    },
+    {
+      "state": 34,
+      "crops": ["brinjal", "okra", "onion", "tomato"],
+      "source": "https://statistics.py.gov.in/sites/default/files/statistical-hand-book-2023-24.pdf",
+      "locator": "Agriculture, area under all crops, 2023–24"
+    },
+    {
+      "state": 34,
+      "crops": ["chilli"],
+      "source": "https://statistics.py.gov.in/sites/default/files/season-and-crop-report-2024-25.pdf",
+      "locator": "Table IV-A, Puducherry region, 2024–25"
+    },
+    {
+      "state": 35,
+      "crops": ["brinjal", "chilli", "okra"],
+      "source": "https://icar.gov.in/sites/default/files/Circulars/ICAR-En-Kharif-Agro-Advisories-for-Farmers-2025.pdf",
+      "locator": "Andaman & Nicobar Islands, overview of widely grown vegetables"
+    },
+    {
+      "state": 35,
+      "crops": ["bottle-gourd", "tomato"],
+      "source": "https://www.icar.gov.in/en/node/3038",
+      "locator": "Car Nicobar homestead garden demonstration"
+    },
+    {
+      "state": 37,
+      "crops": ["brinjal", "tomato"],
+      "source": "https://ladakh.gov.in/kvk-kargil-ii-zanskar-observes-world-soil-day-2025-with-a-mega-awareness-programme-at-taisuru/",
+      "locator": "KVK Kargil-II protected cultivation"
+    },
+    {
+      "state": 37,
+      "crops": ["cauliflower"],
+      "source": "https://ladakh.gov.in/cec-feroz-khan-inspects-works-of-agriculture-department-visits-farms-green-houses-at-pashkum-srf-kurbathang-plateau/",
+      "locator": "Pashkum greenhouse cultivation"
+    },
+    {
+      "state": 38,
+      "crops": ["brinjal", "cabbage", "cauliflower", "tomato"],
+      "source": "https://www.nabard.org/auth/writereaddata/tender/DNH_PLP_2019_20.pdf",
+      "locator": "Dadra and Nagar Haveli district profile, major crops"
+    }
+  ]
+}
