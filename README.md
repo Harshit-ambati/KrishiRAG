@@ -4,9 +4,16 @@ AgriRAG is an evidence-grounded paddy advisory app. The Andhra Pradesh pilot cov
 
 ## Run locally
 
-From this folder, run `python -m http.server 8765 --bind 127.0.0.1 --directory dist` and open [AgriRAG](http://127.0.0.1:8765). The app has no build dependencies or API keys. Serve the `dist` directory to host it.
+From this folder, install the server dependencies and start FastAPI.
 
-Select a state, district, crop stage, topic, and field operation date. Answer language is independent of location. Choose **View archived advisory** to load an example for Krishna on 3 November 2026 in the selected language.
+```sh
+python -m pip install -r requirements.txt
+python -m uvicorn main:app --host 127.0.0.1 --port 8765
+```
+
+Open the [farmer interface](http://127.0.0.1:8765). It uses plain HTML, CSS, and JavaScript without a build step or API key. The form and its results are available in English, Telugu, and Hindi. The demo scenario selector shows five prewritten statuses. Questions and observations stay in the browser during the demo.
+
+Open the [evidence archive](http://127.0.0.1:8765/archive/) for the dated lookup. Choose **View archived advisory** to load an example for Krishna on 3 November 2026. The demo and the archive share the state and district configuration. Set `placeholder: true` on a district to label it as a demo district in the farmer interface.
 
 Run `node --test` from the project folder to verify retrieval.
 
