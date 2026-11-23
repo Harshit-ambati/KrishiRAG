@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evidence review · AgriRAG</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+  <script type="module" src="/static/js/admin.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="shell header-inner">
+      <a class="brand" href="/"><span>Agri<span class="brand-accent">RAG</span></span></a>
+      <a class="archive-link" href="/">Farmer interface</a>
+    </div>
+  </header>
+  <main class="shell admin-main">
+    <h1>Evidence review</h1>
+    <p class="section-description">Compare extracted passages against the original before publishing.</p>
+    <p id="admin-status" role="status" aria-live="polite"></p>
+    <p id="admin-error" role="alert" hidden></p>
+    <div class="admin-grid">
+      <aside class="card">
+        <h2>Sources</h2>
+        <form id="upload-form">
+          <div class="field">
+            <label for="source-file">Upload original document</label>
+            <input id="source-file" name="file" type="file" accept=".pdf,.txt" aria-describedby="file-help" required>
+            <p class="section-description" id="file-help">PDF or UTF-8 text, up to 12 MiB.</p>
+          </div>
+          <button class="primary" type="submit">Upload draft</button>
+        </form>
+        <ul id="source-list" class="source-list"></ul>
+      </aside>
+      <section class="card" id="editor" aria-labelledby="editor-title" hidden>
+        <h2 id="editor-title" tabindex="-1">Source details</h2>
+        <div class="source-meta">
+          <span id="source-status" class="demo-badge"></span>
+          <a id="original-link" target="_blank" rel="noopener noreferrer" hidden>Open publisher’s original</a>
+          <a id="snapshot-link" hidden>Download audited snapshot</a>
+        </div>
+        <p id="source-hash" class="section-description"></p>
+        <p id="replacement-note" class="section-description" hidden></p>
+        <form id="review-form">
+          <fieldset id="review-fields">
+            <legend>Source metadata</legend>
+            <div class="field-grid">
+              <div class="field"><label for="publisher">Publisher</label><input id="publisher" name="publisher" maxlength="240"></div>
+              <div class="field"><label for="title">Title</label><input id="title" name="title" maxlength="240"></div>
+              <div class="field"><label for="original-url">Original URL</label><input id="original-url" name="original_url" type="url"></div>
+              <div class="field"><label for="version">Edition or version</label><input id="version" name="version" maxlength="240"></div>
+              <div class="field"><label for="source-language">Language code</label><input id="source-language" name="language" maxlength="24" placeholder="en, te, or mul"></div>
+              <div class="field"><label for="source-state">State</label><select id="source-state" name="state_id"></select></div>
+              <div class="field full-field"><label for="scope">Geographic coverage as stated</label><textarea id="scope" name="geographic_scope" rows="2" maxlength="1800"></textarea></div>
+              <div class="field"><label for="issue-date">Issue date (if stated)</label><input id="issue-date" name="issue_date" type="date"></div>
+              <div class="field"><label for="valid-from">Valid from</label><input id="valid-from" name="valid_from" type="date"></div>
+              <div class="field"><label for="valid-until">Valid through</label><input id="valid-until" name="valid_until" type="date"></div>
+              <div class="field full-field"><label for="source-notes">Source review notes</label><textarea id="source-notes" name="review_notes" rows="2" maxlength="1800"></textarea></div>
+            </div>
+            <label class="check"><input name="source_verified" type="checkbox"> I opened the publisher’s source and verified its edition, dates and scope.</label>
+            <div class="passage-heading">
+              <h3>Evidence passages</h3>
+              <button id="add-passage" class="secondary" type="button">Add a passage</button>
+            </div>
+            <p class="section-description">For tables, scans and Telugu text, check the rendered page. Include only passages you have reviewed.</p>
+            <div id="passages"></div>
+          </fieldset>
+          <div id="draft-actions" class="admin-actions" hidden>
+            <button class="secondary" type="submit">Save draft</button>
+            <button class="primary" type="submit" id="publish-button">Save and publish reviewed passages</button>
+          </div>
+        </form>
+        <form id="archive-form" hidden>
+          <div class="field">
+            <label for="replacement">Superseding source (optional)</label>
+            <select id="replacement" name="superseded_by"></select>
+          </div>
+          <button class="secondary" type="submit">Archive this version</button>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <template id="passage-template">
+    <details class="passage">
+      <summary></summary>
+      <fieldset>
+        <legend class="sr-only">Passage metadata and review</legend>
+        <p class="extraction-note"></p>
+        <details class="raw-extraction"><summary>Machine-extracted preview</summary><pre></pre></details>
+        <button class="secondary use-extraction" type="button">Copy preview into review text</button>
+        <div class="field-grid">
+          <label class="field">PDF page<input name="page_number" type="number" min="1"></label>
+          <label class="field">Section or table row<input name="section" maxlength="240"></label>
+          <label class="field">District<select name="district_id"></select></label>
+          <label class="field">Language (inherits source if blank)<input name="language" maxlength="24"></label>
+          <label class="field">Evidence type<select name="kind"><option value="background">Background</option><option value="advisory">Crop advisory</option><option value="weather">District weather</option></select></label>
+          <label class="field">Crop<select name="crop"></select></label>
+          <label class="field">Crop stage as stated<input name="crop_stage" maxlength="240"></label>
+          <label class="field">Topic<input name="topic" maxlength="240"></label>
+          <label class="field">Valid from (optional)<input name="valid_from" type="date"></label>
+          <label class="field">Valid through (optional)<input name="valid_until" type="date"></label>
+          <label class="field full-field">Reviewed passage or paraphrase<textarea name="content" rows="4" maxlength="16000"></textarea></label>
+          <label class="field full-field">Review notes<textarea name="review_notes" rows="2" maxlength="1800"></textarea></label>
+        </div>
+        <label class="check"><input name="reviewed" type="checkbox"> I compared the text and locator with the original passage.</label>
+        <label class="check"><input name="include" type="checkbox"> Include this passage when publishing.</label>
+      </fieldset>
+    </details>
+  </template>
+</body>
+</html>

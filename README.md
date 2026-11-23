@@ -45,6 +45,16 @@ python -m pip install -r requirements-dev.txt
 python -m unittest discover -s test -p "test_*.py"
 ```
 
+## Evidence review
+
+The [pilot audit](EVIDENCE_AUDIT.md) records the reviewed districts, source editions, supported uses, and coverage window. Load the approved passages into the local SQLite database with `python evidence_seed.py`. If you have the three original PDFs listed in `pilot_evidence.json`, supply their directory with `--snapshots`. The importer checks every file against the audited SHA-256 before attaching it. Re-running the seed preserves existing records, including archived versions.
+
+Set `AGRIRAG_ADMIN_PASSWORD` before starting FastAPI and open [the evidence admin](http://127.0.0.1:8765/admin). The username defaults to `admin` and can be set with `AGRIRAG_ADMIN_USER`. Use HTTPS when serving outside loopback.
+
+Upload a PDF or UTF-8 text document to create a draft. Open the publisher’s original or download the stored copy, complete the source metadata, and record which passages you checked. Include only the passages to publish. For a scan, mixed-column table, or legacy Telugu encoding, use the rendered original to type or correct the passage and record the locator. Publishing locks the version. Upload a replacement as a new version, then archive the old one and select its successor.
+
+`GET /api/evidence?state_id=andhra-pradesh&district_id=krishna&on_date=2026-11-24` returns approved passages for an exact district and date. `covered` indicates that both reviewed paddy guidance and weather evidence apply to that date. The endpoint excludes archived and undated material from the dated lookup.
+
 ## Pilot evidence
 
 The initial evidence covers selected paddy decisions from 31 October to 4 November 2026. It includes drainage during rain, post-rain spray timing, and dry storage of harvested rice. Irrigation timing and water depth require additional applicable evidence. The app uses curated bulletins and has no automatic weather or advisory feed. The app reports a coverage gap if the selected date, district, crop stage, or topic lacks applicable evidence. Historical results display an archive label. IMD may replace the two generic PDF URLs with newer documents, so citations include the issue date and section.

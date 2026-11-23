@@ -1,0 +1,59 @@
+import argparse
+import json
+from hashlib import sha256
+from pathlib import Path
+
+from evidence_store import DOCUMENT_FIELDS, PASSAGE_FIELDS, evidence_db
+
+SEED = Path(__file__).with_name("pilot_evidence.json")
+
+
+def seed(snapshots: Path | None):
+    records = json.loads(SEED.read_text(encoding="utf-8"))
+    files = {}
+    if snapshots:
+        for record in records:
+            data = (snapshots / record["filename"]).read_bytes()
+            if sha256(data).hexdigest() != record["sha256"]:
+                raise ValueError(f'{record["filename"]} does not match the audited PDF.')
+            files[record["id"]] = data
+
+    with evidence_db(write=True) as connection:
+        for record in records:
+            document_id = record["id"]
+            fields = (*DOCUMENT_FIELDS, "id", "filename", "sha256", "page_count", "status", "content")
+            values = {
+                **record["metadata"], **{field: record[field] for field in ("id", "filename", "sha256", "page_count")},
+                "source_verified": True, "status": "approved", "content": files.get(document_id),
+            }
+            cursor = connection.execute(
+                f"INSERT INTO source_documents ({', '.join(fields)}) VALUES ({', '.join('?' for _ in fields)}) "
+                "ON CONFLICT (original_url, version) DO NOTHING",
+                tuple(values.get(field) for field in fields),
+            )
+            if not cursor.rowcount:
+                if document_id in files:
+                    connection.execute(
+                        "UPDATE source_documents SET content = ? WHERE id = ? AND sha256 = ? AND content IS NULL",
+                        (files[document_id], document_id, record["sha256"]),
+                    )
+                continue
+            fields = (*PASSAGE_FIELDS, "id", "document_id", "status", "extraction_note")
+            for index, passage in enumerate(record["passages"], start=1):
+                values = {
+                    **passage, "id": f"{document_id}-{index}", "document_id": document_id,
+                    "status": "approved", "reviewed": True, "include": True,
+                    "extraction_note": "Manually reviewed against the rendered original PDF.",
+                }
+                connection.execute(
+                    f"INSERT INTO evidence_passages ({', '.join(fields)}) VALUES ({', '.join('?' for _ in fields)})",
+                    tuple(values.get(field) for field in fields),
+                )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Load the reviewed Andhra Pradesh pilot evidence.")
+    parser.add_argument("--snapshots", type=Path, help="Directory containing the original PDFs named in pilot_evidence.json.")
+    args = parser.parse_args()
+    seed(args.snapshots)
+    print("Reviewed pilot evidence loaded.")
