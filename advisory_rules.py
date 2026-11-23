@@ -118,6 +118,41 @@ ACTIONS = {
 }
 
 MESSAGES = {
+    "paddy_grain_filling": (
+        "The bulletin covers paddy from grain filling to grain hardening. Its guidance is to keep enough moisture in the soil while avoiding excess irrigation and standing water.",
+        "ఈ బులెటిన్ వరి గింజలు నిండే దశ నుంచి గట్టిపడే దశ వరకు వర్తిస్తుంది. నేలలో తగినంత తేమ ఉంచుతూ, ఎక్కువగా నీరు పెట్టకుండా, నీరు నిలవకుండా చూడాలని సూచిస్తుంది.",
+        "बुलेटिन धान में दाना भरने से दाना सख्त होने तक की अवस्था पर लागू है। इसमें मिट्टी में पर्याप्त नमी रखने और अधिक सिंचाई व जलभराव से बचने की सलाह है।",
+    ),
+    "paddy_no_standing": (
+        "Your field observation indicates no standing water. Check soil moisture at the field before deciding how much water, if any, to add.",
+        "మీ పరిశీలన ప్రకారం పొలంలో నీరు నిలవలేదు. నీరు పెట్టాల్సి ఉందా, ఎంత పెట్టాలి అనేది నిర్ణయించే ముందు పొలంలో నేల తేమను చూడండి.",
+        "आपके खेत के विवरण से पानी खड़ा होने का संकेत नहीं मिलता। पानी देना है या नहीं और कितना देना है, यह तय करने से पहले खेत की मिट्टी में नमी देखें।",
+    ),
+    "paddy_standing_reason": (
+        "The standing water you observed is the reason to pause irrigation. Use the field condition when deciding whether to resume.",
+        "పొలంలో నీరు నిలిచి ఉండటంతో సాగునీరు పెట్టడం వాయిదా వేయాలి. మళ్లీ నీరు ఎప్పుడు పెట్టాలో పొలం పరిస్థితిని బట్టి నిర్ణయించండి.",
+        "खेत में खड़ा पानी सिंचाई टालने का कारण है। सिंचाई फिर कब शुरू करनी है, यह खेत की स्थिति देखकर तय करें।",
+    ),
+    "forecast_field_limit": (
+        "This is a forecast for planning. Check conditions at your field before making a field-work decision.",
+        "ఇది పనుల ప్రణాళిక కోసం ఇచ్చిన అంచనా. పొలం పనులపై నిర్ణయం తీసుకునే ముందు మీ పొలంలోని పరిస్థితిని చూడండి.",
+        "यह पूर्वानुमान काम की योजना बनाने के लिए है। खेत के काम पर फैसला लेने से पहले अपने खेत की स्थिति देखें।",
+    ),
+    "paddy_harvest_reason": (
+        "The maturity percentage refers to grains on the panicle before cutting. The moisture percentage refers to the harvested grain before storage. The bulletin gives these checks for different steps.",
+        "పరిపక్వత శాతం కోతకు ముందు కంకిలోని గింజలకు వర్తిస్తుంది. తేమ శాతం నిల్వకు ముందు కోసిన ధాన్యానికి వర్తిస్తుంది. బులెటిన్ ఈ రెండు దశలకు వేర్వేరు ప్రమాణాలు ఇస్తుంది.",
+        "पकने का प्रतिशत कटाई से पहले बाली के दानों पर लागू है। नमी का प्रतिशत भंडारण से पहले काटे गए धान पर लागू है। बुलेटिन में दोनों चरणों की अलग-अलग जाँच दी गई है।",
+    ),
+    "okra_harvest_reason": (
+        "Use tenderness as the readiness check for picking. The length range is a guide for organic okra, and the suitable size can vary across varieties and markets.",
+        "కోతకు కాయ లేతగా ఉందో చూడండి. ఈ పొడవు సేంద్రియ బెండకు ఒక సూచన. సరైన పరిమాణం రకం, మార్కెట్‌ను బట్టి మారవచ్చు.",
+        "तुड़ाई के लिए फलियों की कोमलता देखें। लंबाई की सीमा जैविक भिंडी के लिए एक संकेत है। सही आकार किस्म और बाज़ार के अनुसार बदल सकता है।",
+    ),
+    "okra_moisture_reason": (
+        "The guide identifies flowering and the start of pod formation as sensitive to moisture stress. Keeping the soil moist at this stage also means preventing water from pooling.",
+        "పూత, కాయలు పట్టడం మొదలయ్యే దశల్లో తేమ కొరత ప్రభావం చూపుతుందని సూచన చెబుతుంది. ఈ దశలో నేల తేమగా ఉండడంతో పాటు నీరు నిలవకుండా చూడాలి.",
+        "मार्गदर्शिका के अनुसार फूल आने और फलियाँ बनना शुरू होने के समय नमी की कमी का असर पड़ता है। इस अवस्था में मिट्टी नम रखें और पानी जमा होने से बचाएँ।",
+    ),
     "crop_selection": ("Select the crop to check what guidance applies to your field.",
                        "మీ పొలానికి వర్తించే సూచన కోసం పంటను ఎంచుకోండి.",
                        "अपने खेत पर लागू मार्गदर्शन देखने के लिए फसल चुनें।"),
@@ -435,8 +470,16 @@ def decision(session, connection, covered_location, forecast=None):
         return result("insufficient_evidence", message("unencoded"), practices)
     code = next(iter(supported_codes))
     action = localize(ACTIONS[topic][code], session.language)
+    practice_detail = []
     if code == "harvest_at_maturity" and practices[0]["content"] == REVIEWED_HARVEST_TEXT:
         action = message("harvest_thresholds")
+        practice_detail.append(message("paddy_harvest_reason"))
+    if code == "maintain_moisture" and session.crop == "paddy" and practices[0]["stage_id"] == "grain-filling":
+        practice_detail.append(message("paddy_grain_filling"))
+    if code == "okra_harvest_tender":
+        practice_detail.append(message("okra_harvest_reason"))
+    if code == "okra_moisture_at_fruit_set":
+        practice_detail.append(message("okra_moisture_reason"))
     if topic == "irrigation" and needs_weather and code == "maintain_moisture":
         if (session.field_observations or "").casefold() in {text.casefold() for text in UNKNOWN_MOISTURE}:
             return result("insufficient_evidence", message("moisture_unknown"), weather)
@@ -447,16 +490,23 @@ def decision(session, connection, covered_location, forecast=None):
         if moisture == "standing":
             action = message("standing")
             code = "avoid_irrigation_while_standing"
+            practice_detail.append(message("paddy_standing_reason"))
+        else:
+            practice_detail.append(message("paddy_no_standing"))
 
     general_vegetable_practice = code in GENERAL_VEGETABLE_IRRIGATION and needs_weather
     general_okra_harvest = code == "okra_harvest_tender" and needs_weather
     quantity_requested = topic == "irrigation" and has_terms(session.question.casefold(), IRRIGATION_QUANTITY_TERMS)
-    practice_copy = message("vegetable_timing_gap") if general_vegetable_practice else None
+    if general_vegetable_practice:
+        practice_detail.append(message("vegetable_timing_gap"))
     if general_okra_harvest:
-        practice_copy = message("harvest_timing_gap")
+        practice_detail.append(message("harvest_timing_gap"))
     if quantity_requested:
-        practice_copy = " ".join(filter(None, (practice_copy, message("water_quantity_gap"))))
-    weather_copy = f'{point_copy} {message("point_scope")}' if point_copy else None
+        practice_detail.append(message("water_quantity_gap"))
+    weather_copy = None
+    if weather:
+        forecast_description = f'{point_copy} {message("point_scope")}' if point_copy else message("rain", date=day, amount=amount)
+        weather_copy = " ".join((forecast_description, message("forecast_field_limit")))
     return support(code, action, practices[:1], practice_rows=practices[:1], weather_rows=weather,
-                   amount=amount, practice_copy=practice_copy, weather_copy=weather_copy, snapshot=snapshot,
+                   amount=amount, practice_copy=" ".join(practice_detail) or None, weather_copy=weather_copy, snapshot=snapshot,
                    status="conditional" if general_vegetable_practice or general_okra_harvest or quantity_requested else "supported")

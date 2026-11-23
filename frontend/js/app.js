@@ -277,6 +277,17 @@ function renderResult() {
     } else {
       item.textContent = source.title;
     }
+    if (source.excerpt) {
+      const passage = document.createElement('details');
+      passage.className = 'source-passage';
+      const summary = document.createElement('summary');
+      summary.lang = language;
+      summary.textContent = copy.reviewedPassage;
+      const excerpt = document.createElement('p');
+      excerpt.textContent = source.excerpt;
+      passage.append(summary, excerpt);
+      item.append(passage);
+    }
     return item;
   }));
   const claims = answer.claims ?? [];

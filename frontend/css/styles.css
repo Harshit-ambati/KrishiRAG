@@ -104,6 +104,9 @@ textarea::placeholder { color: #607068; opacity: 1; }
 .sources { margin-top: 14px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 8px; background: #f6f8f1; }
 .sources h3 { margin-top: 0; }
 .sources :is(ul, ol) { margin: 3px 0 0; padding-left: 1.2em; }
+.source-passage { margin: 3px 0 8px; overflow-wrap: anywhere; }
+.source-passage summary { cursor: pointer; color: var(--green); font-weight: 650; }
+.source-passage p { margin-top: 4px; }
 .sources .validity { margin-top: 6px; color: var(--muted); font-size: .89rem; }
 .validity time { font-weight: 650; }
 #result-action { font-size: 1.1rem; font-weight: 650; }
