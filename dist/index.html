@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f0">
+  <meta name="description" content="Find evidence-grounded paddy guidance and district weather bulletins for the Andhra Pradesh pilot.">
+  <title>AgriRAG · Paddy Advisory</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#top" aria-label="AgriRAG home"><span class="brand-icon" data-icon="sprout"></span>Agri<span>RAG</span></a>
+      <nav aria-label="Main navigation">
+        <a class="active" href="#advisory">Advisory</a>
+        <a href="#evidence">Evidence library</a>
+        <a href="#coverage">Coverage</a>
+      </nav>
+      <span class="header-location"><span data-icon="pin"></span> Andhra Pradesh pilot</span>
+    </div>
+  </header>
+
+  <main class="shell" id="top">
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="hero-content">
+        <p class="hero-kicker"><span data-icon="sprout"></span> PADDY ADVISORY</p>
+        <h1 id="hero-heading">Field advice, grounded<br class="desktop-break"> in evidence.</h1>
+        <p>Find paddy irrigation and field guidance backed by official advisories and district weather bulletins.</p>
+      </div>
+    </section>
+
+    <div class="workspace" id="advisory">
+      <section class="card request" aria-labelledby="request-heading">
+        <div class="card-heading"><span class="tile" data-icon="sliders"></span><div><h2 id="request-heading">Get an advisory</h2><p>Tell us about your field and the decision you’re making.</p></div></div>
+        <form id="advisory-form">
+          <div class="fields">
+            <label>State<select id="state" name="state" required></select></label>
+            <label>District<select id="district" name="district" required></select></label>
+            <label>Crop<select id="crop" name="crop" required></select></label>
+            <label>Crop stage<select id="stage" name="stage" required></select></label>
+            <label>Advisory topic<select id="topic" name="topic" required></select></label>
+            <label>Field operation date<input type="date" id="date" name="date" min="1900-01-01" max="9999-12-31" required></label>
+          </div>
+          <fieldset>
+            <legend>Answer language</legend>
+            <div class="languages">
+              <label><input type="radio" name="language" value="en" checked><span lang="en">English</span></label>
+              <label><input type="radio" name="language" value="hi"><span lang="hi">हिन्दी</span></label>
+              <label><input type="radio" name="language" value="te"><span lang="te">తెలుగు</span></label>
+            </div>
+          </fieldset>
+          <button class="primary" type="submit"><span data-icon="search"></span> Find advisory</button>
+        </form>
+      </section>
+
+      <aside class="sidebar" aria-label="Pilot information">
+        <section class="card side-card" id="coverage">
+          <div class="card-heading"><span class="tile" data-icon="pin"></span><div><h2>Pilot coverage</h2><p id="coverage-summary"></p></div></div>
+          <ul class="district-list" id="district-list"></ul>
+          <div class="side-note" id="archive-note"></div>
+        </section>
+        <section class="card side-card example-card">
+          <div class="card-heading"><span class="tile" data-icon="book"></span><div><h2>Explore an example</h2><p id="example-description"></p></div></div>
+          <button class="secondary" type="button" id="example">View archived advisory</button>
+        </section>
+      </aside>
+
+      <section class="card result" id="result" aria-live="polite" tabindex="-1" hidden></section>
+    </div>
+
+    <section class="evidence" id="evidence" aria-labelledby="evidence-heading">
+      <h2 id="evidence-heading">Evidence library</h2>
+      <p>Official sources curated for the pilot. Check the issue date when opening an IMD bulletin link, as some links are updated in place.</p>
+      <div class="source-grid" id="source-library"></div>
+    </section>
+  </main>
+  <footer><div class="shell footer-inner"><a class="brand" href="#top">Agri<span>RAG</span></a><span>Evidence-grounded agricultural advisory</span><a href="https://mausam.imd.gov.in/amaravati/" target="_blank" rel="noopener noreferrer">IMD Met Centre Amaravati</a></div></footer>
+</body>
+</html>
