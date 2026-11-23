@@ -35,13 +35,15 @@ def forecast_parameters(latitude, longitude, day):
     }
 
 
+def forecast_configured(state, district, day, today):
+    return (day is not None and os.environ.get("AGRIRAG_LIVE_WEATHER") == "1"
+            and bool(LOCATIONS.get((state, district))) and 0 <= (day - today).days < FORECAST_DAYS)
+
+
 def fetch_forecast(state, district, day, now):
-    location = LOCATIONS.get((state, district))
-    if not location or day is None or not 0 <= (day - now.date()).days < FORECAST_DAYS:
+    if not forecast_configured(state, district, day, now.date()):
         return None
-    if os.environ.get("AGRIRAG_LIVE_WEATHER") != "1":
-        return None
-    latitude, longitude = location
+    latitude, longitude = LOCATIONS[state, district]
     params = forecast_parameters(latitude, longitude, day)
     key = os.environ.get("OPEN_METEO_API_KEY", "").strip()
     if key:

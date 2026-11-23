@@ -64,6 +64,31 @@ class ExpandedCoverageTests(unittest.TestCase):
                 self.assertEqual(backed["evidence"][0]["crop"], crop)
                 self.assertEqual(self.ask(PUNE, question, crop=crop, requested_date=None)["status"], "insufficient_evidence")
 
+    def test_pre_submission_coverage_respects_scope_stage_date_and_approval(self):
+        from evidence_store import evidence_db
+
+        def lookup(**changes):
+            query = {"state_id": "andhra-pradesh", "district_id": "krishna", "crop": "paddy",
+                     "on_date": "2026-11-24", **changes}
+            response = self.client.get("/api/coverage", params=query)
+            self.assertEqual(response.status_code, 200, response.text)
+            return response.json()
+
+        with patch("live_weather.httpx.get") as network:
+            today = lookup()
+            self.assertTrue(today["has_reviewed_forecast"])
+            self.assertIn({"topic": "irrigation", "status": "stage_needed"}, today["crop_topics"])
+            staged = lookup(crop_stage="grain-filling")
+            self.assertIn({"topic": "irrigation", "status": "reviewed"}, staged["crop_topics"])
+            self.assertFalse(lookup(on_date="2026-12-01")["has_reviewed_forecast"])
+            self.assertEqual(lookup(district_id="eluru")["crop_topics"], [])
+            self.assertEqual(lookup(**COIMBATORE, crop="tomato")["crop_topics"],
+                             [{"topic": "irrigation", "status": "reviewed"}])
+            with evidence_db(write=True) as connection:
+                connection.execute("UPDATE source_documents SET status='archived' WHERE id='imd-agromet-ap-93-2026'")
+            self.assertNotIn({"topic": "irrigation", "status": "reviewed"}, lookup(crop_stage="grain-filling")["crop_topics"])
+            network.assert_not_called()
+
     def test_direct_definition_in_all_three_languages_without_crop_details(self):
         for language, question in (("en", "What is drip irrigation?"), ("hi", "ड्रिप सिंचाई क्या है?"),
                                    ("te", "బిందు సేద్యం అంటే ఏమిటి?")):

@@ -5,18 +5,19 @@ from contextlib import contextmanager
 from datetime import date, datetime
 from hashlib import sha256
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from advisory_rules import INDIA, decision, needs_forecast, question_topic, requested_day
+from advisory_rules import ACTIONS, INDIA, WEATHER_TOPIC, applicable, decision, needs_forecast, preferred, question_topic, rainfall_on, requested_day
 from advisory_generation import ChatProvider, CitedClaim, render_with_provider
 from advisory_log import decision_signature, deliver, ensure_advisory_tables, latest_run
 from evidence_index import EvidenceIndexUnavailable
-from evidence_store import ensure_evidence_schema
-from live_weather import Forecast, fetch_forecast
+from evidence_store import ensure_evidence_schema, evidence_db
+from live_weather import Forecast, fetch_forecast, forecast_configured
 from locations import CONFIG, DISTRICTS, DEMO_DISTRICTS
 
 ROOT = Path(__file__).resolve().parent
@@ -294,6 +295,47 @@ router = APIRouter()
 @router.get("/api/farm-config")
 def farm_config():
     return CONFIG
+
+
+@router.get("/api/coverage")
+def farm_coverage(state_id: Identifier, district_id: Identifier, crop: Identifier = "none",
+                  crop_stage: Identifier = "unknown", on_date: date | None = None):
+    if district_id not in DISTRICTS.get(state_id, ()):
+        raise HTTPException(422, detail="district_not_in_state")
+    if crop not in CONFIG["crop_stages"]:
+        raise HTTPException(422, detail="unsupported_crop")
+    context = SimpleNamespace(state_id=state_id, district_id=district_id, crop=crop, crop_stage=crop_stage)
+    validate_stage(context)
+    today = datetime.now(INDIA).date()
+    day = on_date or today
+    with evidence_db() as connection:
+        rows = applicable(connection, context, None, day.isoformat())
+
+    weather = preferred([row for row in rows if row["topic"] == WEATHER_TOPIC and row["kind"] == "weather"
+                         and (row["stage_id"] == crop_stage or (row["stage_id"] is None and not row["crop_stage"]))])
+    amounts = {rainfall_on(row, day.isoformat()) for row in weather}
+    topics = []
+    for topic, actions in ACTIONS.items():
+        scoped = [row for row in rows if row["topic"] == topic and row["kind"] != "weather"
+                  and (row["stage_id"] or not row["crop_stage"])]
+        selected = preferred([row for row in scoped if row["stage_id"] in (None, crop_stage)])
+        codes = {row["decision_code"] for row in selected}
+        stage_codes = {row["decision_code"] for row in scoped if row["stage_id"]}
+        if crop_stage == "unknown" and stage_codes & actions.keys() and (
+                len(codes) != 1 or bool(stage_codes - codes)):
+            topics.append({"topic": topic, "status": "stage_needed"})
+        elif len(codes & actions.keys()) > 1:
+            topics.append({"topic": topic, "status": "conflicting"})
+        elif len(codes) == 1 and codes <= actions.keys():
+            topics.append({"topic": topic, "status": "reviewed"})
+
+    return {
+        "on_date": day,
+        "has_reviewed_forecast": len(amounts) == 1 and None not in amounts,
+        "conflicting_forecasts": len(amounts - {None}) > 1,
+        "live_forecast_configured": forecast_configured(state_id, district_id, day, today),
+        "crop_topics": topics,
+    }
 
 
 def weather_context(request, key, fingerprint):

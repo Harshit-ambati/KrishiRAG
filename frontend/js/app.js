@@ -25,6 +25,9 @@ let pending = false;
 let result;
 let requestError;
 let failedRequest;
+let coverageRequest;
+let coverageResult;
+let coverageFailed = false;
 const feedback = new Map();
 
 const selectedState = () => coverage.find(state => state.id === fields.state.value);
@@ -70,6 +73,56 @@ function renderDemoAvailability() {
   if (!available) scenarioSelect.value = '';
 }
 
+function renderCoverage() {
+  const node = byId('coverage-summary');
+  node.hidden = !fields.district.value;
+  if (node.hidden) return;
+  if (!coverageResult) {
+    node.textContent = coverageFailed ? copy.coverageError : copy.coverageLoading;
+    return;
+  }
+  const weather = coverageResult.conflicting_forecasts ? 'weatherConflicting'
+    : coverageResult.has_reviewed_forecast ? 'weatherReviewed'
+    : coverageResult.live_forecast_configured ? 'weatherLive' : 'weatherUnavailable';
+  const rows = [copy[weather]];
+  if (fields.crop.value !== 'none') {
+    const topics = coverageResult.crop_topics.map(({ topic, status }) =>
+      copy.coverageTopics[topic] + (status === 'reviewed' ? '' : ' (' + copy.coverageStatuses[status] + ')'));
+    rows.push(topics.length ? copy.coverageGuidance + ' ' + topics.join(' · ') : copy.coverageGap);
+  }
+  node.replaceChildren(...rows.map(text => {
+    const line = document.createElement('p');
+    line.textContent = text;
+    return line;
+  }));
+}
+
+async function checkCoverage() {
+  coverageRequest?.abort();
+  coverageResult = undefined;
+  coverageFailed = false;
+  renderCoverage();
+  if (!fields.district.value) return;
+  const request = new AbortController();
+  coverageRequest = request;
+  const params = new URLSearchParams({
+    state_id: fields.state.value, district_id: fields.district.value,
+    crop: fields.crop.value, crop_stage: fields.stage.value,
+  });
+  try {
+    const response = await fetch('/api/coverage?' + params, {
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(8000)]),
+    });
+    if (!response.ok) throw new Error('Coverage unavailable');
+    const result = await response.json();
+    if (!request.signal.aborted) coverageResult = result;
+  } catch {
+    if (!request.signal.aborted) coverageFailed = true;
+  } finally {
+    if (!request.signal.aborted) renderCoverage();
+  }
+}
+
 function renderLanguage() {
   language = languageSelect.value;
   copy = translations[language];
@@ -90,6 +143,7 @@ function renderLanguage() {
     ...['supported', 'conditional', 'clarification', 'coverageGap', 'conflict'].map(value => ({ value, label: copy.statuses[value] })),
   ]);
   renderDemoAvailability();
+  renderCoverage();
 
   if (validationStarted) validate();
   renderResult();
@@ -293,6 +347,7 @@ function fieldChanged(event) {
     renderCropStages();
   }
   renderDemoAvailability();
+  if ([fields.state, fields.district, fields.crop, fields.stage].includes(event.target)) checkCoverage();
   if ([fields.state, fields.district, fields.crop, fields.question].includes(event.target)) resetSession();
   else if (requestError) {
     clearRequestError();

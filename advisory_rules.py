@@ -180,7 +180,7 @@ def needs_forecast(question, topic, explicit):
 
 def applicable(connection, session, topic, day):
     rows = connection.execute(PUBLISHED_PASSAGES + """
-        AND d.state_id = ? AND p.topic = ?
+        AND d.state_id = ? AND (? IS NULL OR p.topic = ?)
         AND (d.issue_date IS NULL OR d.issue_date <= ?)
         AND (COALESCE(p.valid_from, d.valid_from) IS NULL OR COALESCE(p.valid_from, d.valid_from) <= ?)
         AND (COALESCE(p.valid_until, d.valid_until) IS NULL OR COALESCE(p.valid_until, d.valid_until) >= ?)
@@ -192,7 +192,7 @@ def applicable(connection, session, topic, day):
             (p.kind IN ('advisory','background') AND p.crop = ?
                 AND (p.district_id = ? OR (p.district_id IS NULL AND p.statewide = 1)))
         )
-    """, (session.state_id, topic, day, day, day, session.district_id, session.crop, session.crop, session.district_id))
+    """, (session.state_id, topic, topic, day, day, day, session.district_id, session.crop, session.crop, session.district_id))
     return list(rows)
 
 
