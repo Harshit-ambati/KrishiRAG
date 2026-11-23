@@ -336,3 +336,55 @@ byId('feedback-review').addEventListener('toggle', event => {
 });
 byId('refresh-feedback').addEventListener('click', () => loadFeedback(true));
 byId('more-feedback').addEventListener('click', () => loadFeedback());
+
+async function loadMaintenance() {
+  const status = byId('maintenance-status');
+  const button = byId('refresh-maintenance');
+  button.disabled = true;
+  status.textContent = 'Checking evidence maintenance…';
+  try {
+    const response = await fetch('/api/admin/maintenance', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Maintenance could not be loaded.');
+    const report = await response.json();
+    const groups = [
+      ['Forecasts expired or ending within seven days', report.forecast_review.map(row =>
+        [row.status, row.title, row.version, row.district_id, row.valid_until].join(' · '))],
+      ['Approved sources missing an original copy', report.missing_snapshots.map(row =>
+        [row.title, row.version, row.has_checksum ? 'audited checksum available' : 'checksum unavailable'].join(' · '))],
+      ['Coverage gaps in the past 30 days', report.coverage_gaps.map(row =>
+        [row.state_id, row.district_id, row.crop, row.crop_stage, row.topic, `${row.sessions} sessions`].join(' · '))],
+    ];
+    const content = groups.flatMap(([title, lines]) => {
+      const heading = document.createElement('h3');
+      heading.textContent = title;
+      if (!lines.length) {
+        const empty = document.createElement('p');
+        empty.textContent = 'No entries.';
+        return [heading, empty];
+      }
+      const list = document.createElement('ul');
+      list.append(...lines.slice(0, 30).map(text => {
+        const item = document.createElement('li');
+        item.textContent = text;
+        return item;
+      }));
+      if (lines.length > 30) {
+        const item = document.createElement('li');
+        item.textContent = `Showing 30 of ${lines.length}. The maintenance API returns the complete list.`;
+        list.append(item);
+      }
+      return [heading, list];
+    });
+    byId('maintenance-list').replaceChildren(...content);
+    status.textContent = `Checked for ${report.as_of} (India time).`;
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+byId('maintenance-review').addEventListener('toggle', event => {
+  if (event.target.open) loadMaintenance();
+});
+byId('refresh-maintenance').addEventListener('click', loadMaintenance);

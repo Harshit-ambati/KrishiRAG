@@ -20,6 +20,14 @@
     <p class="section-description">Compare extracted passages against the original before publishing.</p>
     <p id="admin-status" role="status" aria-live="polite"></p>
     <p id="admin-error" role="alert" hidden></p>
+    <details class="card feedback-review" id="maintenance-review">
+      <summary>Evidence maintenance</summary>
+      <div class="admin-actions">
+        <button type="button" class="secondary" id="refresh-maintenance">Refresh maintenance</button>
+      </div>
+      <p id="maintenance-status" role="status" aria-live="polite"></p>
+      <div id="maintenance-list"></div>
+    </details>
     <details class="card feedback-review" id="feedback-review">
       <summary>Advisory feedback</summary>
       <div class="admin-actions">

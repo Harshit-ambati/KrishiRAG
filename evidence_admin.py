@@ -3,7 +3,7 @@ import json
 import os
 import secrets
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Annotated, Literal
@@ -15,7 +15,8 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 from pypdf import PdfReader
 
-from advisory_rules import ACTIONS, DEFINITIONS, WEATHER_TOPIC
+from advisory_rules import ACTIONS, DEFINITIONS, INDIA, WEATHER_TOPIC
+from evidence_maintenance import maintenance_report
 from locations import CONFIG, DISTRICTS
 from evidence_store import DOCUMENT_COLUMNS, DOCUMENT_FIELDS, PASSAGE_FIELDS, evidence_db
 
@@ -201,6 +202,11 @@ def list_sources():
         return [dict(row) for row in connection.execute(
             f"SELECT {DOCUMENT_COLUMNS} FROM source_documents ORDER BY status, issue_date DESC, title"
         )]
+
+
+@admin.get("/api/admin/maintenance")
+def review_maintenance():
+    return maintenance_report(datetime.now(INDIA).date())
 
 
 @admin.get("/api/admin/evidence/{document_id}")

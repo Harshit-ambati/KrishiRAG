@@ -13,3 +13,11 @@ I verified the original publisher URLs by downloading the PDFs. The IMD endpoint
 The audited IMD URLs are rotating endpoints. Preserve the matching original PDF when verifying a new edition. The local evidence database holds the three verified snapshots. The checked-in seed can recreate the reviewed records without redistributing the full PDFs. A redeployment can attach an original only if its SHA-256 matches the seed.
 
 This audit establishes no additional district coverage, spray-timing guidance, irrigation volumes, or rolling weather feed. The university background passage is excluded from district decisions because its geographic applicability is unspecified. The farmer question endpoint uses the approved catalog by default. The explicitly selected demo scenarios remain labeled.
+
+## Evidence maintenance check, 23 November 2026
+
+The reviewed IMD paddy and district forecast editions already have exact originals in the local evidence catalog. The maintenance report flags the reviewed district rainfall rows for Krishna and West Godavari as valid through **28 November 2026**. Their copies remain available from the protected source records.
+
+The original Uttarakhand organic chilli PDF was attached to the approved record after its checksum matched the audited edition.
+
+IMD's Andhra Pradesh Agromet Bulletin **94/2026**, issued **23 November 2026** and covering **24–28 November 2026**, was saved in the local review inbox as `data/evidence-inbox/ap-agromet-2026-11-23.pdf`. Its SHA-256 is `7a930941f6df33265f048acad099763611e85f7814ce44a87d036015206ad7de`. Treat it as a candidate. Review the specific Krishna and West Godavari crop rows, stages, and recommended actions before publishing any passages. The separate district forecast needs its own edition and date check. [IMD agromet bulletin](https://mausam.imd.gov.in/visakhapatnam/mcdata/APAgromet.pdf)

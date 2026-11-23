@@ -1,6 +1,8 @@
 import io
 import tempfile
 import unittest
+from datetime import date
+from hashlib import sha256
 from pathlib import Path
 from unittest.mock import patch
 
@@ -8,6 +10,8 @@ from fastapi.testclient import TestClient
 from pypdf import PdfWriter
 
 from evidence_seed import seed
+from evidence_maintenance import attach_snapshot, maintenance_report
+from evidence_store import evidence_db
 from main import app
 
 BASE = "/api/admin/evidence"
@@ -37,11 +41,49 @@ class EvidenceAdminTests(unittest.TestCase):
 
     def test_admin_page_and_data_require_credentials_and_mutation_header(self):
         with TestClient(app) as unauthenticated:
-            for route in ("/admin", BASE, f"{BASE}/example/original"):
+            for route in ("/admin", BASE, f"{BASE}/example/original", "/api/admin/maintenance"):
                 self.assertEqual(unauthenticated.get(route).status_code, 401)
             self.assertEqual(unauthenticated.get("/static/admin.html").status_code, 404)
         self.assertEqual(self.client.get("/admin").status_code, 200)
         self.assertEqual(self.client.post(BASE, files={"file": ("x.txt", b"text")}).status_code, 403)
+
+    def test_maintenance_expiry_and_verified_snapshot(self):
+        seed(None)
+        forecast_rows = maintenance_report(date(2026, 11, 28))["forecast_review"]
+        self.assertEqual([(row["district_id"], row["status"]) for row in forecast_rows],
+                         [("krishna", "expiring"), ("west-godavari", "expiring")])
+        self.assertEqual({row["status"] for row in maintenance_report(date(2026, 11, 29))["forecast_review"]}, {"expired"})
+        response = self.client.get("/api/admin/maintenance")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(any(row["id"] == "imd-value-added-ap-94-2026" and row["has_checksum"]
+                            for row in response.json()["missing_snapshots"]))
+        original = b"audited exact bytes"
+        with evidence_db(write=True) as connection:
+            connection.execute("UPDATE source_documents SET sha256 = ? WHERE id = ?",
+                               (sha256(original).hexdigest(), "imd-value-added-ap-94-2026"))
+        path = Path(self.enterContext(tempfile.TemporaryDirectory())) / "forecast.pdf"
+        path.write_bytes(b"replacement bytes")
+        with self.assertRaises(ValueError):
+            attach_snapshot("imd-value-added-ap-94-2026", path)
+        path.write_bytes(original)
+        attach_snapshot("imd-value-added-ap-94-2026", path)
+        self.assertEqual(self.client.get(f"{BASE}/imd-value-added-ap-94-2026/original").content, original)
+
+    def test_maintenance_counts_sessions_without_exposing_questions(self):
+        request = {"state_id": "andhra-pradesh", "district_id": "krishna", "crop": "paddy",
+                   "language": "en", "question": "What is my selling price? Private example."}
+        result = self.client.post("/api/advisories", json=request).json()
+        self.assertEqual(result["status"], "insufficient_evidence")
+        translated = self.client.post("/api/advisories", json={
+            "session_id": result["session_id"], "translate_advisory_id": result["advisory_id"], "language": "te",
+        })
+        self.assertEqual(translated.status_code, 200)
+        report = self.client.get("/api/admin/maintenance")
+        self.assertNotIn("Private example", report.text)
+        self.assertEqual(report.json()["coverage_gaps"], [{
+            "state_id": "andhra-pradesh", "district_id": "krishna", "crop": "paddy", "crop_stage": "unknown",
+            "topic": "unclassified", "sessions": 1,
+        }])
 
     def test_scanned_pdf_remains_draft_and_original_is_preserved(self):
         pdf = PdfWriter()
