@@ -60,6 +60,7 @@ textarea::placeholder { color: #607068; opacity: 1; }
 .question-field, .observation-field { margin-top: 13px; }
 .optional { margin-left: 4px; color: var(--muted); font-size: .82rem; font-weight: 450; }
 .field-error { margin-top: 4px; color: var(--error); font-size: .88rem; line-height: 1.45; }
+.request-error { margin-top: 10px; color: var(--error); font-size: .94rem; line-height: 1.45; }
 [aria-invalid="true"] { border-color: var(--error); }
 .primary { margin-top: 15px; min-height: 45px; padding: 9px 17px; background: var(--green); color: white; border: 1px solid var(--green); border-radius: 8px; font-weight: 650; line-height: 1.45; }
 .primary:hover { background: #173c29; }
@@ -78,6 +79,9 @@ textarea::placeholder { color: #607068; opacity: 1; }
 .result-status[data-status="clarification"] { background: #e5eef5; color: #284763; }
 .result-location { margin-top: 6px; color: var(--muted); font-size: .9rem; }
 .advisory h3 { margin: 12px 0 2px; font-size: 1rem; }
+.follow-up { margin-top: 14px; padding: 11px 13px; border: 1px solid #cddce7; border-radius: 8px; background: #eff5f9; }
+.follow-up h3 { margin-top: 0; }
+.follow-up-button { margin-top: 7px; padding: 4px 0; color: var(--green); background: none; border: 0; text-decoration: underline; text-underline-offset: .2em; font-weight: 650; }
 .sources { margin-top: 14px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 8px; background: #f6f8f1; }
 .sources h3 { margin-top: 0; }
 .sources ul { margin: 3px 0 0; padding-left: 1.2em; }

@@ -77,6 +77,7 @@
             <p class="field-error" id="observation-error" hidden></p>
           </div>
           <button id="submit" class="primary" type="submit" aria-controls="result-content"><span data-text="submit" id="submit-label">Get demo advisory</span></button>
+          <p class="request-error" id="request-error" role="alert" hidden></p>
         </form>
       </section>
 
@@ -85,7 +86,7 @@
           <h2 id="result-title" data-text="resultTitle">Advisory result</h2>
           <span class="demo-badge" data-text="demo">Mock demo</span>
         </div>
-        <p class="section-description" data-text="demoDescription">Results are prewritten examples for the selected scenario.</p>
+        <p class="section-description" data-text="demoDescription">Answers use demo fixtures. Choose a scenario to test a specific result.</p>
         <div class="field scenario-field">
           <label for="scenario" data-text="scenario">Mock scenario</label>
           <select id="scenario" aria-controls="result-content"></select>
@@ -104,11 +105,16 @@
             <p id="result-action"></p>
             <h3 data-text="explanation">Why this result?</h3>
             <p id="result-explanation"></p>
+            <section id="follow-up" class="follow-up" aria-labelledby="follow-up-title" hidden>
+              <h3 id="follow-up-title" data-text="followUp">Follow-up question</h3>
+              <p id="result-follow-up"></p>
+              <button id="answer-follow-up" class="follow-up-button" type="button" data-text="answerFollowUp">Add the missing detail</button>
+            </section>
             <section class="sources" aria-labelledby="source-title">
               <h3 id="source-title" data-text="sources">Sources</h3>
               <p id="no-sources" data-text="noSources" hidden>No sources are attached to this mock scenario.</p>
               <ul id="result-sources"></ul>
-              <p id="validity" class="validity" hidden><span data-text="validUntil">Example valid through</span> <time id="validity-date"></time></p>
+              <p id="validity" class="validity" hidden><span data-text="validity">Example validity</span> <time id="validity-start"></time> – <time id="validity-date"></time></p>
             </section>
           </div>
         </div>

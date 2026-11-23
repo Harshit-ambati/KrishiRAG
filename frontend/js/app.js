@@ -1,5 +1,4 @@
 import { coverage, stages } from '../../archive/coverage.mjs';
-import { mockAdvisories } from './mock-advisories.js';
 import { translations } from './translations.js';
 
 const byId = id => document.getElementById(id);
@@ -14,8 +13,10 @@ const resultContent = byId('result-content');
 let language = languageSelect.value;
 let copy = translations[language];
 let validationStarted = false;
-let loadTimer;
+let pending = false;
 let result;
+let requestError;
+let failedRequest;
 
 const selectedState = () => coverage.find(state => state.id === fields.state.value);
 const districtsFor = state => state?.districts.filter(district => district.enabled) ?? [];
@@ -49,6 +50,7 @@ function renderLanguage() {
   language = languageSelect.value;
   copy = translations[language];
   document.documentElement.lang = language;
+  announcement.lang = language;
   document.title = `AgriRAG · ${copy.heroTitle}`;
   document.querySelectorAll('[data-text]').forEach(node => { node.textContent = copy[node.dataset.text]; });
   document.querySelectorAll('[data-placeholder]').forEach(node => { node.placeholder = copy[node.dataset.placeholder]; });
@@ -59,12 +61,15 @@ function renderLanguage() {
     { value: 'unknown', label: copy.unknownStage },
     ...Object.entries(stages).map(([value, names]) => ({ value, label: localName(names) })),
   ], copy.selectStage);
-  setOptions(scenarioSelect, Object.entries(copy.statuses).map(([value, label]) => ({ value, label })));
+  setOptions(scenarioSelect, [
+    { value: '', label: copy.automatic },
+    ...Object.entries(copy.statuses).map(([value, label]) => ({ value, label })),
+  ]);
   fields.crop.value = copy.cropValue;
 
   if (validationStarted) validate();
   renderResult();
-  if (loadTimer !== undefined) announce(copy.loadingTitle);
+  if (pending) announce(copy.loadingTitle);
   else if (result) announceResult();
   else announce('');
 }
@@ -96,60 +101,79 @@ function announce(message) {
 }
 
 function announceResult() {
-  announce(`${copy.resultReady} ${copy.statuses[result.scenario]}.`);
+  const answerCopy = translations[result.answer.language];
+  announcement.lang = result.answer.language;
+  announce(`${answerCopy.resultReady} ${answerCopy.statuses[result.answer.status]}. ${result.answer.follow_up_question ?? ''}`.trim());
 }
 
 function renderResult() {
-  const loading = loadTimer !== undefined;
-  resultContent.setAttribute('aria-busy', String(loading));
-  submit.setAttribute('aria-disabled', String(loading));
-  byId('submit-label').textContent = loading ? copy.loadingButton : copy.submit;
+  resultContent.setAttribute('aria-busy', String(pending));
+  submit.setAttribute('aria-disabled', String(pending));
+  const buttonLabel = pending ? 'loadingButton' : requestError ? 'retry' : result?.answer.follow_up_field ? 'submitFollowUp' : 'submit';
+  byId('submit-label').textContent = copy[buttonLabel];
+  const error = byId('request-error');
+  error.hidden = !requestError;
+  error.textContent = requestError ? copy[requestError] : '';
   byId('result-placeholder').hidden = Boolean(result);
   byId('advisory').hidden = !result;
 
   if (!result) {
-    byId('placeholder-title').textContent = loading ? copy.loadingTitle : copy.emptyTitle;
-    byId('placeholder-description').textContent = loading ? copy.loadingDescription : copy.emptyDescription;
+    byId('placeholder-title').textContent = pending ? copy.loadingTitle : copy.emptyTitle;
+    byId('placeholder-description').textContent = pending ? copy.loadingDescription : copy.emptyDescription;
     return;
   }
 
-  const example = mockAdvisories[result.scenario];
-  const info = example[language];
+  const { answer, state, district } = result;
+  const answerCopy = translations[answer.language];
   const status = byId('result-status');
-  status.textContent = copy.statuses[result.scenario];
-  status.dataset.status = result.scenario;
-  const stageName = result.stage === 'unknown' ? copy.unknownStage : localName(stages[result.stage]);
-  const districtName = localName(result.district.name);
-  const districtLabel = result.district.placeholder ? `${districtName} (${copy.placeholderDistrict})` : districtName;
-  byId('result-location').textContent = [districtLabel, localName(result.state.name), stageName].join(' · ');
-  byId('result-action').textContent = info.action;
-  byId('result-explanation').textContent = info.explanation;
+  status.textContent = answerCopy.statuses[answer.status];
+  status.dataset.status = answer.status;
+  const stageName = answer.crop_stage === 'unknown' ? copy.unknownStage : localName(stages[answer.crop_stage]);
+  const districtName = localName(district.name);
+  const districtLabel = district.placeholder ? `${districtName} (${copy.placeholderDistrict})` : districtName;
+  byId('result-location').textContent = [districtLabel, localName(state.name), stageName].join(' · ');
+  byId('result-action').textContent = answer.suggested_action;
+  byId('result-explanation').textContent = answer.explanation;
+  byId('follow-up').hidden = !answer.follow_up_question;
+  byId('answer-follow-up').disabled = pending;
+  byId('result-follow-up').textContent = answer.follow_up_question ?? '';
+  for (const id of ['result-status', 'result-action', 'result-explanation', 'result-follow-up', 'result-sources']) {
+    byId(id).lang = answer.language;
+  }
 
   const sources = byId('result-sources');
-  sources.replaceChildren(...example.sources.map(source => {
+  sources.replaceChildren(...answer.evidence.map(source => {
     const item = document.createElement('li');
-    item.textContent = localName(source);
+    item.textContent = source.title;
     return item;
   }));
-  sources.hidden = !example.sources.length;
-  byId('no-sources').hidden = Boolean(example.sources.length);
-  byId('validity').hidden = !example.validThrough;
-  const date = byId('validity-date');
-  if (example.validThrough) {
-    date.dateTime = example.validThrough;
-    date.textContent = new Intl.DateTimeFormat(`${language}-IN`, { dateStyle: 'medium', timeZone: 'UTC' })
-      .format(new Date(`${example.validThrough}T00:00:00Z`));
-  } else {
-    date.removeAttribute('datetime');
-    date.textContent = '';
-  }
+  sources.hidden = !answer.evidence.length;
+  byId('no-sources').hidden = Boolean(answer.evidence.length);
+  byId('validity').hidden = !answer.validity_window;
+  renderDate('validity-start', answer.validity_window?.valid_from);
+  renderDate('validity-date', answer.validity_window?.valid_until);
 }
 
-function clearResult() {
-  if (!result && loadTimer === undefined) return;
-  clearTimeout(loadTimer);
-  loadTimer = undefined;
+function renderDate(id, value) {
+  const date = byId(id);
+  if (!value) {
+    date.removeAttribute('datetime');
+    date.textContent = '';
+    return;
+  }
+  date.dateTime = value;
+  date.textContent = new Intl.DateTimeFormat(`${language}-IN`, { dateStyle: 'medium', timeZone: 'UTC' })
+    .format(new Date(`${value}T00:00:00Z`));
+}
+
+function clearRequestError() {
+  requestError = undefined;
+  failedRequest = undefined;
+}
+
+function resetSession() {
   result = undefined;
+  clearRequestError();
   renderResult();
   announce('');
 }
@@ -159,18 +183,81 @@ function fieldChanged(event) {
     fields.district.value = '';
     renderDistricts();
   }
-  clearResult();
+  if ([fields.state, fields.district, fields.question].includes(event.target)) resetSession();
+  else if (requestError) {
+    clearRequestError();
+    renderResult();
+  }
   if (validationStarted) validate();
 }
 
 for (const field of [fields.state, fields.district, fields.stage]) field.addEventListener('change', fieldChanged);
 for (const field of [fields.question, fields.observation]) field.addEventListener('input', fieldChanged);
-languageSelect.addEventListener('change', renderLanguage);
-scenarioSelect.addEventListener('change', clearResult);
+languageSelect.addEventListener('change', () => {
+  failedRequest = undefined;
+  renderLanguage();
+  if (result && !requestError) {
+    requestAdvisory({ session_id: result.answer.session_id, language }, result);
+  }
+});
+scenarioSelect.addEventListener('change', resetSession);
+byId('answer-follow-up').addEventListener('click', () => {
+  const field = result.answer.follow_up_field === 'crop_stage' ? fields.stage : fields.observation;
+  field.focus();
+});
+
+function setPending(value) {
+  pending = value;
+  for (const control of [fields.state, fields.stage, fields.question, fields.observation, scenarioSelect, languageSelect]) {
+    control.disabled = value;
+  }
+  fields.district.disabled = value || !districtsFor(selectedState()).length;
+}
+
+function requestKey() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function requestAdvisory(payload, { state, district }, key = requestKey()) {
+  clearRequestError();
+  setPending(true);
+  renderResult();
+  announcement.lang = language;
+  announce(copy.loadingTitle);
+
+  try {
+    const response = await fetch('/api/advisories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (response.ok) {
+      result = { answer: await response.json(), state, district };
+    } else if (payload.session_id && [404, 409].includes(response.status)) {
+      result = undefined;
+      requestError = 'sessionError';
+    } else if (response.status === 422) {
+      requestError = 'invalidRequest';
+    } else {
+      requestError = 'requestError';
+      if (response.status !== 409) failedRequest = { payload, state, district, key };
+    }
+  } catch {
+    requestError = 'requestError';
+    failedRequest = { payload, state, district, key };
+  } finally {
+    setPending(false);
+    renderResult();
+    if (requestError) announce('');
+    else announceResult();
+  }
+}
 
 form.addEventListener('submit', event => {
   event.preventDefault();
-  if (loadTimer !== undefined) return;
+  if (pending) return;
   validationStarted = true;
   const error = validate();
   if (error) {
@@ -181,22 +268,27 @@ form.addEventListener('submit', event => {
     return;
   }
 
+  if (failedRequest) {
+    requestAdvisory(failedRequest.payload, failedRequest, failedRequest.key);
+    return;
+  }
+
   const state = selectedState();
-  const requested = {
-    state,
-    district: districtsFor(state).find(district => district.id === fields.district.value),
-    stage: fields.stage.value,
-    scenario: scenarioSelect.value,
+  const district = districtsFor(state).find(entry => entry.id === fields.district.value);
+  const updates = {
+    crop_stage: fields.stage.value,
+    field_observations: fields.observation.value.trim() || null,
+    language,
   };
-  result = undefined;
-  loadTimer = setTimeout(() => {
-    loadTimer = undefined;
-    result = requested;
-    renderResult();
-    announceResult();
-  }, 400);
-  renderResult();
-  announce(copy.loadingTitle);
+  const payload = result ? { ...updates, session_id: result.answer.session_id } : {
+    ...updates,
+    state_id: state.id,
+    district_id: district.id,
+    crop: 'paddy',
+    question: fields.question.value.trim(),
+    demo_scenario: scenarioSelect.value || null,
+  };
+  requestAdvisory(payload, { state, district });
 });
 
 renderLanguage();
