@@ -19,8 +19,10 @@ from evidence_index import EvidenceIndexUnavailable
 from evidence_coverage import reviewed_crops
 from evidence_store import database_path, ensure_evidence_schema, evidence_db
 from general_farming import DECISION as GENERAL_DECISION, answer_with_evidence, approved_general_passages, current_evidence, retrieve
+from general_farming import CLARIFICATION, CLARIFICATION_PREFIX, clarification_response
 from live_weather import FORECAST_DAYS, Forecast, fetch_forecast, fetch_forecast_days, forecast_configured
 from locations import CONFIG, DISTRICTS, DEMO_DISTRICTS
+from trusted_web import pinned_web_rows, search_publications, web_enabled
 
 ROOT = Path(__file__).resolve().parent
 FIXTURES = json.loads((ROOT / "demo_advisories.json").read_text(encoding="utf-8"))
@@ -482,7 +484,8 @@ def create_advisory(
             run = latest_run(connection, replay["advisory_id"], session.session_id)
             if run:
                 delivered = AdvisoryResponse.model_validate_json(run["response"])
-                if delivered.decision_code == GENERAL_DECISION and current_evidence(connection, session, delivered):
+                if ((delivered.decision_code or "").startswith(CLARIFICATION_PREFIX) or
+                        delivered.decision_code == GENERAL_DECISION and current_evidence(connection, session, delivered)):
                     return delivered
                 forecast = delivered.weather_snapshot
         elif translation_run:
@@ -495,6 +498,10 @@ def create_advisory(
 
         validate_demo(session.demo_scenario)
         response, wording = evaluate(session, connection, UUID(replay["advisory_id"]) if replay else None, forecast)
+        if previous and (previous.decision_code or "").startswith(CLARIFICATION_PREFIX):
+            detail = previous.decision_code.removeprefix(CLARIFICATION_PREFIX)
+            if detail in CLARIFICATION:
+                response = clarification_response(response, detail)
         signature = decision_signature(response)
         dynamic_translation = previous is not None and previous.decision_code == GENERAL_DECISION
         open_question = session.question_type == "general" and response.status == "insufficient_evidence"
@@ -513,25 +520,36 @@ def create_advisory(
                     "context": session.model_dump(mode="json"), "advisory_id": str(response.advisory_id),
                 })),
             )
+        if session.question_type == "general" and wording:
+            return deliver(connection, session, response)
         provider = ChatProvider.configured() if wording or open_question or dynamic_translation else None
         rows = []
         if provider and (open_question or dynamic_translation):
             rows = approved_general_passages(connection, session.requested_date.isoformat())
             if dynamic_translation:
                 ids = {item.passage_id for item in previous.evidence}
-                rows = [row for row in rows if row["id"] in ids]
+                rows = pinned_web_rows(previous.evidence) or [row for row in rows if row["id"] in ids]
         if dynamic_translation and not rows:
             raise HTTPException(503, detail="general_answer_unavailable")
         if provider is None:
             return deliver(connection, session, response)
-        if not wording and not rows:
+        search_web = open_question and not dynamic_translation and web_enabled(provider)
+        if not wording and not rows and not search_web:
             return deliver(connection, session, response)
 
     # Provider I/O runs outside the SQLite write lock.
-    if rows:
+    if rows or search_web:
         candidates = rows if dynamic_translation else retrieve(session.question, rows)
         proposed = (answer_with_evidence(provider, session, response, candidates, previous if dynamic_translation else None)
                     if candidates else response)
+        if search_web and proposed.status == "insufficient_evidence" and proposed.generation_outcome not in {
+            "provider_limit", "provider_error",
+        }:
+            web_rows, error = search_publications(provider, session.question)
+            if web_rows:
+                proposed = answer_with_evidence(provider, session, response, web_rows)
+            elif error:
+                proposed = proposed.model_copy(update={"generation_outcome": error})
         with advisory_transaction() as connection:
             if not current_evidence(connection, session, proposed):
                 if dynamic_translation:

@@ -202,11 +202,12 @@ function providerNotice(answer) {
 function announceResult() {
   const { answer } = result;
   const answerCopy = translations[answer.language];
+  const notice = providerNotice(answer);
   announcement.lang = answer.language;
   announce([
     answerCopy.resultReady,
-    answerCopy.statuses[answer.status] + '.',
-    answerCopy[providerNotice(answer)],
+    (notice && !answer.evidence.length ? answerCopy.serviceUnavailable : answerCopy.statuses[answer.status]) + '.',
+    answerCopy[notice],
     answer.follow_up_question,
   ].filter(Boolean).join(' '));
 }
@@ -231,11 +232,12 @@ function renderResult() {
 
   const { answer, state, district } = result;
   const answerCopy = translations[answer.language];
+  const notice = providerNotice(answer);
+  const serviceUnavailable = Boolean(notice && !answer.evidence.length);
   const status = byId('result-status');
-  status.textContent = answerCopy.statuses[answer.status];
+  status.textContent = serviceUnavailable ? answerCopy.serviceUnavailable : answerCopy.statuses[answer.status];
   status.dataset.status = answer.status;
   const providerLimit = byId('provider-limit');
-  const notice = providerNotice(answer);
   providerLimit.hidden = !notice;
   providerLimit.lang = answer.language;
   providerLimit.textContent = notice ? answerCopy[notice] : '';
@@ -286,7 +288,7 @@ function renderResult() {
       passage.className = 'source-passage';
       const summary = document.createElement('summary');
       summary.lang = language;
-      summary.textContent = copy.reviewedPassage;
+      summary.textContent = source.source_id === 'trusted-web' ? copy.webPassage : copy.reviewedPassage;
       const excerpt = document.createElement('p');
       excerpt.textContent = source.excerpt;
       passage.append(summary, excerpt);
@@ -302,11 +304,23 @@ function renderResult() {
   const reason = byId('result-explanation');
   const forecastText = byId('result-weather');
   primary.textContent = answer.answer ?? answer.suggested_action;
+  primary.hidden = serviceUnavailable || (!district && Boolean(answer.follow_up_question));
+  byId('result-primary-label').hidden = primary.hidden;
   reason.textContent = '';
   forecastText.textContent = '';
   byId('answer-weather').hidden = !weather;
   if (action) appendReferences(primary, action);
-  if (explanation.length) {
+  if (explanation.length > 1 && !district) {
+    const points = document.createElement('ul');
+    points.className = 'answer-points';
+    for (const claim of explanation) {
+      const item = document.createElement('li');
+      item.textContent = claim.text;
+      appendReferences(item, claim);
+      points.append(item);
+    }
+    reason.append(points);
+  } else if (explanation.length) {
     for (const claim of explanation) {
       if (reason.hasChildNodes()) reason.append(' ');
       reason.append(claim.text);
@@ -315,7 +329,7 @@ function renderResult() {
   } else if (!weather) {
     reason.textContent = answer.explanation;
   }
-  reason.hidden = !reason.textContent;
+  reason.hidden = serviceUnavailable || !reason.textContent;
   byId('result-explanation-title').hidden = reason.hidden;
   if (weather) {
     forecastText.textContent = weather.text;
@@ -334,6 +348,7 @@ function renderResult() {
       node.append(' ', reference);
     }
   }
+  byId('answer-sources').hidden = serviceUnavailable;
   sources.hidden = !answer.evidence.length;
   byId('no-sources').hidden = Boolean(answer.evidence.length);
   byId('validity').hidden = !answer.validity_window;
@@ -554,7 +569,7 @@ async function requestAdvisory(payload, { state, district }, key = requestKey())
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(35000),
+      signal: AbortSignal.timeout(state ? 35000 : 60000),
     });
     if (response.ok) {
       result = { answer: await response.json(), state, district };
@@ -607,8 +622,10 @@ form.addEventListener('submit', event => {
     language,
   };
   if (isGeneral()) {
-    requestAdvisory({ question_type: 'general', question: fields.question.value.trim(),
-      field_observations: updates.field_observations, language }, {});
+    const context = result?.answer.follow_up_field
+      ? { session_id: result.answer.session_id }
+      : { question_type: 'general', question: fields.question.value.trim() };
+    requestAdvisory({ ...context, field_observations: updates.field_observations, language }, {});
     return;
   }
   const payload = result?.answer.follow_up_field ? { ...updates, session_id: result.answer.session_id } : {

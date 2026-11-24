@@ -9,12 +9,13 @@ from uuid import uuid4
 import httpx
 from fastapi.testclient import TestClient
 
-from advisory_generation import ChatProvider
+from advisory_generation import ChatProvider, GeminiProvider
 from advisory_rules import INDIA
 from evidence_seed import seed
 from evidence_store import evidence_db
 from general_farming import DECISION, approved_general_passages, retrieve
 from main import app
+from trusted_web import load_publication, official_url, search_publications, web_row
 
 
 class GeneralFarmingTests(unittest.TestCase):
@@ -26,6 +27,97 @@ class GeneralFarmingTests(unittest.TestCase):
         }))
         self.client = self.enterContext(TestClient(app))
         seed(None)
+
+    def test_web_fallback_uses_fetched_passages_and_keeps_them_when_translating(self):
+        provider = GeminiProvider("https://example.com", "test-model")
+        row = web_row("https://icar.gov.in/extension/test", "Indian Council of Agricultural Research",
+                      "Crop spacing", "Wider spacing between young example plants increases airflow.", "test-hash")
+
+        def complete(instruction, payload, schema, max_tokens):
+            if "pairs" in payload:
+                return '{"supported":true}'
+            if not any(p["id"] == row["id"] for p in payload["passages"]):
+                return '{"claims":[],"clarification":null}'
+            return json.dumps({"claims": [{"text": "Improving airflow is possible with wider spacing.",
+                                           "passage_id": row["id"], "quote": row["content"]}], "clarification": None})
+
+        with patch("advisory_api.ChatProvider.configured", return_value=provider), \
+                patch("advisory_api.search_publications", return_value=([row], None)) as search, \
+                patch.object(GeminiProvider, "complete", side_effect=complete):
+            answer = self.client.post("/api/advisories", json={
+                "question_type": "general", "question": "How can I improve airflow around a young crop?", "language": "en",
+            }).json()
+            self.assertEqual(answer["status"], "supported")
+            self.assertEqual(answer["evidence"][0]["source_id"], "trusted-web")
+            translated = self.client.post("/api/advisories", json={
+                "session_id": answer["session_id"], "translate_advisory_id": answer["advisory_id"], "language": "te",
+            })
+            self.assertEqual(translated.status_code, 200, translated.text)
+            self.assertEqual(translated.json()["evidence"], answer["evidence"])
+            search.assert_called_once()
+        with evidence_db() as connection:
+            self.assertFalse(connection.execute("SELECT 1 FROM evidence_passages WHERE id=?", (row["id"],)).fetchone())
+
+    def test_general_follow_up_preserves_question_and_accepts_field_observations(self):
+        provider = ChatProvider("https://example.com", "test-model")
+
+        def complete(instruction, payload, schema, max_tokens):
+            self.assertEqual(payload["question"], "Why are my plant leaves yellow?")
+            if payload["observations"]:
+                self.assertEqual(payload["observations"], "My okra has yellow veins.")
+                return '{"claims":[],"clarification":null}'
+            return '{"claims":[],"clarification":"crop"}'
+
+        with patch("advisory_api.ChatProvider.configured", return_value=provider), \
+                patch.object(ChatProvider, "complete", side_effect=complete):
+            original = self.client.post("/api/advisories", json={
+                "question_type": "general", "question": "Why are my plant leaves yellow?", "language": "en",
+            }).json()
+            self.assertEqual(original["follow_up_question"], "Which crop are you asking about?")
+            localized = self.client.post("/api/advisories", json={
+                "session_id": original["session_id"], "translate_advisory_id": original["advisory_id"], "language": "hi",
+            })
+            self.assertEqual(localized.status_code, 200, localized.text)
+            self.assertNotEqual(localized.json()["follow_up_question"], original["follow_up_question"])
+            reply = self.client.post("/api/advisories", json={
+                "session_id": original["session_id"], "field_observations": "My okra has yellow veins.", "language": "en",
+            })
+            self.assertEqual(reply.status_code, 200)
+            self.assertEqual(reply.json()["session_id"], original["session_id"])
+
+    def test_web_rejects_other_hosts_and_checks_publisher_html(self):
+        for url in ("http://tnau.ac.in/guide", "https://tnau.ac.in.evil.test/guide", "https://user@tnau.ac.in/guide",
+                    "https://tnau.ac.in:1234/guide"):
+            self.assertIsNone(official_url(url))
+        website = "https://agritech.tnau.ac.in/crop/guide"
+        html = "<script>untrusted script</script><p>A soil test is an important part of assessing soil conditions for tomatoes before planting.</p>"
+
+        def handler(request):
+            if request.url.path == "/grounding-api-redirect/test":
+                return httpx.Response(302, headers={"Location": website})
+            self.assertEqual(str(request.url), website)
+            return httpx.Response(200, text=html, headers={"Content-Type": "text/html; charset=utf-8"})
+
+        with httpx.Client(transport=httpx.MockTransport(handler)) as client, patch("trusted_web.httpx.stream", client.stream):
+            rows = load_publication({"uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/test",
+                                     "title": "Soil and tomato cultivation"}, "When should I test tomato soil?")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["original_url"], website)
+        self.assertNotIn("untrusted script", rows[0]["content"])
+
+    def test_grounded_search_discovers_links_without_using_generated_text(self):
+        provider = GeminiProvider("https://example.com", "test-model", "test-key")
+        source = {"uri": "https://icar.gov.in/guide"}
+        response = httpx.Response(200, request=httpx.Request("POST", provider.base_url), json={"candidates": [{
+            "content": {"parts": [{"text": "Unverified text must never become evidence."}]},
+            "groundingMetadata": {"groundingChunks": [{"web": source}]},
+        }]})
+        with patch.dict("os.environ", {"AGRIRAG_WEB_EVIDENCE": "1"}), \
+                patch("trusted_web.httpx.post", return_value=response) as post, \
+                patch("trusted_web.load_publication", return_value=[]) as load:
+            self.assertEqual(search_publications(provider, "How can I improve potato storage?"), ([], None))
+            self.assertEqual(post.call_args.kwargs["json"]["tools"], [{"google_search": {}}])
+            load.assert_called_once_with(source, "How can I improve potato storage?")
 
     def test_open_question_proposes_and_checks_each_claim(self):
         provider = ChatProvider("https://example.com", "test-model")
