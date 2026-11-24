@@ -79,6 +79,39 @@ class GeneralFarmingTests(unittest.TestCase):
                 candidates = retrieve(question, rows)
                 self.assertEqual({row["crop"] for row in candidates}, {"okra", None})
 
+    def test_tomato_yield_uses_cultivation_passages_instead_of_symptom_guides(self):
+        queries = ("how can i increase the production of my tomato crop",
+                   "मैं अपनी टमाटर की फसल की पैदावार कैसे बढ़ा सकता हूँ?",
+                   "నా టమాటా పంట దిగుబడి ఎలా పెంచుకోవాలి?")
+        with evidence_db() as connection:
+            rows = approved_general_passages(connection, datetime.now(INDIA).date().isoformat())
+        self.assertTrue(any(row["topic"] == "tomato-blossom-end-rot" for row in rows))
+        for query in queries:
+            with self.subTest(query=query):
+                passages = retrieve(query, rows)
+                self.assertEqual({row["crop"] for row in passages}, {"tomato"})
+                self.assertEqual({row["topic"] for row in passages}, {"crop-production"})
+                self.assertIn("Training of Hybrids", {row["section"] for row in passages})
+        self.assertEqual(retrieve("How do I improve my onion yield?", rows), [])
+        self.assertTrue(retrieve("How does yellow vein mosaic affect okra yield?", rows))
+
+        provider = ChatProvider("https://example.com", "test-model")
+
+        def complete(instruction, payload, schema, max_tokens):
+            if "pairs" in payload:
+                return '{"supported":true}'
+            self.assertEqual({passage["topic"] for passage in payload["passages"]}, {"crop-production"})
+            weed = next(p for p in payload["passages"] if p["id"] == "tnau-tomato-production-organic-1")
+            return json.dumps({"claims": [{"text": "Control weeds early with shallow hoeing to avoid injuring roots.",
+                                           "passage_id": weed["id"], "quote": weed["text"]}]})
+
+        with patch("advisory_api.ChatProvider.configured", return_value=provider), patch.object(ChatProvider, "complete", side_effect=complete):
+            result = self.client.post("/api/advisories", json={
+                "question_type": "general", "question": queries[0], "language": "en",
+            }).json()
+            self.assertEqual(result["status"], "supported")
+            self.assertEqual([evidence["topic"] for evidence in result["evidence"]], ["crop-production"])
+
     def test_open_question_suppresses_invented_quotes_and_rejected_actions(self):
         provider = ChatProvider("https://example.com", "test-model")
         with patch("advisory_api.ChatProvider.configured", return_value=provider):

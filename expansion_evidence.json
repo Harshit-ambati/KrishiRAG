@@ -418,5 +418,112 @@
         "content": "Small silvery-white patches on onion leaves can indicate thrips. Under heavy infestation leaves may dry downward from their tips. Adult onion thrips range in colour from pale yellow to grey. The guide includes keeping the field clean and hoeing regularly as cultural management practices."
       }
     ]
+  },
+  {
+    "id": "tnau-tomato-production-cultural",
+    "filename": "tomato_cultural_practices.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University",
+      "title": "Tomato Cultural Practices",
+      "original_url": "https://agritech.tnau.ac.in/horticulture/horti_vegetables_tomato_cultural%20practices.html",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General cultural practices with explicit variety and hybrid restrictions.",
+      "version": "Online guide updated June 2023",
+      "review_notes": "Reviewed cultivar-specific spacing and staking for hybrid tomatoes. Excluded pesticide, fertilizer and growth-regulator rates."
+    },
+    "passages": [
+      {
+        "kind": "background",
+        "crop": "tomato",
+        "topic": "crop-production",
+        "section": "Training of Hybrids",
+        "content": "For hybrid tomatoes, the guide recommends staking about 30 days after planting with stakes 1 to 1.5 m tall. The guide links staking to easier harvest and better fruit yield and quality."
+      },
+      {
+        "kind": "background",
+        "crop": "tomato",
+        "topic": "crop-production",
+        "section": "Spacing for Varieties",
+        "content": "Choose planting spacing for the specific tomato variety. The guide lists 60 × 45 cm for TNAU Tomato Hybrid CO 3 and 45 × 30 cm for the variety CO 3. These spacings apply to the cited cultivars."
+      }
+    ]
+  },
+  {
+    "id": "tnau-tomato-production-organic",
+    "filename": "orgfarm_tomato_cultivation.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University Agritech Portal (Centre for Indian Knowledge Systems, Chennai)",
+      "title": "Organic Farming Practices: Tomato Cultivation",
+      "original_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_cultivation.html",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General transplanted tomato weed management.",
+      "version": "Online guide updated December 2014",
+      "review_notes": "Reviewed the cultural weed management guidance and the caution on deep cultivation."
+    },
+    "passages": [
+      {
+        "kind": "background",
+        "crop": "tomato",
+        "topic": "crop-production",
+        "section": "Weeds",
+        "content": "Weed competition can sharply reduce tomato yield, and weeds are especially important early in crop growth. The guide describes manual weeding and frequent shallow hoeing in the first four weeks after transplanting. Deep cultivation can injure tomato roots."
+      }
+    ]
+  },
+  {
+    "id": "tnau-tomato-production-soil",
+    "filename": "tomato.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University",
+      "title": "ICT-AAS: Tomato",
+      "original_url": "https://agritech.tnau.ac.in/govt_schemes_services/aas/tomato.html",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General tomato soil suitability and soil testing before the crop season.",
+      "version": "Online guide reviewed 25 November 2026",
+      "review_notes": "Reviewed soil suitability and soil testing purpose. Excluded local planting calendars, yield figures and amendment rates."
+    },
+    "passages": [
+      {
+        "kind": "background",
+        "crop": "tomato",
+        "topic": "crop-production",
+        "section": "Climate and soil",
+        "content": "Tomato grows well in well-drained sandy loam rich in organic matter. Highly acidic soil is unsuitable. Arrange a soil test at the beginning of the crop season."
+      }
+    ]
+  },
+  {
+    "id": "tnau-tomato-production-water",
+    "filename": "orgfarm_tomato_water.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University Agritech Portal (Centre for Indian Knowledge Systems, Chennai)",
+      "title": "Organic Farming Practices: Tomato Water Requirements",
+      "original_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_tomato_water.html",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General tomato crop water management for growth and fruit set.",
+      "version": "Online guide updated December 2014",
+      "review_notes": "Reviewed even moisture for fruit set and cracking prevention. Excluded fixed irrigation intervals and input recipes."
+    },
+    "passages": [
+      {
+        "kind": "background",
+        "crop": "tomato",
+        "topic": "crop-production",
+        "section": "Water requirements",
+        "content": "Maintaining an even water supply supports tomato growth and fruit set. A dry period followed by a sudden heavy watering can cause fruit cracking."
+      }
+    ]
   }
 ]
