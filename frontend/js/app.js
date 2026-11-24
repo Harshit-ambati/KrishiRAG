@@ -191,6 +191,14 @@ function announce(message) {
   announcement.textContent = message;
 }
 
+function providerNotice(answer) {
+  if (answer.generation_outcome === 'provider_limit') {
+    return answer.evidence.length ? 'providerLimit' : 'generalProviderLimit';
+  }
+  if (answer.generation_outcome === 'provider_error' && !answer.evidence.length) return 'generalProviderError';
+  return null;
+}
+
 function announceResult() {
   const { answer } = result;
   const answerCopy = translations[answer.language];
@@ -198,7 +206,7 @@ function announceResult() {
   announce([
     answerCopy.resultReady,
     answerCopy.statuses[answer.status] + '.',
-    answer.generation_outcome === 'provider_limit' ? answerCopy.providerLimit : '',
+    answerCopy[providerNotice(answer)],
     answer.follow_up_question,
   ].filter(Boolean).join(' '));
 }
@@ -227,9 +235,10 @@ function renderResult() {
   status.textContent = answerCopy.statuses[answer.status];
   status.dataset.status = answer.status;
   const providerLimit = byId('provider-limit');
-  providerLimit.hidden = answer.generation_outcome !== 'provider_limit';
+  const notice = providerNotice(answer);
+  providerLimit.hidden = !notice;
   providerLimit.lang = answer.language;
-  providerLimit.textContent = providerLimit.hidden ? '' : answerCopy.providerLimit;
+  providerLimit.textContent = notice ? answerCopy[notice] : '';
   const stageName = answer.crop_stage === 'unknown' ? copy.unknownStage : localName(stages[answer.crop_stage]);
   const districtName = district ? localName(district.name) : '';
   const districtLabel = district?.placeholder ? `${districtName} (${copy.placeholderDistrict})` : districtName;

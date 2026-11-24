@@ -339,10 +339,8 @@ def validate_publication(document, passage):
     if passage["kind"] == "advisory" and not passage["crop"]:
         raise HTTPException(422, "Select a crop for each advisory passage.")
     if document["state_id"] == "india":
-        definition = DEFINITIONS.get(passage["topic"])
-        if (passage["kind"] != "background" or passage["crop"] or passage["stage_id"]
-                or not definition or passage["decision_code"] != definition[0]):
-            raise HTTPException(422, "National passages must be reviewed, crop-independent definitions.")
+        if passage["kind"] != "background" or passage["district_id"] or passage["statewide"]:
+            raise HTTPException(422, "National passages must be reviewed background with no district or statewide restriction.")
     start = passage["valid_from"] or document["valid_from"]
     if passage["kind"] == "weather" and not (passage["district_id"] and document["issue_date"] and start):
         raise HTTPException(422, "District weather passages need an issue date, district and explicit validity window.")

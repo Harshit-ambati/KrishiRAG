@@ -18,6 +18,7 @@ from advisory_log import decision_signature, deliver, ensure_advisory_tables, la
 from evidence_index import EvidenceIndexUnavailable
 from evidence_coverage import reviewed_crops
 from evidence_store import database_path, ensure_evidence_schema, evidence_db
+from general_farming import DECISION as GENERAL_DECISION, answer_with_evidence, approved_general_passages, current_evidence, retrieve
 from live_weather import FORECAST_DAYS, Forecast, fetch_forecast, fetch_forecast_days, forecast_configured
 from locations import CONFIG, DISTRICTS, DEMO_DISTRICTS
 
@@ -466,10 +467,12 @@ def create_advisory(
     with advisory_transaction() as connection:
         replay = replay_request(connection, request, idempotency_key, fingerprint)
         translation_run = None
+        previous = None
         if request.translate_advisory_id:
             translation_run = latest_run(connection, request.translate_advisory_id, request.session_id)
             if translation_run is None:
                 raise HTTPException(404, detail="advisory_not_found")
+            previous = AdvisoryResponse.model_validate_json(translation_run["response"])
         if replay and "context" not in replay:
             previous = AdvisoryResponse.model_validate(replay)
             session = load_session(connection, AdvisoryRequest(session_id=previous.session_id))
@@ -478,7 +481,10 @@ def create_advisory(
             session = AdvisorySession.model_validate(replay["context"])
             run = latest_run(connection, replay["advisory_id"], session.session_id)
             if run:
-                forecast = AdvisoryResponse.model_validate_json(run["response"]).weather_snapshot
+                delivered = AdvisoryResponse.model_validate_json(run["response"])
+                if delivered.decision_code == GENERAL_DECISION and current_evidence(connection, session, delivered):
+                    return delivered
+                forecast = delivered.weather_snapshot
         elif translation_run:
             session = AdvisorySession.model_validate_json(translation_run["context"])
             session.language = request.language
@@ -490,7 +496,11 @@ def create_advisory(
         validate_demo(session.demo_scenario)
         response, wording = evaluate(session, connection, UUID(replay["advisory_id"]) if replay else None, forecast)
         signature = decision_signature(response)
-        if translation_run and signature != translation_run["decision_signature"]:
+        dynamic_translation = previous is not None and previous.decision_code == GENERAL_DECISION
+        open_question = session.question_type == "general" and response.status == "insufficient_evidence"
+        if dynamic_translation and not current_evidence(connection, session, previous):
+            raise HTTPException(409, detail="advisory_changed")
+        if translation_run and not dynamic_translation and signature != translation_run["decision_signature"]:
             raise HTTPException(409, detail="advisory_changed")
         if replay:
             delivered = latest_run(connection, response.advisory_id, response.session_id)
@@ -503,11 +513,42 @@ def create_advisory(
                     "context": session.model_dump(mode="json"), "advisory_id": str(response.advisory_id),
                 })),
             )
-        provider = ChatProvider.configured() if wording else None
+        provider = ChatProvider.configured() if wording or open_question or dynamic_translation else None
+        rows = []
+        if provider and (open_question or dynamic_translation):
+            rows = approved_general_passages(connection, session.requested_date.isoformat())
+            if dynamic_translation:
+                ids = {item.passage_id for item in previous.evidence}
+                rows = [row for row in rows if row["id"] in ids]
+        if dynamic_translation and not rows:
+            raise HTTPException(503, detail="general_answer_unavailable")
         if provider is None:
+            return deliver(connection, session, response)
+        if not wording and not rows:
             return deliver(connection, session, response)
 
     # Provider I/O runs outside the SQLite write lock.
+    if rows:
+        candidates = rows if dynamic_translation else retrieve(session.question, rows)
+        proposed = answer_with_evidence(provider, session, response, candidates, previous if dynamic_translation else None)
+        with advisory_transaction() as connection:
+            if not current_evidence(connection, session, proposed):
+                if dynamic_translation:
+                    raise HTTPException(409, detail="advisory_changed")
+                return deliver(connection, session, response)
+            if dynamic_translation:
+                if proposed.status != "supported":
+                    raise HTTPException(503, detail="general_answer_unavailable")
+                if decision_signature(proposed) != translation_run["decision_signature"]:
+                    raise HTTPException(409, detail="advisory_changed")
+            if idempotency_key:
+                delivered = latest_run(connection, response.advisory_id, response.session_id)
+                if delivered:
+                    cached = AdvisoryResponse.model_validate_json(delivered["response"])
+                    if current_evidence(connection, session, cached):
+                        return cached
+            return deliver(connection, session, proposed, provider.model)
+
     proposed = render_with_provider(provider, session, response, wording)
     with advisory_transaction() as connection:
         fresh, _ = evaluate(session, connection, response.advisory_id, forecast)

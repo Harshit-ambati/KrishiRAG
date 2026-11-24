@@ -15,6 +15,8 @@ python -m uvicorn main:app --host 127.0.0.1 --port 8765
 
 Open the [farmer interface](http://127.0.0.1:8765). The form and results are available in English, Telugu, and Hindi. Choose **General farming** to ask a question without selecting a location. Try “Why are my tomato leaves turning yellow?” for a cited explanation of signs to check and precautions if there are leaf spots. Choose **Local crop & weather** for a district forecast or a field decision. Select a state or Union Territory, district, and optionally a date. A forecast-only question can leave the crop blank.
 
+General farming also searches approved, location-independent background passages for free-form questions. With Gemini or OpenAI configured, try “Why are the veins on my bhindi turning yellow?” or “What causes holes in the fruit of my brinjal?” The model proposes an answer in the selected language. Every claim must have a verbatim supporting excerpt from an eligible passage and pass a separate model check before it is displayed. The source panel links to the original publication. Approved passages can be added using the admin page without changing the question router. General answers are limited to questions supported by the reviewed catalog.
+
 After choosing a state in the local mode, the crop menu lists crops with approved guidance somewhere in that state. Choosing a district narrows the menu to guidance for that district and applicable statewide sources. The menu includes dated editions so older questions can still be replayed. The coverage panel and advisory check the specific date, crop stage, and question.
 
 The stage menus include germination and establishment where applicable, panicle initiation for paddy, and crop-specific stages such as bulb formation, tuber growth, head and curd formation, and pod filling. Existing stage IDs remain valid. [Examples of crop growth stages in IMD agromet bulletins](https://www.agritech.tnau.ac.in/pdf/2013/Bulletin_27.09.2013.pdf)
@@ -156,6 +158,8 @@ The original Andhra Pradesh archive covers selected paddy decisions from 31 Octo
 The farmer catalog in `india_districts.json` uses the November 2026 [bharatlas LGD crosswalk](https://bharatlas.com/releases/bharatlas-cw-2026.11/) (CC0/CC BY 4.0). It drops rows without a current LGD identifier and deduplicates by LGD ID. Forecast points are derived from [LGD/Bharatmaps district boundaries compiled by ramSeraph](https://github.com/ramSeraph/indian_admin_boundaries/releases/tag/districts) (CC0). Each point is inside the largest polygon for its matched district and rounded to four decimal places. These are reference points. Use stable LGD codes when updating the catalog and preserve the legacy pilot IDs in `locations.py`. The original archive has separate static coverage in `dist/coverage.json`.
 
 Use the protected admin workflow to publish crop guidance. Capture the source URL, district or approved statewide scope, crop, stage, date limits, and exact locator. Check that a question in coverage returns a cited answer and that the same question outside its scope withholds an action.
+
+For general questions, select **India (national background)** and use passage kind **Background**. Include the crop and stage if they apply, the exact locator, and a focused reviewed excerpt. A decision code is optional. Use this scope only for advice or descriptions that can be applied without a specific district or forecast. The SQLite deployment passes up to 24 candidates to the model. For larger multilingual collections, enable Chroma ranking.
 
 ## Recommended next tasks
 

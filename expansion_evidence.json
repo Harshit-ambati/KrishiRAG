@@ -318,5 +318,102 @@
       "decision_code": "prevent_tomato_leaf_spot_spread",
       "content": "Water the soil at the base of plants, cover soil with mulch to reduce splashing, support plants for airflow, and handle plants after the foliage dries."
     }]
+  },
+  {
+    "id": "tnau-okra-disease-general",
+    "filename": "orgfarm_bhendi_diseases.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University",
+      "title": "Organic Farming Practices – Okra Disease Management",
+      "original_url": "https://agritech.tnau.ac.in/org_farm/orgfarm_bhendi_diseases.html",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General okra symptoms and preventive practices described for India.",
+      "version": "Online guide reviewed 25 November 2026",
+      "review_notes": "Reviewed observable symptoms and non-chemical precautions. Excluded treatment recipes and loss estimates."
+    },
+    "passages": [
+      {
+        "kind": "background",
+        "crop": "okra",
+        "topic": "yellow-vein-mosaic",
+        "section": "Yellow vein mosaic, Symptoms",
+        "content": "A conspicuous network of yellow, thickened veins and veinlets is a sign associated with yellow vein mosaic in okra (bhindi, lady's finger). In severe cases young leaves are small and yellow, plants are stunted, and fruits may be small or misshapen."
+      },
+      {
+        "kind": "background",
+        "crop": "okra",
+        "topic": "yellow-vein-mosaic-prevention",
+        "section": "Yellow vein mosaic, Symptoms and Management",
+        "content": "Remove weeds and other wild host plants where possible. The guide lists Arka Anamika and Arka Abhay among okra varieties reported to tolerate yellow vein mosaic, without claiming complete resistance."
+      }
+    ]
+  },
+  {
+    "id": "tnau-brinjal-protection-general",
+    "filename": "brinjal_ex.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University",
+      "title": "ICT-AAS: Brinjal Crop Protection",
+      "original_url": "https://agritech.tnau.ac.in/ta/aas/brinjal_ex.html",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General brinjal identification and cultural measures. No local prevalence or dates.",
+      "version": "Online guide reviewed 25 November 2026",
+      "review_notes": "Reviewed signs and non-chemical practices only. Excluded legacy products, dosages, and trap rates."
+    },
+    "passages": [
+      {
+        "kind": "background",
+        "crop": "brinjal",
+        "crop_stage": "Nursery seedlings",
+        "topic": "nursery-damping-off",
+        "section": "Damping off (Nursery)",
+        "content": "Brinjal (eggplant) seedlings with damping-off may turn pale green and develop brown lesions where the stem meets the soil, then collapse. For prevention in nurseries, prepare raised seedbeds and avoid standing water."
+      },
+      {
+        "kind": "background",
+        "crop": "brinjal",
+        "topic": "fruit-and-shoot-borer",
+        "section": "Fruit and shoot borer, Symptoms and Management",
+        "content": "Brinjal (eggplant) shoots may wilt when fruit and shoot borer larvae tunnel inside. Infested fruits can have boreholes plugged with larval waste. The guide recommends hand-removing affected shoots and fruits from the field and locating nurseries away from infested crop residues."
+      },
+      {
+        "kind": "background",
+        "crop": "brinjal",
+        "topic": "root-knot-nematode",
+        "section": "Root-knot nematode, Symptoms and Management",
+        "content": "Knots or galls on the roots of stunted brinjal (eggplant) are consistent with root-knot nematode damage. Yellowing may accompany stunting. Cultural measures listed include removing crop roots and stubble after harvest, controlling weed hosts, and rotating with crops that do not host the nematode."
+      }
+    ]
+  },
+  {
+    "id": "tnau-onion-thrips-general",
+    "filename": "onion_1.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Tamil Nadu Agricultural University",
+      "title": "Crop Protection: Onion Thrips",
+      "original_url": "https://agritech.tnau.ac.in/crop_protection/onion/onion_1.html",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General onion thrips identification and cultural practices.",
+      "version": "Online guide reviewed 25 November 2026",
+      "review_notes": "Reviewed symptoms and regular hoeing. Excluded irrigation and chemical interventions."
+    },
+    "passages": [
+      {
+        "kind": "background",
+        "crop": "onion",
+        "topic": "onion-thrips",
+        "section": "Symptoms of damage, Identification of pest, and Management",
+        "content": "Small silvery-white patches on onion leaves can indicate thrips. Under heavy infestation leaves may dry downward from their tips. Adult onion thrips range in colour from pale yellow to grey. The guide includes keeping the field clean and hoeing regularly as cultural management practices."
+      }
+    ]
   }
 ]
