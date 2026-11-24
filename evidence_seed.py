@@ -44,13 +44,14 @@ def seed(snapshots: Path | None):
                     rainfall = passage.get("daily_rainfall")
                     connection.execute("""
                         UPDATE evidence_passages
-                        SET stage_id = COALESCE(stage_id, ?), decision_code = COALESCE(decision_code, ?),
+                        SET crop = COALESCE(crop, ?), stage_id = COALESCE(stage_id, ?), decision_code = COALESCE(decision_code, ?),
                             daily_rainfall = COALESCE(daily_rainfall, ?)
                         WHERE id = ? AND document_id = ? AND status = 'approved' AND content = ?
                           AND EXISTS (
-                              SELECT 1 FROM source_documents d WHERE d.id = ? AND d.sha256 = ? AND d.status = 'approved'
+                              SELECT 1 FROM source_documents d WHERE d.id = ? AND d.sha256 IS ? AND d.status = 'approved'
                           )
-                    """, (passage.get("stage_id"), passage.get("decision_code"), json.dumps(rainfall) if rainfall else None,
+                    """, (passage.get("crop"), passage.get("stage_id"), passage.get("decision_code"),
+                          json.dumps(rainfall) if rainfall else None,
                           f"{document_id}-{index}", document_id, passage["content"], document_id, record["sha256"]))
                 continue
             fields = (*PASSAGE_FIELDS, "id", "document_id", "status", "extraction_note")

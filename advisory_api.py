@@ -530,7 +530,8 @@ def create_advisory(
     # Provider I/O runs outside the SQLite write lock.
     if rows:
         candidates = rows if dynamic_translation else retrieve(session.question, rows)
-        proposed = answer_with_evidence(provider, session, response, candidates, previous if dynamic_translation else None)
+        proposed = (answer_with_evidence(provider, session, response, candidates, previous if dynamic_translation else None)
+                    if candidates else response)
         with advisory_transaction() as connection:
             if not current_evidence(connection, session, proposed):
                 if dynamic_translation:

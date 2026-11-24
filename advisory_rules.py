@@ -461,21 +461,21 @@ def decision(session, connection, covered_location, forecast=None):
         return result("insufficient_evidence", message("topic"))
     if topic in DEFINITIONS:
         code, copy, _ = DEFINITIONS[topic]
-        def national_sources(topic_id, decision_code):
+        def national_sources(topic_id, decision_code, crop=None):
             rows = list(connection.execute(PUBLISHED_PASSAGES + """
                 AND d.state_id = 'india' AND p.topic = ? AND p.kind = 'background'
-                AND p.crop IS NULL AND p.district_id IS NULL AND p.decision_code = ?
+                AND p.district_id IS NULL AND p.decision_code = ? AND COALESCE(p.crop, ?) IS ?
                 AND (d.issue_date IS NULL OR d.issue_date <= ?)
                 AND (COALESCE(p.valid_from, d.valid_from) IS NULL OR COALESCE(p.valid_from, d.valid_from) <= ?)
                 AND (COALESCE(p.valid_until, d.valid_until) IS NULL OR COALESCE(p.valid_until, d.valid_until) >= ?)
-            """, (topic_id, decision_code, day, day, day)))
+            """, (topic_id, decision_code, crop, crop, day, day, day)))
             return preferred(rank(session.question, rows))[:1]
 
-        sources = national_sources(topic, code)
+        sources = national_sources(topic, code, "tomato" if topic.startswith("tomato-") else None)
         if not sources:
             return result("insufficient_evidence", message("topic"))
         if topic == "tomato-leaf-yellowing":
-            precautions = national_sources("tomato-leaf-spot-precautions", "prevent_tomato_leaf_spot_spread")
+            precautions = national_sources("tomato-leaf-spot-precautions", "prevent_tomato_leaf_spot_spread", "tomato")
             return support(code, message("tomato_yellowing_definition"), sources,
                            practice_rows=precautions or sources, practice_copy=message(
                                "tomato_precautions_explanation" if precautions else "symptom_uncertainty"))

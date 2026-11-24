@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
@@ -9,9 +10,10 @@ import httpx
 from fastapi.testclient import TestClient
 
 from advisory_generation import ChatProvider
+from advisory_rules import INDIA
 from evidence_seed import seed
 from evidence_store import evidence_db
-from general_farming import DECISION
+from general_farming import DECISION, approved_general_passages, retrieve
 from main import app
 
 
@@ -62,6 +64,20 @@ class GeneralFarmingTests(unittest.TestCase):
                 "session_id": result["session_id"], "translate_advisory_id": result["advisory_id"], "language": "te",
             })
             self.assertEqual(response.status_code, 409)
+
+    def test_named_crop_filters_other_crops_in_all_three_languages(self):
+        with evidence_db(write=True) as connection:
+            connection.execute("UPDATE evidence_passages SET crop=NULL WHERE document_id='umd-tomato-symptoms'")
+        seed(None)
+        with evidence_db() as connection:
+            rows = approved_general_passages(connection, datetime.now(INDIA).date().isoformat())
+        self.assertTrue(any(row["crop"] == "tomato" for row in rows))
+        for question in ("Why are the veins of my bhindi yellow?",
+                         "मेरी भिंडी की नसें पीली क्यों हैं?",
+                         "నా బెండ ఆకుల ఈనెలు ఎందుకు పసుపు రంగులోకి మారుతున్నాయి?"):
+            with self.subTest(question=question):
+                candidates = retrieve(question, rows)
+                self.assertEqual({row["crop"] for row in candidates}, {"okra", None})
 
     def test_open_question_suppresses_invented_quotes_and_rejected_actions(self):
         provider = ChatProvider("https://example.com", "test-model")

@@ -11,9 +11,17 @@ from advisory_generation import CitedClaim
 from advisory_rules import citation
 from evidence_index import evidence_mode, rank
 from evidence_store import PUBLISHED_PASSAGES
+from locations import CONFIG
 
 DECISION = "answer_from_general_evidence"
 MAX_PASSAGES = 24
+CROP_ALIASES = {
+    "paddy": ("rice", "धान", "వరి"),
+    "okra": ("lady's finger", "lady finger", "भिन्डी", "బెండ"),
+    "tomato": ("టమాటా", "టమోటా"),
+    "brinjal": ("बैगन", "వంకాయ"),
+    "chilli": ("chili", "chile", "मिरची"),
+}
 
 ANSWER = (
     "Answer an agricultural question in the requested language using only the provided reviewed passages. "
@@ -64,6 +72,16 @@ def approved_general_passages(connection, day):
 
 
 def retrieve(question, rows):
+    text = question.casefold()
+    mentioned = set()
+    for crop, labels in CONFIG["crops"].items():
+        names = [name.strip().casefold() for label in labels.values() for name in re.split(r"[()]", label) if name.strip()]
+        for name in (crop.replace("-", " "), *names, *CROP_ALIASES.get(crop, ())):
+            if (re.search(r"\b" + re.escape(name) + r"(?:s|es)?\b", text) if name.isascii() else name in text):
+                mentioned.add(crop)
+                break
+    if mentioned:
+        rows = [row for row in rows if row["crop"] is None or row["crop"] in mentioned]
     if len(rows) <= MAX_PASSAGES:
         return rows
     if evidence_mode() == "chroma":

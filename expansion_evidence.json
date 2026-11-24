@@ -285,12 +285,14 @@
     "passages": [{
       "kind": "background",
       "topic": "tomato-leaf-yellowing",
+      "crop": "tomato",
       "section": "Symptoms on Leaves and Stems, Leaf Yellowing and Leaf Spots",
       "decision_code": "screen_tomato_yellowing",
       "content": "Yellow margins can surround some leaf spots. Yellowing between veins can indicate a nutrient problem. Yellow lower leaves with wilting can be associated with wilt disease."
     }, {
       "kind": "background",
       "topic": "tomato-blossom-end-rot",
+      "crop": "tomato",
       "section": "Symptoms on fruits - blotches or discolored areas, Blossom end rot",
       "decision_code": "screen_tomato_blossom_end_rot",
       "content": "A dark, leathery depression at the blossom end can indicate blossom-end rot. Calcium can be insufficient in growing fruit tissue under stress such as irregular or shallow irrigation. Maintain steady watering and mulch, and check soil pH before amending."
@@ -314,6 +316,7 @@
     "passages": [{
       "kind": "background",
       "topic": "tomato-leaf-spot-precautions",
+      "crop": "tomato",
       "section": "What else can you do?",
       "decision_code": "prevent_tomato_leaf_spot_spread",
       "content": "Water the soil at the base of plants, cover soil with mulch to reduce splashing, support plants for airflow, and handle plants after the foliage dries."
