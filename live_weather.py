@@ -15,6 +15,7 @@ DAILY_UNITS = {
     "wind_speed_10m_max": "km/h",
 }
 FORECAST_DAYS = 7
+SURFACE_MOISTURE = "soil_moisture_0_to_1cm"
 
 
 class Forecast(BaseModel):
@@ -26,18 +27,36 @@ class Forecast(BaseModel):
     low_c: float
     high_c: float
     wind_kmh: float
+    soil_moisture_m3_m3: float | None = None
 
 
 def forecast_parameters(latitude, longitude, day, last_day=None):
     return {
         "latitude": latitude, "longitude": longitude, "timezone": "Asia/Kolkata",
         "daily": ",".join(DAILY_UNITS), "start_date": day.isoformat(), "end_date": (last_day or day).isoformat(),
+        "hourly": SURFACE_MOISTURE,
     }
 
 
 def forecast_configured(state, district, day, today):
     return (day is not None and os.environ.get("AGRIRAG_LIVE_WEATHER") == "1"
             and bool(LOCATIONS.get((state, district))) and 0 <= (day - today).days < FORECAST_DAYS)
+
+
+def daily_surface_moisture(payload, days):
+    units, hourly = payload.get("hourly_units"), payload.get("hourly")
+    if not isinstance(units, dict) or units.get(SURFACE_MOISTURE) != "m³/m³" or not isinstance(hourly, dict):
+        return {}
+    times, values = hourly.get("time"), hourly.get(SURFACE_MOISTURE)
+    expected = [f"{day.isoformat()}T{hour:02d}:00" for day in days for hour in range(24)]
+    if times != expected or not isinstance(values, list) or len(values) != len(expected):
+        return {}
+    estimates = {}
+    for index, day in enumerate(days):
+        samples = values[index * 24:(index + 1) * 24]
+        if all(type(value) in (int, float) and math.isfinite(value) and 0 <= value <= 1 for value in samples):
+            estimates[day] = round(sum(samples) / 24, 4)
+    return estimates
 
 
 def fetch_forecast_days(state, district, first_day, last_day, now):
@@ -63,6 +82,7 @@ def fetch_forecast_days(state, district, first_day, last_day, now):
             return {}
     except (httpx.HTTPError, KeyError, TypeError, ValueError):
         return {}
+    estimates = daily_surface_moisture(payload, days)
     forecasts = {}
     for index, day in enumerate(days):
         values = [daily[field][index] for field in DAILY_UNITS]
@@ -72,7 +92,8 @@ def fetch_forecast_days(state, district, first_day, last_day, now):
         if min(rain, showers, wind) < 0 or low > high:
             continue
         forecasts[day] = Forecast(day=day, latitude=latitude, longitude=longitude, retrieved_at=now,
-                                  rainfall_mm=round(rain + showers, 2), low_c=low, high_c=high, wind_kmh=wind)
+                                  rainfall_mm=round(rain + showers, 2), low_c=low, high_c=high, wind_kmh=wind,
+                                  soil_moisture_m3_m3=estimates.get(day))
     return forecasts
 
 
@@ -88,6 +109,8 @@ def forecast_passage(forecast, state, district):
     excerpt = (f"Requested point: {forecast.latitude}, {forecast.longitude}. "
                f"Retrieved {stamp}. Forecast for {day}: {forecast.rainfall_mm:g} mm rainfall (rain and showers), "
                f"{forecast.low_c:g}–{forecast.high_c:g} °C, maximum wind {forecast.wind_kmh:g} km/h.")
+    if forecast.soil_moisture_m3_m3 is not None:
+        excerpt += f" Daily mean modelled surface soil moisture (0–1 cm): {forecast.soil_moisture_m3_m3 * 100:.1f}% by volume."
     return {
         "id": f"open-meteo:{state}:{district}:{stamp}", "source_id": "open-meteo-forecast",
         "title": "Weather Forecast API", "publisher": "Open-Meteo",

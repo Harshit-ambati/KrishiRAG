@@ -265,5 +265,58 @@
         "content": "The district forecast table lists zero rainfall for Nagpur on 24–28 November 2026."
       }
     ]
+  },
+  {
+    "id": "umd-tomato-symptoms",
+    "filename": "umd-tomato-symptoms.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "University of Maryland Extension",
+      "title": "Key to Common Problems of Tomatoes",
+      "original_url": "https://extension.umd.edu/resource/key-common-problems-tomatoes",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General tomato symptom screening and growing practices.",
+      "issue_date": "2025-06-18",
+      "version": "Online guide updated 18 June 2025",
+      "review_notes": "General symptom patterns and prevention practices. Excludes geographically specific prevalence or treatment."
+    },
+    "passages": [{
+      "kind": "background",
+      "topic": "tomato-leaf-yellowing",
+      "section": "Symptoms on Leaves and Stems, Leaf Yellowing and Leaf Spots",
+      "decision_code": "screen_tomato_yellowing",
+      "content": "Yellow margins can surround some leaf spots. Yellowing between veins can indicate a nutrient problem. Yellow lower leaves with wilting can be associated with wilt disease."
+    }, {
+      "kind": "background",
+      "topic": "tomato-blossom-end-rot",
+      "section": "Symptoms on fruits - blotches or discolored areas, Blossom end rot",
+      "decision_code": "screen_tomato_blossom_end_rot",
+      "content": "A dark, leathery depression at the blossom end can indicate blossom-end rot. Calcium can be insufficient in growing fruit tissue under stress such as irregular or shallow irrigation. Maintain steady watering and mulch, and check soil pH before amending."
+    }]
+  },
+  {
+    "id": "umn-tomato-leaf-spots",
+    "filename": "umn-tomato-leaf-spots.html",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "University of Minnesota Extension",
+      "title": "Tomato leaf spot diseases",
+      "original_url": "https://extension.umn.edu/garden-and-home/yard-and-garden/gardening-in-minnesota/yard-and-garden-problems/tomato-leaf-spot-diseases",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "General tomato leaf-spot prevention practices.",
+      "version": "Online guide reviewed 25 November 2026",
+      "review_notes": "Approved general sanitation and moisture-management practices only. No chemical treatment recommendation."
+    },
+    "passages": [{
+      "kind": "background",
+      "topic": "tomato-leaf-spot-precautions",
+      "section": "What else can you do?",
+      "decision_code": "prevent_tomato_leaf_spot_spread",
+      "content": "Water the soil at the base of plants, cover soil with mulch to reduce splashing, support plants for airflow, and handle plants after the foliage dries."
+    }]
   }
 ]

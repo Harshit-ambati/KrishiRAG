@@ -23,8 +23,9 @@ from locations import CONFIG, DISTRICTS, DEMO_DISTRICTS
 
 ROOT = Path(__file__).resolve().parent
 FIXTURES = json.loads((ROOT / "demo_advisories.json").read_text(encoding="utf-8"))
-CONTEXT_FIELDS = ("state_id", "district_id", "crop")
+CONTEXT_FIELDS = ("state_id", "district_id", "crop", "question_type")
 Language = Literal["en", "te", "hi"]
+QuestionType = Literal["local", "general"]
 DemoStatus = Literal["supported", "conditional", "clarification", "coverageGap", "conflict"]
 Status = Literal["supported", "conditional", "clarification", "coverageGap", "conflict",
                  "insufficient_evidence", "conflicting_evidence"]
@@ -41,6 +42,7 @@ class AdvisoryRequest(BaseModel):
     crop_stage: Identifier | None = None
     question: Question | None = None
     language: Language | None = None
+    question_type: QuestionType | None = None
     field_observations: Annotated[str, Field(max_length=1200)] | None = None
     session_id: UUID | None = None
     demo_scenario: DemoStatus | None = None
@@ -68,11 +70,13 @@ class AdvisoryRequest(BaseModel):
             if not (self.session_id and self.language) or self.model_fields_set - allowed:
                 raise ValueError("Translate with only the advisory ID, its session ID, and the new language.")
         if self.session_id is None:
-            required = ("state_id", "district_id", "question", "language")
+            required = ("question", "language") if self.question_type == "general" else (
+                "state_id", "district_id", "question", "language",
+            )
             missing = [field for field in required if getattr(self, field) is None]
             if missing:
                 raise ValueError(f"Required to start a session: {', '.join(missing)}")
-            if self.district_id not in DISTRICTS.get(self.state_id, set()):
+            if self.question_type != "general" and self.district_id not in DISTRICTS.get(self.state_id, set()):
                 raise ValueError("District does not belong to the selected state")
         return self
 
@@ -144,6 +148,7 @@ class AdvisorySession(BaseModel):
     crop_stage: str
     question: str
     language: Language
+    question_type: QuestionType = "local"
     field_observations: str | None = None
     demo_scenario: DemoStatus | None = None
     requested_date: date | None = None
@@ -211,8 +216,14 @@ def initial_session(request):
     fields = request.model_dump(exclude={"session_id", "translate_advisory_id"})
     fields["crop"] = request.crop or "none"
     fields["crop_stage"] = request.crop_stage or "unknown"
+    fields["question_type"] = request.question_type or "local"
+    if fields["question_type"] == "general":
+        fields.update(state_id="india", district_id="national", crop="none", crop_stage="unknown")
     session = AdvisorySession(session_id=uuid4(), **fields)
-    session.requested_date, session.date_explicit = requested_day(session.question, request.requested_date)
+    session.requested_date, session.date_explicit = (
+        (datetime.now(INDIA).date(), False) if session.question_type == "general"
+        else requested_day(session.question, request.requested_date)
+    )
     return session
 
 
@@ -282,6 +293,8 @@ def advisory_transaction():
 
 
 def request_fingerprint(request, exclude=None):
+    if request.question_type is None:
+        exclude = (exclude or set()) | {"question_type"}
     return sha256(request.model_dump_json(exclude=exclude).encode("utf-8")).hexdigest()
 
 
@@ -368,6 +381,7 @@ def district_forecast(state_id: Identifier, district_id: Identifier,
                 "date": day, "rainfall_mm": rain, "rain_status": rain_status,
                 "low_c": point.low_c if point else None, "high_c": point.high_c if point else None,
                 "wind_kmh": point.wind_kmh if point else None, "sources": sources,
+                "soil_moisture_m3_m3": point.soil_moisture_m3_m3 if point else None,
             })
     return {"state_id": state_id, "district_id": district_id, "timezone": "Asia/Kolkata",
             "live_retrieved_at": now if live else None, "days": outlook}
@@ -433,7 +447,7 @@ def weather_context(request, key, fingerprint):
 
 
 def live_forecast_for(session):
-    if not session or session.demo_scenario:
+    if not session or session.demo_scenario or session.question_type == "general":
         return None
     if not needs_forecast(session.question, question_topic(session.question), session.date_explicit):
         return None

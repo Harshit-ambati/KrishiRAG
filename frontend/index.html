@@ -39,31 +39,44 @@
     <div class="workspace">
       <section class="card" aria-labelledby="form-title">
         <h2 id="form-title" data-text="formTitle">Ask a question</h2>
-        <p class="section-description" data-text="formDescription">Select your location. Add crop details for a question about your field.</p>
+        <p class="section-description" id="form-description">Select your district to check weather and get crop guidance for your field.</p>
         <form id="question-form" novalidate tabindex="-1">
-          <div class="field-grid">
-            <div class="field">
-              <label for="state" data-text="state">State</label>
-              <select id="state" name="state" required aria-describedby="state-error"></select>
-              <p class="field-error" id="state-error" hidden></p>
-            </div>
-            <div class="field">
-              <label for="district" data-text="district">District</label>
-              <select id="district" name="district" required aria-describedby="district-error"></select>
-              <p class="field-error" id="district-error" hidden></p>
-            </div>
-            <div class="field">
-              <label for="crop" data-text="crop">Crop</label>
-              <select id="crop" name="crop" aria-describedby="crop-availability" disabled></select>
-              <p id="crop-availability" class="section-description" role="status" hidden></p>
-            </div>
-            <div class="field">
-              <label for="stage" data-text="stage">Crop stage</label>
-              <select id="stage" name="stage" required aria-describedby="stage-error"></select>
-              <p class="field-error" id="stage-error" hidden></p>
-            </div>
+          <div class="field mode-field">
+            <label for="question-mode" data-text="questionMode">Question type</label>
+            <select id="question-mode" name="mode">
+              <option value="local" data-text="localMode">Local crop &amp; weather</option>
+              <option value="general" data-text="generalMode">General farming</option>
+            </select>
           </div>
-          <div id="coverage-summary" class="coverage-summary" role="status" aria-atomic="true" hidden></div>
+          <div id="local-fields">
+            <div class="field-grid">
+              <div class="field">
+                <label for="state" data-text="state">State</label>
+                <select id="state" name="state" required aria-describedby="state-error"></select>
+                <p class="field-error" id="state-error" hidden></p>
+              </div>
+              <div class="field">
+                <label for="district" data-text="district">District</label>
+                <select id="district" name="district" required aria-describedby="district-error"></select>
+                <p class="field-error" id="district-error" hidden></p>
+              </div>
+              <div class="field">
+                <label for="crop" data-text="crop">Crop</label>
+                <select id="crop" name="crop" aria-describedby="crop-availability" disabled></select>
+                <p id="crop-availability" class="section-description" role="status" hidden></p>
+              </div>
+              <div class="field">
+                <label for="stage" data-text="stage">Crop stage</label>
+                <select id="stage" name="stage" required aria-describedby="stage-error"></select>
+                <p class="field-error" id="stage-error" hidden></p>
+              </div>
+            </div>
+            <div class="field date-field">
+              <label for="requested-date"><span data-text="requestedDate">Requested date</span> <span class="optional" data-text="optional">Optional</span></label>
+              <input id="requested-date" name="requestedDate" type="date">
+            </div>
+            <div id="coverage-summary" class="coverage-summary" role="status" aria-atomic="true" hidden></div>
+          </div>
           <div class="field question-field">
             <label for="question" data-text="question">Your question</label>
             <textarea id="question" name="question" rows="3" maxlength="1200" required aria-describedby="question-error" data-placeholder="questionPlaceholder" placeholder="For example, should I irrigate if rain is expected?"></textarea>
@@ -146,6 +159,7 @@
               <th scope="col" data-text="outlookRain">Rain (mm)</th>
               <th scope="col" data-text="outlookTemperature">Low–high (°C)</th>
               <th scope="col" data-text="outlookWind">Max wind (km/h)</th>
+              <th scope="col" data-text="outlookSoil">Surface soil moisture (0–1 cm)</th>
             </tr></thead>
             <tbody id="outlook-rows"></tbody>
           </table>

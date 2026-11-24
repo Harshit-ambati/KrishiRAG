@@ -33,6 +33,7 @@ let outlookFailed = false;
 const feedback = new Map();
 
 const selectedState = () => coverage.find(state => state.id === fields.state.value);
+const isGeneral = () => fields.mode.value === 'general';
 const districtsFor = state => state?.districts.filter(district => district.enabled) ?? [];
 const localName = names => names[language] ?? names.en;
 
@@ -83,7 +84,7 @@ function renderCropStages() {
 
 function renderCoverage() {
   const node = byId('coverage-summary');
-  node.hidden = !fields.district.value;
+  node.hidden = isGeneral() || !fields.district.value;
   if (node.hidden) return;
   if (!coverageResult) {
     node.textContent = coverageFailed ? copy.coverageError : copy.coverageLoading;
@@ -110,13 +111,14 @@ async function checkCoverage() {
   coverageResult = undefined;
   coverageFailed = false;
   renderCoverage();
-  if (!fields.district.value) return;
+  if (isGeneral() || !fields.district.value) return;
   const request = new AbortController();
   coverageRequest = request;
   const params = new URLSearchParams({
     state_id: fields.state.value, district_id: fields.district.value,
     crop: fields.crop.value, crop_stage: fields.stage.value,
   });
+  if (fields.requestedDate.value) params.set('on_date', fields.requestedDate.value);
   try {
     const response = await fetch('/api/coverage?' + params, {
       signal: AbortSignal.any([request.signal, AbortSignal.timeout(8000)]),
@@ -131,6 +133,15 @@ async function checkCoverage() {
   }
 }
 
+function renderMode() {
+  const general = isGeneral();
+  byId('local-fields').hidden = general;
+  byId('form-description').textContent = general ? copy.generalDescription : copy.formDescription;
+  fields.question.placeholder = general ? copy.generalPlaceholder : copy.questionPlaceholder;
+  fields.observation.placeholder = general ? copy.generalObservation : copy.observationPlaceholder;
+  submit.disabled = !config && !general;
+}
+
 function renderLanguage() {
   language = languageSelect.value;
   copy = translations[language];
@@ -139,6 +150,7 @@ function renderLanguage() {
   document.title = `AgriRAG · ${copy.heroTitle}`;
   document.querySelectorAll('[data-text]').forEach(node => { node.textContent = copy[node.dataset.text]; });
   document.querySelectorAll('[data-placeholder]').forEach(node => { node.placeholder = copy[node.dataset.placeholder]; });
+  renderMode();
 
   setOptions(fields.state, coverage.map(state => ({ value: state.id, label: localName(state.name) })), copy.selectState);
   renderDistricts();
@@ -159,9 +171,9 @@ function validate() {
   const district = districtsFor(state).find(entry => entry.id === fields.district.value);
   const validStage = fields.stage.value === 'unknown' || cropStages[fields.crop.value]?.includes(fields.stage.value);
   const errors = {
-    state: state ? '' : copy.stateError,
-    district: state && !district ? (fields.district.disabled ? copy.noDistricts : copy.districtError) : '',
-    stage: validStage ? '' : copy.stageError,
+    state: isGeneral() || state ? '' : copy.stateError,
+    district: !isGeneral() && state && !district ? (fields.district.disabled ? copy.noDistricts : copy.districtError) : '',
+    stage: isGeneral() || validStage ? '' : copy.stageError,
     question: fields.question.value.length > fields.question.maxLength ? copy.questionLength : fields.question.value.trim() ? '' : copy.questionError,
     observation: fields.observation.value.length > fields.observation.maxLength ? copy.observationLength : '',
   };
@@ -198,8 +210,9 @@ function renderResult() {
   const buttonLabel = pending ? 'loadingButton' : requestError ? 'retry' : result?.answer.follow_up_field ? 'submitFollowUp' : 'submit';
   byId('submit-label').textContent = copy[buttonLabel];
   const error = byId('request-error');
-  error.hidden = !requestError;
-  error.textContent = requestError ? copy[requestError] : '';
+  const errorKey = requestError || (!config && !isGeneral() ? 'configError' : null);
+  error.hidden = !errorKey;
+  error.textContent = errorKey ? copy[errorKey] : '';
   byId('result-placeholder').hidden = Boolean(result);
   byId('advisory').hidden = !result;
 
@@ -219,19 +232,20 @@ function renderResult() {
   providerLimit.lang = answer.language;
   providerLimit.textContent = providerLimit.hidden ? '' : answerCopy.providerLimit;
   const stageName = answer.crop_stage === 'unknown' ? copy.unknownStage : localName(stages[answer.crop_stage]);
-  const districtName = localName(district.name);
-  const districtLabel = district.placeholder ? `${districtName} (${copy.placeholderDistrict})` : districtName;
-  const details = answer.answer_type === 'information' || fields.crop.value === 'none'
+  const districtName = district ? localName(district.name) : '';
+  const districtLabel = district?.placeholder ? `${districtName} (${copy.placeholderDistrict})` : districtName;
+  const details = !district || answer.answer_type === 'information' || fields.crop.value === 'none'
     ? [] : [localName(crops[fields.crop.value]), stageName];
-  byId('result-location').textContent = [districtLabel, localName(state.name), ...details].join(' · ');
+  byId('result-location').textContent = district ? [districtLabel, localName(state.name), ...details].join(' · ') : copy.generalMode;
   byId('result-primary-label').textContent = copy[answer.answer_type === 'information' ? 'directAnswer' : 'action'];
+  byId('result-explanation-title').textContent = district ? copy.explanation : copy.generalDetails;
   byId('follow-up').hidden = !answer.follow_up_question;
   const observations = byId('observation-choices');
   observations.hidden = answer.follow_up_kind !== 'soil_moisture';
   for (const button of observations.querySelectorAll('button')) button.disabled = pending;
   byId('answer-follow-up').disabled = pending;
   byId('result-follow-up').textContent = answer.follow_up_question ?? '';
-  byId('result-requested-date').hidden = !answer.requested_date;
+  byId('result-requested-date').hidden = !district || !answer.requested_date;
   renderDate('advisory-date', answer.requested_date);
   for (const id of ['result-status', 'result-action', 'result-explanation', 'result-weather', 'result-follow-up', 'result-sources']) {
     byId(id).lang = answer.language;
@@ -328,8 +342,8 @@ function formattedDate(value) {
 function renderOutlook() {
   const panel = byId('district-outlook');
   const district = districtsFor(selectedState()).find(entry => entry.id === fields.district.value);
-  panel.hidden = !district;
-  if (!district) return;
+  panel.hidden = isGeneral() || !district;
+  if (panel.hidden) return;
   const table = byId('outlook-table');
   const status = byId('outlook-status');
   table.hidden = !outlookData;
@@ -363,7 +377,8 @@ function renderOutlook() {
     }
     row.append(rain);
     for (const value of [day.low_c == null ? null : number.format(day.low_c) + '–' + number.format(day.high_c),
-                         day.wind_kmh == null ? null : number.format(day.wind_kmh)]) {
+                         day.wind_kmh == null ? null : number.format(day.wind_kmh),
+                         day.soil_moisture_m3_m3 == null ? null : number.format(day.soil_moisture_m3_m3 * 100) + '%']) {
       const cell = document.createElement('td');
       cell.textContent = value ?? '–';
       if (value === null) cell.setAttribute('aria-label', copy.outlookUnavailable);
@@ -378,12 +393,13 @@ async function checkOutlook() {
   outlookData = undefined;
   outlookFailed = false;
   renderOutlook();
-  if (!fields.district.value || !byId('district-outlook').open) return;
+  if (isGeneral() || !fields.district.value || !byId('district-outlook').open) return;
   const request = new AbortController();
   outlookRequest = request;
   const query = new URLSearchParams({
     state_id: fields.state.value, district_id: fields.district.value, days: byId('outlook-days').value,
   });
+  if (fields.requestedDate.value) query.set('start_date', fields.requestedDate.value);
   try {
     const response = await fetch('/api/forecast?' + query, {
       signal: AbortSignal.any([request.signal, AbortSignal.timeout(9000)]),
@@ -455,6 +471,7 @@ function resetSession() {
 }
 
 function fieldChanged(event) {
+  if (event.target === fields.mode) renderMode();
   if (event.target === fields.state) {
     fields.district.value = '';
     renderDistricts();
@@ -467,9 +484,9 @@ function fieldChanged(event) {
     fields.stage.value = 'unknown';
     renderCropStages();
   }
-  if ([fields.state, fields.district, fields.crop, fields.stage].includes(event.target)) checkCoverage();
-  if ([fields.state, fields.district].includes(event.target)) checkOutlook();
-  if ([fields.state, fields.district, fields.crop, fields.question].includes(event.target)) resetSession();
+  if ([fields.mode, fields.state, fields.district, fields.crop, fields.stage, fields.requestedDate].includes(event.target)) checkCoverage();
+  if ([fields.mode, fields.state, fields.district, fields.requestedDate].includes(event.target)) checkOutlook();
+  if ([fields.mode, fields.state, fields.district, fields.crop, fields.question, fields.requestedDate].includes(event.target)) resetSession();
   else if (requestError) {
     clearRequestError();
     renderResult();
@@ -477,7 +494,7 @@ function fieldChanged(event) {
   if (validationStarted) validate();
 }
 
-for (const field of [fields.state, fields.district, fields.crop, fields.stage]) field.addEventListener('change', fieldChanged);
+for (const field of [fields.mode, fields.state, fields.district, fields.crop, fields.stage, fields.requestedDate]) field.addEventListener('change', fieldChanged);
 for (const field of [fields.question, fields.observation]) field.addEventListener('input', fieldChanged);
 languageSelect.addEventListener('change', () => {
   clearRequestError();
@@ -504,7 +521,7 @@ byId('answer-follow-up').addEventListener('click', () => {
 
 function setPending(value) {
   pending = value;
-  for (const control of [fields.state, fields.question, fields.observation, languageSelect]) {
+  for (const control of [fields.mode, fields.state, fields.question, fields.observation, fields.requestedDate, languageSelect]) {
     control.disabled = value;
   }
   fields.crop.disabled = value || fields.crop.options.length <= 1;
@@ -558,7 +575,7 @@ async function requestAdvisory(payload, { state, district }, key = requestKey())
 
 form.addEventListener('submit', event => {
   event.preventDefault();
-  if (pending) return;
+  if (pending || (!config && !isGeneral())) return;
   validationStarted = true;
   const error = validate();
   if (error) {
@@ -581,16 +598,20 @@ form.addEventListener('submit', event => {
     field_observations: fields.observation.value.trim() || null,
     language,
   };
+  if (isGeneral()) {
+    requestAdvisory({ question_type: 'general', question: fields.question.value.trim(),
+      field_observations: updates.field_observations, language }, {});
+    return;
+  }
   const payload = result?.answer.follow_up_field ? { ...updates, session_id: result.answer.session_id } : {
     ...updates,
     state_id: state.id,
     district_id: district.id,
     crop: fields.crop.value,
     question: fields.question.value.trim(),
+    ...(fields.requestedDate.value ? { requested_date: fields.requestedDate.value } : {}),
   };
   requestAdvisory(payload, { state, district });
 });
 
-if (!config) requestError = 'configError';
 renderLanguage();
-if (!config) submit.disabled = true;

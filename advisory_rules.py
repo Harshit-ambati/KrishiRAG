@@ -17,6 +17,7 @@ TOPICS = {
     "district-rainfall-forecast": ("rain", "forecast", "weather", "temperature", "wind", "बारिश", "वर्षा", "मौसम", "तापमान", "हवा", "వర్ష", "వాతావరణ", "ఉష్ణోగ్రత", "గాలి"),
 }
 WEATHER_TOPIC = "district-rainfall-forecast"
+SOIL_MOISTURE_TERMS = ("soil moisture", "मिट्टी की नमी", "నేల తేమ")
 RAIN_TERMS = ("rain", "forecast", "weather", "बारिश", "वर्षा", "मौसम", "వర్ష", "వాతావరణ")
 OTHER_WEATHER_TERMS = ("temperature", "wind", "तापमान", "हवा", "ఉష్ణోగ్రత", "గాలి")
 IRRIGATION_QUANTITY_TERMS = ("how much water", "how much irrigation", "irrigation depth", "water depth",
@@ -49,6 +50,9 @@ DEFINITIONS = {
         "what is sprinkler irrigation", "define sprinkler irrigation", "how does sprinkler irrigation work", "स्प्रिंकलर सिंचाई क्या है",
         "फव्वारा सिंचाई क्या है", "స్ప్రింక్లర్ సేద్యం అంటే ఏమిటి", "తుంపర సేద్యం అంటే ఏమిటి",
     }),
+    "tomato-leaf-yellowing": ("screen_tomato_yellowing", "tomato_yellowing", ()),
+    "tomato-blossom-end-rot": ("screen_tomato_blossom_end_rot", "tomato_blossom_end_rot", ()),
+    "tomato-leaf-spot-precautions": ("prevent_tomato_leaf_spot_spread", "tomato_precautions", ()),
 }
 
 # Only reviewer-coded actions are rendered automatically. Each value is a distinct
@@ -202,6 +206,46 @@ MESSAGES = {
                         "బిందు సేద్యంలో గొట్టాలకు అమర్చిన చిన్న రంధ్రాల ద్వారా మొక్కల వేర్ల దగ్గర నెమ్మదిగా నీరు అందుతుంది.",
                         "ड्रिप सिंचाई में पाइप या नलियों पर लगे छोटे आउटलेट से पानी धीरे-धीरे पौधों की जड़ों के पास पहुँचता है।"),
     "drip_explanation": ("These outlets are called emitters.", "ఈ రంధ్రాలను ఎమిటర్లు అంటారు।", "इन आउटलेट को एमिटर कहते हैं।"),
+    "tomato_yellowing_definition": (
+        "Yellow tomato leaves can have several causes. Check where it began and what else you see. Dark spots with yellow margins suggest a leaf-spot problem. Yellowing between veins can point to a nutrient problem. Lower leaves turning yellow together with wilting can point to a wilt disease. The pattern helps narrow the cause.",
+        "టమాటా ఆకులు పసుపు రంగులోకి మారడానికి అనేక కారణాలు ఉండవచ్చు. మొదట ఏ ఆకుల్లో మొదలైందో, ఇతర లక్షణాలు ఏమిటో చూడండి. పసుపు అంచులతో నల్లటి మచ్చలు ఆకుమచ్చ సమస్యను సూచించవచ్చు. ఈనెల మధ్య పసుపుదనం పోషక సమస్యను సూచించవచ్చు. కింది ఆకులు పసుపు రంగులోకి మారి మొక్క వాడిపోతే వాడుదల వ్యాధి ఒక అవకాశం.",
+        "टमाटर की पत्तियाँ कई कारणों से पीली हो सकती हैं। देखें कि पीलापन कहाँ शुरू हुआ और साथ में क्या दिख रहा है। पीले घेरों वाले गहरे धब्बे पत्ती धब्बा रोग का संकेत हो सकते हैं। नसों के बीच पीलापन पोषक तत्वों की समस्या का संकेत हो सकता है। निचली पत्तियाँ पीली हों और पौधा मुरझाए तो मुरझान रोग की संभावना है।",
+    ),
+    "tomato_precautions_explanation": (
+        "If you see leaf spots, water at the base and keep foliage dry. Mulch to reduce soil splash, support the plants so air can circulate, and wait until leaves are dry before pruning or handling them.",
+        "ఆకులపై మచ్చలు ఉంటే మొక్క అడుగున నీరు పెట్టి ఆకులు పొడిగా ఉండేలా చూడండి. నేల చిమ్మకుండా మల్చింగ్ చేయండి. గాలి ఆడేలా మొక్కలకు ఆధారం ఇవ్వండి. ఆకులు ఆరిన తర్వాతే కత్తిరించండి లేదా తాకండి.",
+        "पत्तियों पर धब्बे हों तो पौधे की जड़ के पास पानी दें और पत्तियाँ सूखी रखें। मिट्टी के छींटे रोकने के लिए मल्च बिछाएँ, हवा आने-जाने के लिए पौधों को सहारा दें और पत्तियाँ सूखने के बाद ही छँटाई करें या उन्हें छुएँ।",
+    ),
+    "symptom_uncertainty": (
+        "Compare the leaf pattern and check for wilting before drawing a conclusion.",
+        "కారణాన్ని నిర్ణయించే ముందు ఆకులపై లక్షణాలను సరిపోల్చి, మొక్క వాడుతోందో చూడండి.",
+        "कारण तय करने से पहले पत्तियों के लक्षणों की तुलना करें और देखें कि पौधा मुरझा रहा है या नहीं।",
+    ),
+    "tomato_blossom_end_rot_definition": (
+        "A dark, sunken, leathery patch at the end opposite the stem may be blossom-end rot. It happens when the growing fruit gets too little calcium. Uneven or shallow watering can contribute.",
+        "కాడకు ఎదురుగా ఉన్న చివర ముదురు రంగులో లోపలికి కుంగిన గట్టి మచ్చ ఉంటే అది కాయ చివర కుళ్లు కావచ్చు. పెరుగుతున్న కాయకు తగినంత కాల్షియం అందకపోతే ఇది వస్తుంది. నీరు సక్రమంగా పెట్టకపోవడం లేదా పైపైన మాత్రమే తడపడం ఇందుకు దోహదపడవచ్చు.",
+        "डंठल के विपरीत सिरे पर गहरा, धँसा और सख्त धब्बा ब्लॉसम-एंड रॉट हो सकता है। बढ़ते फल को पर्याप्त कैल्शियम न मिलने पर यह होता है। अनियमित या उथली सिंचाई इसकी वजह बन सकती है।",
+    ),
+    "tomato_blossom_end_rot_explanation": (
+        "Keep soil moisture steady and use mulch to slow drying. Check soil pH before deciding whether to add a soil amendment.",
+        "నేల తేమ స్థిరంగా ఉంచండి. నేల త్వరగా ఆరకుండా మల్చింగ్ చేయండి. నేల సవరణ పదార్థం వేయాలా అని నిర్ణయించే ముందు పీహెచ్ పరీక్షించండి.",
+        "मिट्टी की नमी स्थिर रखें और मिट्टी को जल्दी सूखने से बचाने के लिए मल्च बिछाएँ। मिट्टी में सुधार के लिए कुछ डालने से पहले उसका पीएच जाँचें।",
+    ),
+    "general_topic": (
+        "This question needs a reviewed general farming source. For a decision about your field or its weather, use Local crop & weather.",
+        "ఈ ప్రశ్నకు సమీక్షించిన సాధారణ వ్యవసాయ మూలం అవసరం. మీ పొలం లేదా స్థానిక వాతావరణం గురించి అడగాలంటే స్థానిక పంట, వాతావరణ విభాగాన్ని ఎంచుకోండి.",
+        "इस सवाल के लिए खेती का समीक्षा किया हुआ सामान्य स्रोत चाहिए। अपने खेत या वहाँ के मौसम के बारे में पूछने के लिए स्थानीय फसल और मौसम चुनें।",
+    ),
+    "point_soil": (
+        "Estimated daily mean surface soil moisture (0–1 cm) at the reference point is {value:g}%. Check your field before irrigating.",
+        "జిల్లా నమూనా స్థానం వద్ద పైనేల (0–1 సెం.మీ.) సగటు తేమ అంచనా {value:g}%. నీరు పెట్టే ముందు మీ పొలాన్ని పరిశీలించండి.",
+        "ज़िले के संदर्भ बिंदु पर सतही मिट्टी (0–1 सेमी) की अनुमानित दैनिक औसत नमी {value:g}% है। सिंचाई से पहले अपने खेत की स्थिति देखें।",
+    ),
+    "point_soil_missing": (
+        "The surface soil moisture estimate is unavailable for this location and date.",
+        "ఈ ప్రాంతం, తేదీకి పైనేల తేమ అంచనా అందుబాటులో లేదు.",
+        "इस स्थान और तारीख के लिए सतही मिट्टी की नमी का अनुमान उपलब्ध नहीं है।",
+    ),
     "vegetable_timing_gap": ("The crop source supports a general practice. It does not determine whether to irrigate on this date.",
                              "పంట మూలం సాధారణ పద్ధతిని సూచిస్తుంది. ఈ తేదీన నీరు పెట్టాలా అనేది అది నిర్ధారించదు.",
                              "फसल का स्रोत सामान्य तरीका बताता है। उससे तय नहीं होता कि इस तारीख को सिंचाई करनी चाहिए या नहीं।"),
@@ -272,12 +316,28 @@ def question_topic(question):
     for topic, (_, _, questions) in DEFINITIONS.items():
         if text in questions:
             return topic
+    if has_terms(text, ("tomato", "tomatoes", "टमाटर", "టమాటా", "టమోటా")):
+        if has_terms(text, ("leaf", "leaves", "foliage", "पत्त", "ఆకు", "ఆకుల")) and has_terms(
+            text, ("yellow", "yellowing", "पील", "పసుపు")
+        ):
+            return "tomato-leaf-yellowing"
+        if has_terms(text, ("blossom-end rot", "blossom end rot", "ब्लॉसम-एंड रॉट", "కాయ చివర కుళ్లు")) or all(
+            has_terms(text, terms) for terms in (
+                ("bottom", "blossom end", "opposite the stem", "नीचे", "सिरे", "చివర", "అడుగున"),
+                ("black", "dark", "sunken", "rot", "काल", "धब्ब", "निचल", "నల్ల", "ముదురు", "కుళ్లు"),
+            )
+        ):
+            return "tomato-blossom-end-rot"
+    if has_terms(text, SOIL_MOISTURE_TERMS) and not any(
+        has_terms(text, terms) for name, terms in TOPICS.items() if name != WEATHER_TOPIC
+    ):
+        return WEATHER_TOPIC
     return next((name for name, terms in TOPICS.items() if has_terms(text, terms)), None)
 
 
 def needs_forecast(question, topic, explicit):
     return topic == WEATHER_TOPIC or topic in TIMING_TOPICS and (
-        explicit or has_terms(question.casefold(), RAIN_TERMS)
+        explicit or has_terms(question.casefold(), (*RAIN_TERMS, *SOIL_MOISTURE_TERMS))
     )
 
 
@@ -351,7 +411,7 @@ def citation(row):
 
 def decision(session, connection, covered_location, forecast=None):
     topic = question_topic(session.question)
-    informational = topic == WEATHER_TOPIC or topic in DEFINITIONS
+    informational = session.question_type == "general" or topic == WEATHER_TOPIC or topic in DEFINITIONS
 
     def message(key, **values):
         return localize(MESSAGES[key], session.language).format(**values)
@@ -381,14 +441,17 @@ def decision(session, connection, covered_location, forecast=None):
             explanation = weather_copy or message("rain", date=day, amount=amount)
             claims.append({"kind": "weather", "text": explanation, "passage_ids": [row["id"] for row in weather_rows]})
             wording["weather"] = [explanation]
+        evidence = list({row["id"]: row for row in (*action_rows, *practice_rows, *weather_rows)}.values())
         return {
             **result(status, " ".join(claim["text"] for claim in claims[1:]),
-                     [*practice_rows, *weather_rows], action=action),
+                     evidence, action=action),
             "claims": claims, "claim_wording": wording, "decision_code": code, "forecast_rainfall_mm": amount,
             "weather_snapshot": snapshot,
         }
 
-    if not covered_location:
+    if session.question_type == "general" and topic not in DEFINITIONS:
+        return result("insufficient_evidence", message("general_topic"), action=message("answer_unavailable"))
+    if not covered_location and session.question_type != "general":
         return result("insufficient_evidence", message("location"))
     if session.requested_date is None:
         reason = "forecast_range" if topic == WEATHER_TOPIC and MULTI_DAY_REQUEST.search(session.question.casefold()) else "date"
@@ -398,18 +461,25 @@ def decision(session, connection, covered_location, forecast=None):
         return result("insufficient_evidence", message("topic"))
     if topic in DEFINITIONS:
         code, copy, _ = DEFINITIONS[topic]
-        rows = list(connection.execute(PUBLISHED_PASSAGES + """
-            AND d.state_id = 'india' AND p.topic = ? AND p.kind = 'background'
-            AND p.crop IS NULL AND p.district_id IS NULL AND p.decision_code = ?
-            AND (d.issue_date IS NULL OR d.issue_date <= ?)
-            AND (COALESCE(p.valid_from, d.valid_from) IS NULL OR COALESCE(p.valid_from, d.valid_from) <= ?)
-            AND (COALESCE(p.valid_until, d.valid_until) IS NULL OR COALESCE(p.valid_until, d.valid_until) >= ?)
-        """, (topic, code, day, day, day)))
-        sources = preferred(rank(session.question, rows))[:1]
+        def national_sources(topic_id, decision_code):
+            rows = list(connection.execute(PUBLISHED_PASSAGES + """
+                AND d.state_id = 'india' AND p.topic = ? AND p.kind = 'background'
+                AND p.crop IS NULL AND p.district_id IS NULL AND p.decision_code = ?
+                AND (d.issue_date IS NULL OR d.issue_date <= ?)
+                AND (COALESCE(p.valid_from, d.valid_from) IS NULL OR COALESCE(p.valid_from, d.valid_from) <= ?)
+                AND (COALESCE(p.valid_until, d.valid_until) IS NULL OR COALESCE(p.valid_until, d.valid_until) >= ?)
+            """, (topic_id, decision_code, day, day, day)))
+            return preferred(rank(session.question, rows))[:1]
+
+        sources = national_sources(topic, code)
         if not sources:
             return result("insufficient_evidence", message("topic"))
-        return support(code, message(f"{copy}_definition"), sources, practice_rows=sources,
-                       practice_copy=message(f"{copy}_explanation"))
+        if topic == "tomato-leaf-yellowing":
+            precautions = national_sources("tomato-leaf-spot-precautions", "prevent_tomato_leaf_spot_spread")
+            return support(code, message("tomato_yellowing_definition"), sources,
+                           practice_rows=precautions or sources, practice_copy=message(
+                               "tomato_precautions_explanation" if precautions else "symptom_uncertainty"))
+        return support(code, message(f"{copy}_definition"), sources, practice_rows=sources, practice_copy=message(f"{copy}_explanation"))
 
     needs_weather = needs_forecast(session.question, topic, session.date_explicit)
     candidates = [row for row in applicable(connection, session, topic, day) if row["kind"] != "weather"
@@ -432,7 +502,8 @@ def decision(session, connection, covered_location, forecast=None):
         amounts = {rainfall_on(row, day) for row in weather}
         if len(amounts - {None}) > 1:
             return result("conflicting_evidence", message("conflict"), weather)
-        only_missing_metrics = topic == WEATHER_TOPIC and has_terms(session.question.casefold(), OTHER_WEATHER_TERMS)
+        soil_requested = topic == WEATHER_TOPIC and has_terms(session.question.casefold(), SOIL_MOISTURE_TERMS)
+        only_missing_metrics = soil_requested or (topic == WEATHER_TOPIC and has_terms(session.question.casefold(), OTHER_WEATHER_TERMS))
         if amounts and None not in amounts and not only_missing_metrics:
             amount = next(iter(amounts))
             weather = weather[:1]
@@ -442,9 +513,13 @@ def decision(session, connection, covered_location, forecast=None):
             weather = [forecast_passage(forecast, session.state_id, session.district_id)]
             point_copy = message("point_forecast", date=day, rain=amount, low=forecast.low_c,
                                  high=forecast.high_c, wind=forecast.wind_kmh)
+            if forecast.soil_moisture_m3_m3 is not None:
+                point_copy += " " + message("point_soil", value=round(forecast.soil_moisture_m3_m3 * 100, 1))
+            elif soil_requested:
+                point_copy += " " + message("point_soil_missing")
         else:
             reason = "weather_gap" if only_missing_metrics or session.crop != "paddy" else "weather"
-            explanation = message(reason)
+            explanation = message("point_soil_missing" if soil_requested else reason)
             if topic != WEATHER_TOPIC:
                 explanation = (" ".join((crop_gap(), explanation)) if not stage_candidates and not (
                     candidates and session.crop_stage == "unknown") else " ".join((explanation, message("weather_needed"))))
@@ -452,7 +527,8 @@ def decision(session, connection, covered_location, forecast=None):
         if topic == WEATHER_TOPIC:
             return support("plan_with_district_forecast", point_copy or message("rain", date=day, amount=amount),
                            weather, weather_rows=weather, amount=amount,
-                           weather_copy=message("point_scope" if snapshot else "bulletin_scope"), snapshot=snapshot)
+                           weather_copy=message("point_scope" if snapshot else "bulletin_scope"), snapshot=snapshot,
+                           status="conditional" if soil_requested and snapshot.soil_moisture_m3_m3 is None else "supported")
 
     if session.crop_stage == "unknown":
         generic = preferred([row for row in candidates if row["stage_id"] is None])

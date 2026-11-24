@@ -68,7 +68,7 @@ select { appearance: none; padding-right: 34px; background-image: url('/static/a
 select:disabled { cursor: default; }
 textarea { resize: vertical; line-height: 1.45; }
 textarea::placeholder { color: #607068; opacity: 1; }
-.question-field, .observation-field { margin-top: 13px; }
+.mode-field, .date-field, .question-field, .observation-field { margin-top: 13px; }
 .optional { margin-left: 4px; color: var(--muted); font-size: .82rem; font-weight: 450; }
 .field-error { margin-top: 4px; color: var(--error); font-size: .88rem; line-height: 1.45; }
 .coverage-summary { margin: 14px 0; padding: 10px 12px; background: #eef4e9; color: #273c24; border-radius: 6px; font-size: .92rem; }

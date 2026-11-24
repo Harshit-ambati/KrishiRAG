@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 from advisory_generation import ChatProvider, ModelAdvisory
 from advisory_rules import INDIA
 from evidence_seed import seed
-from live_weather import DAILY_UNITS, Forecast, fetch_forecast, fetch_forecast_days
+from live_weather import DAILY_UNITS, SURFACE_MOISTURE, Forecast, fetch_forecast, fetch_forecast_days
 from main import app
 
 
@@ -42,6 +42,56 @@ class ExpandedCoverageTests(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()
+
+    def test_general_tomato_symptoms_cite_distinct_support_without_a_district(self):
+        questions = {
+            "en": "Why are my tomato leaves turning yellow?",
+            "te": "నా టమాటా ఆకులు ఎందుకు పసుపు రంగులోకి మారుతున్నాయి?",
+            "hi": "मेरे टमाटर की पत्तियाँ पीली क्यों हो रही हैं?",
+        }
+        decisions = []
+        with patch("advisory_api.fetch_forecast") as fetch:
+            for language, question in questions.items():
+                response = self.client.post("/api/advisories", json={
+                    "question_type": "general", "question": question, "language": language,
+                })
+                self.assertEqual(response.status_code, 200, response.text)
+                answer = response.json()
+                self.assertEqual(answer["status"], "supported")
+                self.assertEqual(answer["language"], language)
+                self.assertEqual(answer["answer_type"], "information")
+                cites = {citation["passage_id"]: citation["publisher"] for citation in answer["evidence"]}
+                action, precaution = answer["claims"]
+                self.assertEqual([cites[key] for key in action["passage_ids"]], ["University of Maryland Extension"])
+                self.assertEqual([cites[key] for key in precaution["passage_ids"]], ["University of Minnesota Extension"])
+                self.assertIsNone(answer["weather_snapshot"])
+                decisions.append((answer["decision_code"], tuple(cites)))
+            weather = self.ask({}, "Will it rain tomorrow?", question_type="general")
+            self.assertEqual(weather["status"], "insufficient_evidence")
+            fetch.assert_not_called()
+        self.assertEqual(decisions, [decisions[0]] * len(questions))
+        rot = self.ask({}, "Why are the bottoms of my tomatoes turning black?", question_type="general")
+        self.assertEqual(rot["status"], "supported")
+        self.assertEqual(rot["decision_code"], "screen_tomato_blossom_end_rot")
+        self.assertIn("Check soil pH", rot["explanation"])
+
+    def test_local_soil_question_requires_an_applicable_point_estimate(self):
+        forecast = Forecast(day=DAY, latitude=18.5, longitude=74, retrieved_at=NOW,
+                            rainfall_mm=2, low_c=18, high_c=30, wind_kmh=10)
+        with patch("advisory_api.fetch_forecast", return_value=forecast) as fetch:
+            answer = self.ask(PUNE, "What is the soil moisture?")
+            self.assertEqual(answer["status"], "conditional")
+            self.assertIn("unavailable", answer["answer"])
+
+            fetch.return_value = forecast.model_copy(update={"soil_moisture_m3_m3": 0.245})
+            answer = self.ask(PUNE, "What is the soil moisture?")
+            self.assertEqual(answer["status"], "supported")
+            self.assertIn("24.5%", answer["answer"])
+            self.assertIn("24.5% by volume", answer["evidence"][0]["excerpt"])
+            self.assertEqual(answer["weather_snapshot"]["soil_moisture_m3_m3"], 0.245)
+
+            fetch.return_value = forecast.model_copy(update={"day": DAY + timedelta(days=1)})
+            self.assertEqual(self.ask(PUNE, "What is the soil moisture?")["status"], "insufficient_evidence")
 
     def test_national_directory_and_crop_stage_validation(self):
         config = self.client.get("/api/farm-config").json()
@@ -214,7 +264,7 @@ class ExpandedCoverageTests(unittest.TestCase):
     def test_district_outlook_uses_reviewed_rainfall_and_never_fills_a_missing_day(self):
         day = date(2026, 11, 24)
         point = Forecast(day=day, latitude=16, longitude=81, retrieved_at=NOW,
-                         rainfall_mm=55, low_c=17, high_c=30, wind_kmh=10)
+                         rainfall_mm=55, low_c=17, high_c=30, wind_kmh=10, soil_moisture_m3_m3=0.28)
         with patch("advisory_api.fetch_forecast_days", return_value={day: point}) as fetch:
             response = self.client.get("/api/forecast", params=KRISHNA | {"start_date": day.isoformat(), "days": 7})
             self.assertEqual(response.status_code, 200, response.text)
@@ -224,9 +274,11 @@ class ExpandedCoverageTests(unittest.TestCase):
             self.assertEqual(days[0]["rain_status"], "reviewed")
             self.assertEqual(days[0]["rainfall_mm"], 1)
             self.assertEqual(days[0]["high_c"], 30)
+            self.assertEqual(days[0]["soil_moisture_m3_m3"], 0.28)
             self.assertEqual(days[0]["sources"][0]["passage_id"], "imd-value-added-ap-94-2026-1")
             self.assertEqual(days[-1]["rain_status"], "unavailable")
             self.assertIsNone(days[-1]["rainfall_mm"])
+            self.assertIsNone(days[-1]["soil_moisture_m3_m3"])
         wrong = self.client.get("/api/forecast", params=KRISHNA | {"state_id": "maharashtra"})
         self.assertEqual(wrong.status_code, 422)
         self.assertEqual(self.client.get("/api/forecast", params=KRISHNA | {"days": 8}).status_code, 422)
@@ -293,6 +345,11 @@ class ProviderIntegrationTests(unittest.TestCase):
             "temperature_2m_min": [18, 19, 17], "temperature_2m_max": [30, 30, 29],
             "wind_speed_10m_max": [15, 14, 13],
         }}
+        payload["hourly_units"] = {SURFACE_MOISTURE: "m³/m³"}
+        payload["hourly"] = {
+            "time": [f"{day.isoformat()}T{hour:02d}:00" for day in days for hour in range(24)],
+            SURFACE_MOISTURE: [0.2, 0.3] * 12 + [0.3] * 24 + [0.2] * 23 + [None],
+        }
         with patch.dict("os.environ", {"AGRIRAG_LIVE_WEATHER": "1", "OPEN_METEO_API_KEY": ""}):
             with patch("live_weather.httpx.get") as get:
                 get.return_value = httpx.Response(200, json=payload, request=httpx.Request("GET", "https://example.com"))
@@ -301,6 +358,8 @@ class ProviderIntegrationTests(unittest.TestCase):
                 self.assertEqual(get.call_args.kwargs["params"]["end_date"], days[-1].isoformat())
                 self.assertEqual(list(result), [days[0], days[2]])
                 self.assertEqual(result[days[2]].rainfall_mm, 3.25)
+                self.assertEqual(result[days[0]].soil_moisture_m3_m3, 0.25)
+                self.assertIsNone(result[days[2]].soil_moisture_m3_m3)
 
     def test_weather_provider_date_units_and_expiry(self):
         payload = {"timezone": "Asia/Kolkata", "daily_units": DAILY_UNITS.copy(), "daily": {

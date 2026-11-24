@@ -13,9 +13,9 @@ python evidence_index.py --download-model
 python -m uvicorn main:app --host 127.0.0.1 --port 8765
 ```
 
-Open the [farmer interface](http://127.0.0.1:8765). The form and results are available in English, Telugu, and Hindi. Select a state or Union Territory and district. Crop details can be omitted for a forecast or general definition.
+Open the [farmer interface](http://127.0.0.1:8765). The form and results are available in English, Telugu, and Hindi. Choose **General farming** to ask a question without selecting a location. Try “Why are my tomato leaves turning yellow?” for a cited explanation of signs to check and precautions if there are leaf spots. Choose **Local crop & weather** for a district forecast or a field decision. Select a state or Union Territory, district, and optionally a date. A forecast-only question can leave the crop blank.
 
-After choosing a state, the crop menu lists crops with approved guidance somewhere in that state. Choosing a district narrows the menu to guidance for that district and applicable statewide sources. The menu includes dated editions so older questions can still be replayed. The coverage panel and advisory check the specific date, crop stage, and question. Farmers can leave the crop blank for general farming and weather questions.
+After choosing a state in the local mode, the crop menu lists crops with approved guidance somewhere in that state. Choosing a district narrows the menu to guidance for that district and applicable statewide sources. The menu includes dated editions so older questions can still be replayed. The coverage panel and advisory check the specific date, crop stage, and question.
 
 The stage menus include germination and establishment where applicable, panicle initiation for paddy, and crop-specific stages such as bulb formation, tuber growth, head and curd formation, and pod filling. Existing stage IDs remain valid. [Examples of crop growth stages in IMD agromet bulletins](https://www.agritech.tnau.ac.in/pdf/2013/Bulletin_27.09.2013.pdf)
 
@@ -64,7 +64,7 @@ The selected provider receives the question, farm context, and eligible passages
 
 ## Verify live weather in Postman
 
-The Docker image and Compose enable live weather by default. Set `AGRIRAG_LIVE_WEATHER=0` to disable it. For native Uvicorn, export `AGRIRAG_LIVE_WEATHER=1`. The public [Open-Meteo forecast endpoint](https://open-meteo.com/en/docs) is available for non-commercial use. Set `OPEN_METEO_API_KEY` for the licensed customer endpoint. The backend validates the requested day in Asia/Kolkata, units, and forecast values, and can fetch today through six days ahead. The result cites a representative point and records the retrieval time with the forecast. Applicable IMD forecasts retain priority for the rainfall they cover. Crop timing still requires applicable crop guidance.
+The Docker image and Compose enable live weather by default. Set `AGRIRAG_LIVE_WEATHER=0` to disable it. For native Uvicorn, export `AGRIRAG_LIVE_WEATHER=1`. The public [Open-Meteo forecast endpoint](https://open-meteo.com/en/docs) is available for non-commercial use. Set `OPEN_METEO_API_KEY` for the licensed customer endpoint. The backend validates the requested day in Asia/Kolkata, units, and forecast values, and can fetch today through six days ahead. The result cites a representative point and records the retrieval time with the forecast. The district outlook reports the daily mean surface soil moisture when all 24 hourly values for the top 0–1 cm are available. The API field `soil_moisture_m3_m3` is volumetric and the interface expresses it as a percentage. Paddy irrigation decisions still use an observation from the field.
 
 Use Postman to send `POST http://127.0.0.1:8765/api/advisories` with `Content-Type: application/json`. This example requires no crop stage or farmer observation.
 
@@ -77,7 +77,7 @@ Use Postman to send `POST http://127.0.0.1:8765/api/advisories` with `Content-Ty
 }
 ```
 
-Verify `status: "supported"`, `answer_type: "information"`, the local `requested_date`, the values in `weather_snapshot`, and an Open-Meteo citation. Check that a different district produces a different requested point. For a direct knowledge answer, submit “What is drip irrigation?” or “What is sprinkler irrigation?” and confirm that the response cites the original PIB section. To try vegetable guidance, select Coimbatore (`tamil-nadu`, `lgd-569`), choose Tomato, and ask “How should I irrigate my tomatoes?”
+Verify `status: "supported"`, `answer_type: "information"`, the local `requested_date`, the values in `weather_snapshot`, and an Open-Meteo citation. Check that a different district produces a different requested point. For a general question, POST `{"question_type":"general","question":"Why are my tomato leaves turning yellow?","language":"en"}` to the same endpoint without a location. Check the symptom explanation and leaf-spot precautions against their separate citations. To try local vegetable guidance, select Coimbatore (`tamil-nadu`, `lgd-569`), choose Tomato, and ask “How should I irrigate my tomatoes?”
 
 Open **District forecast** in the farmer interface to compare 3, 5, or 7 days. This calls `GET /api/forecast?state_id=maharashtra&district_id=lgd-490&days=5`, also usable in Postman. A window starts today in Asia/Kolkata unless `start_date` is supplied. Each day shows reviewed district rainfall when available and live temperature and wind for the district's reference point. If reviewed rainfall is unavailable, a validated live value can be shown. Conflicting or unavailable rainfall is flagged. Multi-day outlooks are for planning. Crop decisions continue to use evidence for the specific requested date. [Open-Meteo forecast documentation](https://open-meteo.com/en/docs)
 
