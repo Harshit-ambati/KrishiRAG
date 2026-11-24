@@ -149,7 +149,6 @@ function renderLanguage() {
   announcement.lang = language;
   document.title = `AgriRAG · ${copy.heroTitle}`;
   document.querySelectorAll('[data-text]').forEach(node => { node.textContent = copy[node.dataset.text]; });
-  document.querySelectorAll('[data-placeholder]').forEach(node => { node.placeholder = copy[node.dataset.placeholder]; });
   renderMode();
 
   setOptions(fields.state, coverage.map(state => ({ value: state.id, label: localName(state.name) })), copy.selectState);

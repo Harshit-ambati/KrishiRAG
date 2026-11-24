@@ -39,16 +39,16 @@
     <div class="workspace">
       <section class="card" aria-labelledby="form-title">
         <h2 id="form-title" data-text="formTitle">Ask a question</h2>
-        <p class="section-description" id="form-description">Select your district to check weather and get crop guidance for your field.</p>
+        <p class="section-description" id="form-description">Ask about crop symptoms or farming practices. Describe what you see for a troubleshooting question.</p>
         <form id="question-form" novalidate tabindex="-1">
           <div class="field mode-field">
             <label for="question-mode" data-text="questionMode">Question type</label>
             <select id="question-mode" name="mode">
+              <option value="general" data-text="generalMode" selected>General farming</option>
               <option value="local" data-text="localMode">Local crop &amp; weather</option>
-              <option value="general" data-text="generalMode">General farming</option>
             </select>
           </div>
-          <div id="local-fields">
+          <div id="local-fields" hidden>
             <div class="field-grid">
               <div class="field">
                 <label for="state" data-text="state">State</label>
@@ -79,12 +79,12 @@
           </div>
           <div class="field question-field">
             <label for="question" data-text="question">Your question</label>
-            <textarea id="question" name="question" rows="3" maxlength="1200" required aria-describedby="question-error" data-placeholder="questionPlaceholder" placeholder="For example, should I irrigate if rain is expected?"></textarea>
+            <textarea id="question" name="question" rows="3" maxlength="1200" required aria-describedby="question-error" placeholder="For example, why are my tomato leaves turning yellow?"></textarea>
             <p class="field-error" id="question-error" hidden></p>
           </div>
           <div class="field observation-field">
             <label for="observation"><span data-text="observation">Field observation</span> <span class="optional" data-text="optional">Optional</span></label>
-            <textarea id="observation" name="observation" rows="2" maxlength="1200" aria-describedby="observation-error" data-placeholder="observationPlaceholder" placeholder="For example, water is still standing after yesterday’s rain."></textarea>
+            <textarea id="observation" name="observation" rows="2" maxlength="1200" aria-describedby="observation-error" placeholder="For example, the lower leaves have dark spots with yellow edges."></textarea>
             <p class="field-error" id="observation-error" hidden></p>
           </div>
           <button id="submit" class="primary" type="submit" aria-controls="result-content"><span data-text="submit" id="submit-label">Get answer</span></button>
