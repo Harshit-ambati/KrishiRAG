@@ -10,7 +10,7 @@ import httpx
 from fastapi.testclient import TestClient
 
 from advisory_generation import ChatProvider, GeminiProvider
-from advisory_rules import INDIA
+from advisory_rules import INDIA, question_topic
 from evidence_seed import seed
 from evidence_store import evidence_db
 from general_farming import DECISION, approved_general_passages, retrieve
@@ -27,6 +27,34 @@ class GeneralFarmingTests(unittest.TestCase):
         }))
         self.client = self.enterContext(TestClient(app))
         seed(None)
+
+    def test_potato_maturity_answers_with_icar_sources_without_a_model(self):
+        questions = {
+            "en": "How many days after planting seed potatoes is the crop ready to harvest?",
+            "te": "బంగాళాదుంప నాటిన తర్వాత కోతకు ఎన్ని రోజులు పడుతుంది?",
+            "hi": "आलू लगाने के बाद कटाई में कितने दिन लगते हैं?",
+        }
+        with patch("advisory_api.ChatProvider.configured") as provider:
+            for language, question in questions.items():
+                response = self.client.post("/api/advisories", json={
+                    "question_type": "general", "question": question, "language": language,
+                })
+                self.assertEqual(response.status_code, 200)
+                result = response.json()
+                self.assertEqual(result["status"], "supported")
+                self.assertEqual(result["generation_outcome"], "verified_template")
+                self.assertIn("70–100", result["answer"])
+                for duration in ("70–90", "75–80", "90–100"):
+                    self.assertIn(duration, result["explanation"])
+                self.assertEqual(result["evidence"][0]["publisher"], "Indian Council of Agricultural Research")
+            provider.assert_not_called()
+
+    def test_potato_duration_intent_leaves_other_potato_questions_open(self):
+        self.assertEqual(question_topic("how many days it take to cultivate the potato crop after the sampling"),
+                         "potato-harvest-duration")
+        for query in ("How many days after planting should I fertilize potatoes?",
+                      "How long until I harvest sweet potatoes?"):
+            self.assertNotEqual(question_topic(query), "potato-harvest-duration")
 
     def test_web_fallback_uses_fetched_passages_and_keeps_them_when_translating(self):
         provider = GeminiProvider("https://example.com", "test-model")

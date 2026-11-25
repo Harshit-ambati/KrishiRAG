@@ -11,7 +11,7 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import httpx
 
-from advisory_generation import GeminiProvider
+from advisory_generation import GeminiProvider, log_provider_failure
 
 PUBLISHERS = {
     "icar.gov.in": "Indian Council of Agricultural Research",
@@ -183,8 +183,10 @@ def search_publications(provider, question):
         chunks = response.json()["candidates"][0].get("groundingMetadata", {}).get("groundingChunks", [])
         hits = [chunk["web"] for chunk in chunks if isinstance(chunk, dict) and isinstance(chunk.get("web"), dict)][:4]
     except httpx.HTTPStatusError as exc:
+        log_provider_failure(provider, "official source discovery", exc)
         return [], "provider_limit" if exc.response.status_code == 429 else "provider_error"
-    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
+    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
+        log_provider_failure(provider, "official source discovery", exc)
         return [], "provider_error"
     with ThreadPoolExecutor(max_workers=4) as workers:
         batches = workers.map(lambda hit: load_publication(hit, question), hits)

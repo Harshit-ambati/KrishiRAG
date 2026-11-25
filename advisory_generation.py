@@ -1,6 +1,7 @@
 """A constrained renderer. Only reviewed claim wording can leave this service."""
 
 import json
+import logging
 import os
 from dataclasses import dataclass, field
 from typing import Annotated, Callable, Literal
@@ -9,6 +10,12 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 GEMINI_MODEL = "gemini-3.1-flash-lite"
+LOGGER = logging.getLogger(__name__)
+
+
+def log_provider_failure(provider, operation, error):
+    reason = f"HTTP {error.response.status_code}" if isinstance(error, httpx.HTTPStatusError) else type(error).__name__
+    LOGGER.warning("%s failed during %s: %s", type(provider).__name__, operation, reason)
 
 
 class CitedClaim(BaseModel):
@@ -159,9 +166,11 @@ def render_with_provider(provider, session, response, wording):
     try:
         raw = provider.complete(INSTRUCTION, payload, schema, max_tokens=900)
     except httpx.HTTPStatusError as exc:
+        log_provider_failure(provider, "verified answer rendering", exc)
         outcome = "provider_limit" if exc.response.status_code == 429 else "provider_error"
         return response.model_copy(update={"generation_outcome": outcome})
-    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
+    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
+        log_provider_failure(provider, "verified answer rendering", exc)
         return response.model_copy(update={"generation_outcome": "provider_error"})
 
     try:

@@ -53,6 +53,13 @@ DEFINITIONS = {
     "tomato-leaf-yellowing": ("screen_tomato_yellowing", "tomato_yellowing", ()),
     "tomato-blossom-end-rot": ("screen_tomato_blossom_end_rot", "tomato_blossom_end_rot", ()),
     "tomato-leaf-spot-precautions": ("prevent_tomato_leaf_spot_spread", "tomato_precautions", ()),
+    "potato-harvest-duration": ("explain_potato_harvest_duration", "potato_harvest_duration", ()),
+}
+DEFINITION_CROPS = {
+    "tomato-leaf-yellowing": "tomato",
+    "tomato-blossom-end-rot": "tomato",
+    "tomato-leaf-spot-precautions": "tomato",
+    "potato-harvest-duration": "potato",
 }
 
 # Only reviewer-coded actions are rendered automatically. Each value is a distinct
@@ -206,6 +213,16 @@ MESSAGES = {
                         "బిందు సేద్యంలో గొట్టాలకు అమర్చిన చిన్న రంధ్రాల ద్వారా మొక్కల వేర్ల దగ్గర నెమ్మదిగా నీరు అందుతుంది.",
                         "ड्रिप सिंचाई में पाइप या नलियों पर लगे छोटे आउटलेट से पानी धीरे-धीरे पौधों की जड़ों के पास पहुँचता है।"),
     "drip_explanation": ("These outlets are called emitters.", "ఈ రంధ్రాలను ఎమిటర్లు అంటారు।", "इन आउटलेट को एमिटर कहते हैं।"),
+    "potato_harvest_duration_definition": (
+        "If you mean after planting seed potatoes, allow roughly 70–100 days for the varieties covered in this ICAR guide. The time depends on the variety.",
+        "విత్తన బంగాళాదుంపలు నాటిన తర్వాత ఎంత కాలం అని అడుగుతుంటే, ఈ ICAR మార్గదర్శకంలోని రకాలకు సుమారు 70–100 రోజులు పడుతుంది. కాలవ్యవధి రకాన్ని బట్టి మారుతుంది.",
+        "अगर आपका मतलब बीज आलू लगाने के बाद से है, तो इस ICAR मार्गदर्शिका की किस्मों में लगभग 70–100 दिन लगते हैं। समय किस्म पर निर्भर करता है।",
+    ),
+    "potato_harvest_duration_explanation": (
+        "ICAR lists 70–90 days for Kufri Pukhraj, 75–80 days for Kufri Ashoka, and 90–100 days for Kufri Surya. Count from the planting date and check which variety you planted.",
+        "ICAR ప్రకారం కుఫ్రి పుఖ్‌రాజ్‌కు 70–90 రోజులు, కుఫ్రి అశోకకు 75–80 రోజులు, కుఫ్రి సూర్యకు 90–100 రోజులు. నాటిన తేదీ నుంచి లెక్కించి, మీరు నాటిన రకాన్ని చూసుకోండి.",
+        "ICAR के अनुसार कुफरी पुखराज में 70–90 दिन, कुफरी अशोका में 75–80 दिन और कुफरी सूर्या में 90–100 दिन लगते हैं। रोपाई की तारीख से गिनें और अपनी किस्म की पुष्टि करें।",
+    ),
     "tomato_yellowing_definition": (
         "Yellow tomato leaves can have several causes. Check where it began and what else you see. Dark spots with yellow margins suggest a leaf-spot problem. Yellowing between veins can point to a nutrient problem. Lower leaves turning yellow together with wilting can point to a wilt disease. The pattern helps narrow the cause.",
         "టమాటా ఆకులు పసుపు రంగులోకి మారడానికి అనేక కారణాలు ఉండవచ్చు. మొదట ఏ ఆకుల్లో మొదలైందో, ఇతర లక్షణాలు ఏమిటో చూడండి. పసుపు అంచులతో నల్లటి మచ్చలు ఆకుమచ్చ సమస్యను సూచించవచ్చు. ఈనెల మధ్య పసుపుదనం పోషక సమస్యను సూచించవచ్చు. కింది ఆకులు పసుపు రంగులోకి మారి మొక్క వాడిపోతే వాడుదల వ్యాధి ఒక అవకాశం.",
@@ -316,6 +333,14 @@ def question_topic(question):
     for topic, (_, _, questions) in DEFINITIONS.items():
         if text in questions:
             return topic
+    if has_terms(text, ("potato", "potatoes", "आलू", "బంగాళాదుంప", "ఆలుగడ్డ")) and not has_terms(
+        text, ("sweet potato", "sweet potatoes", "chinese potato", "chinese potatoes", "शकरकंद", "చిలగడ")
+    ) and has_terms(text, (
+        "how many days", "how long", "days", "duration", "कितने दिन", "कितना समय", "ఎన్ని రోజులు", "ఎంత కాలం",
+    )) and has_terms(text, (
+        "harvest", "mature", "maturity", "cultivate", "grow", "कटाई", "खुदाई", "पकने", "खेती", "కోత", "తవ్వ", "పరిపక్వ", "సాగు",
+    )):
+        return "potato-harvest-duration"
     if has_terms(text, ("tomato", "tomatoes", "टमाटर", "టమాటా", "టమోటా")):
         if has_terms(text, ("leaf", "leaves", "foliage", "पत्त", "ఆకు", "ఆకుల")) and has_terms(
             text, ("yellow", "yellowing", "पील", "పసుపు")
@@ -471,7 +496,7 @@ def decision(session, connection, covered_location, forecast=None):
             """, (topic_id, decision_code, crop, crop, day, day, day)))
             return preferred(rank(session.question, rows))[:1]
 
-        sources = national_sources(topic, code, "tomato" if topic.startswith("tomato-") else None)
+        sources = national_sources(topic, code, DEFINITION_CROPS.get(topic))
         if not sources:
             return result("insufficient_evidence", message("topic"))
         if topic == "tomato-leaf-yellowing":

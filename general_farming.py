@@ -5,9 +5,9 @@ from dataclasses import replace
 from typing import Annotated, Literal
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from advisory_generation import CitedClaim
+from advisory_generation import CitedClaim, log_provider_failure
 from advisory_rules import citation
 from evidence_index import evidence_mode, rank
 from evidence_store import PUBLISHED_PASSAGES
@@ -161,9 +161,11 @@ def answer_with_evidence(provider, session, response, rows, previous=None):
     previous_claims = [{"text": claim.text, "passage_id": claim.passage_ids[0]} for claim in previous.claims] if previous else []
     context = {"question": session.question, "observations": session.field_observations,
                "language": session.language, "previous_claims": previous_claims}
+    operation = "general answer drafting"
     try:
         schema = DraftAnswer.model_json_schema()
         schema["required"] = ["claims", "clarification"]
+        schema["properties"]["clarification"].pop("default", None)
         raw = provider.complete(ANSWER, context | {"passages": passages}, schema, max_tokens=1900)
         draft = DraftAnswer.model_validate_json(raw)
         if not draft.claims:
@@ -178,13 +180,19 @@ def answer_with_evidence(provider, session, response, rows, previous=None):
         if previous and ids != [claim["passage_id"] for claim in previous_claims]:
             return response.model_copy(update={"generation_outcome": "invalid_output"})
         pairs = [claim.model_dump() | {"passage": by_id[claim.passage_id]} for claim in draft.claims]
+        operation = "general answer verification"
         raw = provider.complete(VERIFY, context | {"pairs": pairs}, Verification.model_json_schema(), max_tokens=500)
         if not Verification.model_validate_json(raw).supported:
             return response.model_copy(update={"generation_outcome": "invalid_output"})
     except httpx.HTTPStatusError as exc:
+        log_provider_failure(provider, operation, exc)
         outcome: Literal["provider_limit", "provider_error"] = "provider_limit" if exc.response.status_code == 429 else "provider_error"
         return response.model_copy(update={"generation_outcome": outcome})
-    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError):
+    except ValidationError as exc:
+        log_provider_failure(provider, operation, exc)
+        return response.model_copy(update={"generation_outcome": "invalid_output"})
+    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
+        log_provider_failure(provider, operation, exc)
         return response.model_copy(update={"generation_outcome": "provider_error"})
 
     claims = [CitedClaim(kind="action" if index == 0 else "practice", text=claim.text, passage_ids=[claim.passage_id])

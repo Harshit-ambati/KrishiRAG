@@ -525,5 +525,31 @@
         "content": "Maintaining an even water supply supports tomato growth and fruit set. A dry period followed by a sudden heavy watering can cause fruit cracking."
       }
     ]
+  },
+  {
+    "id": "icar-potato-harvest-duration",
+    "filename": "Rabi-Agro-Advisory-2021-22.pdf",
+    "sha256": null,
+    "page_count": null,
+    "metadata": {
+      "publisher": "Indian Council of Agricultural Research",
+      "title": "ICAR Rabi Agro-Advisory for Farmers 2021–22",
+      "original_url": "https://www.icar.gov.in/sites/default/files/2022-09/Rabi-Agro-Advisory-2021-22_0.pdf",
+      "language": "en",
+      "state_id": "india",
+      "geographic_scope": "Published crop durations for three named potato varieties. General guidance for interpreting maturity.",
+      "version": "2021–22 edition",
+      "review_notes": "Reviewed the variety descriptions in the potato section. Excluded yield figures and seasonal or district schedules."
+    },
+    "passages": [
+      {
+        "kind": "background",
+        "crop": "potato",
+        "topic": "potato-harvest-duration",
+        "section": "Rabi Vegetables — Potato, Early Varieties (printed page 149)",
+        "decision_code": "explain_potato_harvest_duration",
+        "content": "ICAR describes the duration for three early potato varieties: 70–90 days for Kufri Pukhraj, 75–80 days for Kufri Ashoka, and 90–100 days for Kufri Surya. The range across these examples is 70–100 days."
+      }
+    ]
   }
 ]
