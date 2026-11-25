@@ -61,7 +61,7 @@ export const translations = {
     issued: 'Issued',
     feedbackTitle: 'Was this result helpful?', useful: 'Useful', unclear: 'Unclear', potentiallyIncorrect: 'Potentially incorrect',
     feedbackSaving: 'Saving feedback…', feedbackSaved: 'Feedback saved.', feedbackError: 'Feedback could not be saved. Choose an option to retry.',
-    resultReady: 'Result ready.', footer: 'AgriRAG · Evidence-grounded agriculture',
+    resultReady: 'Result ready.', footer: 'KrishiRAG · Evidence-grounded agriculture',
     statuses: {
       supported: 'Evidence available', conditional: 'Conditional advice', clarification: 'More information needed',
       coverageGap: 'Coverage gap', conflict: 'Conflicting evidence',
@@ -131,7 +131,7 @@ export const translations = {
     feedbackTitle: 'ఈ ఫలితం ఉపయోగపడిందా?', useful: 'ఉపయోగపడింది', unclear: 'స్పష్టంగా లేదు', potentiallyIncorrect: 'తప్పు ఉండవచ్చు',
     feedbackSaving: 'అభిప్రాయాన్ని సేవ్ చేస్తున్నాం…', feedbackSaved: 'మీ అభిప్రాయం నమోదైంది.',
     feedbackError: 'అభిప్రాయం నమోదు కాలేదు. మళ్లీ ప్రయత్నించడానికి ఒక ఎంపికను నొక్కండి.',
-    resultReady: 'ఫలితం సిద్ధంగా ఉంది.', footer: 'AgriRAG · ఆధారాలతో కూడిన వ్యవసాయ సమాచారం',
+    resultReady: 'ఫలితం సిద్ధంగా ఉంది.', footer: 'KrishiRAG · ఆధారాలతో కూడిన వ్యవసాయ సమాచారం',
     statuses: {
       supported: 'ఆధారం అందుబాటులో ఉంది', conditional: 'షరతులతో కూడిన సూచన', clarification: 'మరింత సమాచారం అవసరం',
       coverageGap: 'వర్తించే ఆధారం లేదు', conflict: 'ఆధారాల మధ్య విభేదం',
@@ -201,7 +201,7 @@ export const translations = {
     feedbackTitle: 'क्या यह नतीजा काम आया?', useful: 'उपयोगी', unclear: 'अस्पष्ट', potentiallyIncorrect: 'शायद गलत',
     feedbackSaving: 'प्रतिक्रिया सहेजी जा रही है…', feedbackSaved: 'प्रतिक्रिया सहेजी गई।',
     feedbackError: 'प्रतिक्रिया सहेजी नहीं जा सकी। फिर कोशिश करने के लिए एक विकल्प चुनें।',
-    resultReady: 'नतीजा तैयार है।', footer: 'AgriRAG · साक्ष्य-आधारित कृषि जानकारी',
+    resultReady: 'नतीजा तैयार है।', footer: 'KrishiRAG · साक्ष्य-आधारित कृषि जानकारी',
     statuses: {
       supported: 'साक्ष्य उपलब्ध है', conditional: 'शर्त के साथ सलाह', clarification: 'और जानकारी चाहिए',
       coverageGap: 'लागू साक्ष्य उपलब्ध नहीं है', conflict: 'स्रोतों में मतभेद',

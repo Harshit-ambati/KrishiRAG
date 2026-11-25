@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent
 FRONTEND = ROOT / "frontend"
 logger = logging.getLogger("uvicorn.error")
 
-app = FastAPI(title="AgriRAG")
+app = FastAPI(title="KrishiRAG")
 app.include_router(advisory_router)
 app.include_router(feedback_router)
 app.include_router(evidence_admin_router)

@@ -147,7 +147,7 @@ function renderLanguage() {
   copy = translations[language];
   document.documentElement.lang = language;
   announcement.lang = language;
-  document.title = `AgriRAG · ${copy.heroTitle}`;
+  document.title = `KrishiRAG · ${copy.heroTitle}`;
   document.querySelectorAll('[data-text]').forEach(node => { node.textContent = copy[node.dataset.text]; });
   renderMode();
 

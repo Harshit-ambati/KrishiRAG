@@ -1,6 +1,6 @@
-# AgriRAG
+# KrishiRAG
 
-AgriRAG answers questions about weather, crop practices, and field decisions in English, Telugu, and Hindi. Its location catalog includes 783 district entries across India's 36 states and Union Territories. Crop advice has narrower evidence coverage. The starter catalog includes paddy guidance for Krishna and West Godavari, tomato, Bellary onion, okra, and brinjal practices for Tamil Nadu, and organic chilli guidance for Uttarakhand. It also supports general irrigation definitions from a national source.
+KrishiRAG answers questions about weather, crop practices, and field decisions in English, Telugu, and Hindi. Its location catalog includes 783 district entries across India's 36 states and Union Territories. Crop advice has narrower evidence coverage. The starter catalog includes paddy guidance for Krishna and West Godavari, tomato, Bellary onion, okra, and brinjal practices for Tamil Nadu, and organic chilli guidance for Uttarakhand. It also supports general irrigation definitions from a national source.
 
 ## Run locally
 
@@ -54,7 +54,7 @@ Each supported result links its proposed action and explanation to the original 
 
 ## Configure the model
 
-AgriRAG supports the Gemini and OpenAI APIs for structured rendering. For Docker, copy `.env.example` to `.env` if it does not already exist. Fill in `GEMINI_API_KEY` and run `docker compose up -d --build`. Gemini takes priority when both keys are configured. For native Uvicorn, export the variables in its launching shell. [Gemini 3.1 Flash-Lite](https://aistudio.google.com/docs/models/gemini-3.1-flash-lite)
+KrishiRAG supports the Gemini and OpenAI APIs for structured rendering. For Docker, copy `.env.example` to `.env` if it does not already exist. Fill in `GEMINI_API_KEY` and run `docker compose up -d --build`. Gemini takes priority when both keys are configured. For native Uvicorn, export the variables in its launching shell. [Gemini 3.1 Flash-Lite](https://aistudio.google.com/docs/models/gemini-3.1-flash-lite)
 
 | Variable | Purpose |
 | --- | --- |
@@ -64,7 +64,7 @@ AgriRAG supports the Gemini and OpenAI APIs for structured rendering. For Docker
 | `AGRIRAG_OPENAI_MODEL` | Optional OpenAI model override. Defaults to `gpt-4.1-mini`. |
 | `AGRIRAG_LLM_TIMEOUT` | Request timeout in seconds, defaults to 20 |
 
-The selected provider receives the question, farm context, and eligible passages for covered requests. AgriRAG validates the generated wording and citations before display. The app uses its cited verified templates when a key is absent, the provider fails, or the output fails validation. When the provider returns HTTP 429, the API records `generation_outcome: "provider_limit"` and the result shows a localized usage-limit notice alongside the verified answer. The historical Qwen report applies to its recorded model and fixtures.
+The selected provider receives the question, farm context, and eligible passages for covered requests. KrishiRAG validates the generated wording and citations before display. The app uses its cited verified templates when a key is absent, the provider fails, or the output fails validation. When the provider returns HTTP 429, the API records `generation_outcome: "provider_limit"` and the result shows a localized usage-limit notice alongside the verified answer. The historical Qwen report applies to its recorded model and fixtures.
 
 ## Verify live weather in Postman
 
